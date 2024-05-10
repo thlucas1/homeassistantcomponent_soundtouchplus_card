@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{19dfee94-5cae-417c-ac13-38b165e4121e}</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <ProjectView>ShowAllFiles</ProjectView>
+    <StartupFile>dist\soundtouchplus-card.js</StartupFile>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
+    <EnableTypeScript>true</EnableTypeScript>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">17.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <StartWebBrowser>True</StartWebBrowser>
+    <JavaScriptTestFramework>Jest</JavaScriptTestFramework>
+    <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <ItemGroup>
+    <Content Include=".eslintrc.js" />
+    <Content Include=".gitattributes" />
+    <Content Include=".github\dependabot.yml" />
+    <Content Include=".github\FUNDING.yml" />
+    <Content Include=".github\ISSUE_TEMPLATE\bug.yml" />
+    <Content Include=".github\ISSUE_TEMPLATE\config.yml" />
+    <Content Include=".github\ISSUE_TEMPLATE\feature_request.yml" />
+    <Content Include=".github\workflows\build.yml" />
+    <Content Include=".github\workflows\hacs.yml" />
+    <Content Include=".github\workflows\release.yml" />
+    <Content Include=".gitignore" />
+    <Content Include=".prettierrc.js" />
+    <Content Include=".vscode\launch.json" />
+    <Content Include="CHANGELOG.md" />
+    <Content Include="developer_notes.txt">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="hacs.json" />
+    <Content Include="images\pandora_card_panel.jpg" />
+    <Content Include="images\presets_card_panel.jpg" />
+    <Content Include="images\presets_editor_ui.jpg" />
+    <Content Include="LICENSE" />
+    <Content Include="package-lock.json" />
+    <Content Include="package.json" />
+    <Content Include="rollup.config.js" />
+    <Content Include="src\types\hassentityattributes-soundtouchplus.ts">
+      <SubType>Code</SubType>
+    </Content>
+    <None Include="tsconfig.json" />
+    <Content Include="README.md" />
+    <None Include="src\card.ts" />
+    <None Include="src\constants.ts" />
+    <None Include="src\main.ts" />
+    <None Include="src\types.ts" />
+    <None Include="src\components\footer.ts" />
+    <None Include="src\components\ha-player.ts" />
+    <None Include="src\editor\preset-browser-editor.ts" />
+    <None Include="src\editor\base-editor.ts" />
+    <None Include="src\editor\editor.ts" />
+    <None Include="src\editor\editor-form.ts" />
+    <None Include="src\editor\general-editor.ts" />
+    <None Include="src\model\media-player.ts" />
+    <None Include="src\model\store.ts" />
+    <None Include="src\sections\player.ts" />
+    <None Include="src\sections\preset-browser.ts" />
+    <None Include="src\services\hass-service.ts" />
+    <None Include="src\utils\utils.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include=".github\" />
+    <Folder Include=".github\ISSUE_TEMPLATE\" />
+    <Folder Include=".github\workflows\" />
+    <Folder Include=".vscode\" />
+    <Folder Include="dist" />
+    <Folder Include="images\" />
+    <Folder Include="src" />
+    <Folder Include="src\components" />
+    <Folder Include="src\editor" />
+    <Folder Include="src\model" />
+    <Folder Include="src\types\" />
+    <Folder Include="src\sections" />
+    <Folder Include="src\services" />
+    <Folder Include="src\types\soundtouchplus\" />
+    <Folder Include="src\utils" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="src\components\media-browser-icons.ts" />
+    <TypeScriptCompile Include="src\components\media-browser-list.ts" />
+    <TypeScriptCompile Include="src\editor\pandora-browser-editor.ts" />
+    <TypeScriptCompile Include="src\editor\recent-browser-editor.ts" />
+    <TypeScriptCompile Include="src\sections\pandora-browser.ts" />
+    <TypeScriptCompile Include="src\sections\recent-browser.ts" />
+    <TypeScriptCompile Include="src\services\soundtouchplus-service.ts" />
+    <TypeScriptCompile Include="src\types\cardconfig.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\customimageurls.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\hassentityattributes-mediaplayer.ts" />
+    <TypeScriptCompile Include="src\types\hassentity-soundtouchplus.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\navigateresponse.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\navigateitem.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\soundtouchplus\sourceitem.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\recent.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\sourcelist.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\recentlist.ts" />
+    <TypeScriptCompile Include="src\types\section.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\servicecallrequest.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\servicecallresponse.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\presetlist.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\preset.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\contentitem.ts" />
+    <TypeScriptCompile Include="src\utils\media-browser-utils.ts" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:48022/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>True</UseCustomServer>
+          <CustomServerUrl>http://localhost:1337</CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
