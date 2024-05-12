@@ -15,11 +15,9 @@ Extended support for the Bose SoundTouch line of speaker products for use in Hom
 
 with more to come!
 
-Check out the [Configuration Guide wiki](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Guide) page for detailed explanations, images and YAML examples of the various options supported by this card.
-
 ## How it Looks
 
-Here's a quick look on what the card looks like.
+Here's a quick overview on what the card looks like; check out the [UI Dashboards wiki](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/UI-Dashboards) page for more examples and YAML configuration.
 
 _Pandora Stations, Panel Mode_  
 <img src="images/panel_pandora.png?v01_20240317">   
@@ -59,9 +57,16 @@ _Editor UI, General Options_
 - after any update of the file you will have to edit `/local/soundtouchplus-card.js?v=1` and change the version (e.g. `v=1`) to any higher number (e.g. `v=1.2`).
 
 
-## Configuration 
+## More Information
 
-Most of the configuration of the card is done in the UI.
+Check out the following links for more detailed information.
+
+- [Card Wiki Home](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki)
+- [Card Features](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Card-Features)
+- [Card Configuration](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options)
+- [Card UI Examples](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/UI-Dashboards)
+- [SoundTouchPlus Integration](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus)
+
 
 ## Reporting a Problem
 
