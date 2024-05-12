@@ -22,16 +22,16 @@ Check out the [Configuration Guide wiki](https://github.com/thlucas1/homeassista
 Here's a quick look on what the card looks like.
 
 _Pandora Stations, Panel Mode_
-<img src="https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/panel_pandora.png?v01_20240509">   
+<img src="images/panel_pandora.png?v01_20240317">   
 
 _SoundTouch Presets, Panel Mode_
-<img src="https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/panel_presets.png?v01_20240509">   
+<img src="images/panel_presets.png?v01_20240512">   
 
 _SoundTouch Recently Played, Panel Mode_
-<img src="https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/panel_recently_played.png?v01_20240509">   
+<img src="images/panel_recently_played.png?v01_20240512">   
 
 _Editor UI, General Options_
-<img src="https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/ConfigurationOptions/general_options.png?v01_20240509">   
+<img src="images/general_editor_ui.jpg?v01_20240512">   
 
 ## HACS Installation Instructions (recommended)
 

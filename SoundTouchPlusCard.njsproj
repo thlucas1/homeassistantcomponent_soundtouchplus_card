@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{19dfee94-5cae-417c-ac13-38b165e4121e}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <ProjectView>ProjectFiles</ProjectView>
+    <ProjectView>ShowAllFiles</ProjectView>
     <StartupFile>dist\soundtouchplus-card.js</StartupFile>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -38,9 +38,10 @@
       <SubType>Code</SubType>
     </Content>
     <Content Include="hacs.json" />
-    <Content Include="images\pandora_card_panel.jpg" />
-    <Content Include="images\presets_card_panel.jpg" />
-    <Content Include="images\presets_editor_ui.jpg" />
+    <Content Include="images\panel_pandora.png" />
+    <Content Include="images\panel_presets.png" />
+    <Content Include="images\panel_recently_played.png" />
+    <Content Include="images\general_editor_ui.jpg" />
     <Content Include="LICENSE" />
     <Content Include="package-lock.json" />
     <Content Include="package.json" />
