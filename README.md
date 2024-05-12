@@ -21,16 +21,16 @@ Check out the [Configuration Guide wiki](https://github.com/thlucas1/homeassista
 
 Here's a quick look on what the card looks like.
 
-_Pandora Stations, Panel Mode_
+_Pandora Stations, Panel Mode_  
 <img src="images/panel_pandora.png?v01_20240317">   
 
-_SoundTouch Presets, Panel Mode_
+_SoundTouch Presets, Panel Mode_  
 <img src="images/panel_presets.png?v01_20240512">   
 
-_SoundTouch Recently Played, Panel Mode_
+_SoundTouch Recently Played, Panel Mode_  
 <img src="images/panel_recently_played.png?v01_20240512">   
 
-_Editor UI, General Options_
+_Editor UI, General Options_  
 <img src="images/general_editor_ui.jpg?v01_20240512">   
 
 ## HACS Installation Instructions (recommended)
