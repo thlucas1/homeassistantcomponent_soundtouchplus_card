@@ -59,7 +59,7 @@ _Editor UI, General Options_
 
 ## More Information
 
-Check out the following links for more detailed information.
+Check out the following links for more detailed information:
 
 - [Card Wiki Home](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki)
 - [Card Features](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Card-Features)
