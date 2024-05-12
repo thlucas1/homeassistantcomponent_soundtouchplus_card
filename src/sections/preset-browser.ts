@@ -8,7 +8,7 @@ import '../components/media-browser-list';
 import '../components/media-browser-icons';
 import { Store } from '../model/store';
 import { customEvent } from '../utils/utils';
-import { formatPlayerInfo } from '../utils/media-browser-utils';
+import { formatTitleInfo } from '../utils/media-browser-utils';
 import { MediaPlayer } from '../model/media-player';
 import { ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD } from '../constants';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
@@ -81,7 +81,7 @@ export class PresetBrowser extends LitElement {
 
       // was the media player preset list updated?
       const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
-      console.log("%c preset-browser render - updateMediaList check info BEFORE update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
+      //console.log("%c preset-browser render - updateMediaList check info BEFORE update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
       if ((playerLastUpdatedOn != this.medialistLastUpdatedOn) && (this.medialistLastUpdatedOn > 0))
         this.updateMediaList(this.player);
       
@@ -89,8 +89,8 @@ export class PresetBrowser extends LitElement {
       //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
 
       // format title and sub-title details.
-      const title = formatPlayerInfo(this.player, this.config.presetBrowserTitle);
-      const subtitle = formatPlayerInfo(this.player, this.config.presetBrowserSubTitle);
+      const title = formatTitleInfo(this.config.presetBrowserTitle, this.config, this.player);
+      const subtitle = formatTitleInfo(this.config.presetBrowserSubTitle, this.config, this.player);
 
       return html`
         ${title ? html`<div class="title">${title}</div>` : html``}
@@ -133,7 +133,7 @@ export class PresetBrowser extends LitElement {
 
     //  // log exceptions.
     //  const exObj = (ex as Error);
-    //  console.log("STPC - Error rendering preset browser html\n Name = '%s'\nMessage = %s", exObj.name, exObj.message);
+    //  //console.log("STPC - Error rendering preset browser html\n Name = '%s'\nMessage = %s", exObj.name, exObj.message);
     //  return html`Could not render card - check console log`;
 
     } finally {
@@ -212,14 +212,10 @@ export class PresetBrowser extends LitElement {
     // call the service to retrieve the media list.
     this.soundTouchPlusService.PresetList(player.id, true)
       .then(result => {
-        //if (player.attributes.media_title == 'I Need You') {   // TEST TODO test for invalid lastupdatedon
-        //  console.log("updateMediaList() - resetting result.LastUpdatedOn to undefined TEST TODO REMOVE ME");
-        //  result.LastUpdatedOn = undefined;                   // TEST TODO
-        //}                                                     // TEST TODO
         this.mediaList = result;
         this.medialistLastUpdatedOn = result.LastUpdatedOn || 0;
-        const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
-        console.log("%c preset-browser render - updateMediaList check info AFTER update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
+        //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
+        //console.log("%c preset-browser render - updateMediaList check info AFTER update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
         this.requestUpdate();
       });
   }

@@ -99,7 +99,7 @@ export abstract class BaseEditor extends LitElement {
 
   //  // is this the first render?  if so, then refresh the list.
   //  if (this.sourceListLastUpdatedOn == 1) {
-  //    console.log("base-editor.createStore() calling updateSourceList()");
+  //    //console.log("base-editor.createStore() calling updateSourceList()");
   //    this.updateSourceList(this.player);
   //  }
   }
@@ -144,7 +144,7 @@ export abstract class BaseEditor extends LitElement {
 
 
   //protected configChanged() {
-  //  console.log("base-editor.configChanged() - configuration has changed");
+  //  //console.log("base-editor.configChanged() - configuration has changed");
   //  fireEvent(this, 'config-changed', { config: this.config });
   //  this.requestUpdate();
   //}
@@ -162,7 +162,7 @@ export abstract class BaseEditor extends LitElement {
   // */
   //private updateSourceList(player: MediaPlayer): void {
 
-  //  console.log("base-editor.updateSourceList() - player object:\n%s", JSON.stringify(player,null,2));
+  //  //console.log("base-editor.updateSourceList() - player object:\n%s", JSON.stringify(player,null,2));
 
   //  // update the media list; we will force the `sourceListLastUpdatedOn` attribute 
   //  // with the current epoch date (in seconds) so that the refresh is only triggered once.
@@ -173,7 +173,7 @@ export abstract class BaseEditor extends LitElement {
   //    .then(result => {
   //      this.sourceList = result;
   //      this.sourceListLastUpdatedOn = Date.now() / 1000;
-  //      console.log("%c base-editor.render - updateSourceList AFTER update:\n %s=sourceListLastUpdatedOn", "color: green;", JSON.stringify(this.sourceListLastUpdatedOn));
+  //      //console.log("%c base-editor.render - updateSourceList AFTER update:\n %s=sourceListLastUpdatedOn", "color: green;", JSON.stringify(this.sourceListLastUpdatedOn));
   //      this.requestUpdate();
   //    });
   //}

@@ -58,12 +58,12 @@ const CONFIG_SETTINGS_SCHEMA = [
     type: 'string',
     default: 35.15,
   },
-  {
-    name: 'replaceHttpWithHttpsForThumbnails',
-    label: "Replace HTTP with HTTPS for image url's",
-    required: false,
-    selector: { boolean: {} },
-  },
+//  {
+//    name: 'imageUrlsReplaceHttpWithHttps',
+//    label: "Replace HTTP with HTTPS for image url's",
+//    required: false,
+//    selector: { boolean: {} },
+//  },
 ];
 
 

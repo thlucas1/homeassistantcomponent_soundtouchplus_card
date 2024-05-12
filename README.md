@@ -22,24 +22,27 @@ Check out the [Configuration Guide wiki](https://github.com/thlucas1/homeassista
 Here's a quick look on what the card looks like.
 
 _Pandora Stations, Panel Mode_
-<img src="images/pandora_card_panel.jpg?v01_20240509">   
+<img src="https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/panel_pandora.png?v01_20240509">   
 
 _SoundTouch Presets, Panel Mode_
-<img src="images/presets_card_panel.jpg?v01_20240509">   
+<img src="https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/panel_presets.png?v01_20240509">   
 
-_Editor UI, SoundTouch Presets_
-<img src="images/presets_editor_ui.jpg?v01_20240509">   
+_SoundTouch Recently Played, Panel Mode_
+<img src="https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/panel_recently_played.png?v01_20240509">   
+
+_Editor UI, General Options_
+<img src="https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/ConfigurationOptions/general_options.png?v01_20240509">   
 
 ## HACS Installation Instructions (recommended)
 
-- on your sidebar go to HACS > Frontend
-- click on the 3-dot overflow menu in the upper right, and select `custom repositories` item.
-- copy / paste `https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card` in the Repository textbox and select `Lovelace` for the category entry.
-- click on `Add` to add the custom repository.
-- you can then click on the `SoundTouchPlus Card` repository entry (you may need to filter your list first to find the new entry).
-- click on `download` to start the download. It will install the card to your config/custom_components directory.
-- go back on your dashboard and click on the icon at the right top corner then on Edit dashboard.
-- you can now click on Add card in the bottom right corner and search for "Custom: SoundTouchPlus Card".
+- On your Home Assistant sidebar menu, go to HACS > Frontend
+- Click on the 3-dot overflow menu in the upper right, and select `custom repositories` item.
+- Copy / paste `https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card` in the Repository textbox and select `Lovelace` for the category entry.
+- Click on `Add` to add the custom repository.
+- You can then click on the `SoundTouchPlus Card` repository entry (you may need to filter your list first to find the new entry).
+- Click on `download` to start the download. It will install the card to your `/config/www/community/homeassistantcomponent_soundtouchplus_card` directory.
+- Go back on your dashboard and click on the icon at the right top corner then on Edit dashboard.
+- You can now click on Add card in the bottom right corner and search for "Custom: SoundTouchPlus Card".
 
 ## Manual Installation
 

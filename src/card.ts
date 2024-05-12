@@ -14,7 +14,7 @@ import { Section } from './types/section'
 import './components/footer';
 import './editor/editor';
 import { PROGRESS_DONE, PROGRESS_STARTED, SECTION_SELECTED } from './constants';
-import { formatPlayerInfo, removeSpecialChars } from './utils/media-browser-utils';
+import { formatTitleInfo, removeSpecialChars } from './utils/media-browser-utils';
 import { isNumber } from './utils/utils';
 
 //const LOGPFX = "STPC - card."
@@ -94,11 +94,13 @@ export class Card extends LitElement {
     // has not been set set.
     this.createStore();
 
+    // TODO - add a check to see if the player is of integration type 'soundtouchplus'.
+
     // calculate height of the card, accounting for any extra
     // titles that are shown, footer, etc.
     const sections = this.config.sections;
     const showFooter = !sections || sections.length > 1;
-    const title = formatPlayerInfo(this.store.player, this.config.title);
+    const title = formatTitleInfo(this.config.title, this.config, this.store.player);
 
     //console.log(LOGPFX + "render():\n this.section=%s", JSON.stringify(this.section))
 

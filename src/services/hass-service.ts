@@ -5,7 +5,7 @@ import { PROGRESS_DONE, PROGRESS_STARTED } from '../constants';
 import { MediaPlayer } from '../model/media-player';
 import { HassEntity } from 'home-assistant-js-websocket';
 import { customEvent } from '../utils/utils';
-import { CardConfig }  from '../types/cardconfig'
+//import { CardConfig }  from '../types/cardconfig'
 import { Section } from '../types/section'
 
 export class HassService {
@@ -14,7 +14,7 @@ export class HassService {
   private readonly hass: HomeAssistant;
 
   /** Card configuration data. */
-  private readonly config: CardConfig;
+  //private readonly config: CardConfig;
 
   /** Custom card instance. */
   private readonly card: Element;
@@ -27,13 +27,12 @@ export class HassService {
    * Initializes a new instance of the class.
    * 
    * @param hass Home Assistant instance.
-   * @param config Card configuration data.
    * @param card Custom card instance.
    * @param section Currently selected section of the card.
    */
-  constructor(hass: HomeAssistant, config: CardConfig, card: Element, section: Section) {
+  constructor(hass: HomeAssistant, card: Element, section: Section) {
     this.hass = hass;
-    this.config = config;
+    //this.config = config;
     this.card = card;
     this.section = section;
   }
@@ -63,12 +62,12 @@ export class HassService {
       media_content_id,
       media_content_type,
     });
-    if (this.config.replaceHttpWithHttpsForThumbnails) {
-      mediaPlayerItem.children = mediaPlayerItem.children?.map((child) => ({
-        ...child,
-        thumbnail: child.thumbnail?.replace('http://', 'https://'),
-      }));
-    }
+    //if (this.config.imageUrlsReplaceHttpWithHttps) {
+    //  mediaPlayerItem.children = mediaPlayerItem.children?.map((child) => ({
+    //    ...child,
+    //    thumbnail: child.thumbnail?.replace('http://', 'https://'),
+    //  }));
+    //}
     return mediaPlayerItem;
   }
 

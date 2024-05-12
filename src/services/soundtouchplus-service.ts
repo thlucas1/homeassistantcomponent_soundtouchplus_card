@@ -13,7 +13,7 @@ import { SourceList } from '../types/soundtouchplus/sourcelist';
 import { Section } from '../types/section';
 import { ServiceCallResponse } from '../types/servicecallresponse';
 
-const LOGPFX = "STPC - services/soundtouchplus-service."
+//const LOGPFX = "STPC - services/soundtouchplus-service."
 
 
 /** SoundTouchPlus custom services provider class. */
@@ -54,7 +54,7 @@ export class SoundTouchPlusService {
 
     try {
 
-      console.log("%c" + LOGPFX + "CallService()\n Calling service '%s' (no response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest,null,2));
+      //console.log("%c" + LOGPFX + "CallService()\n Calling service '%s' (no response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest,null,2));
 
       // show the progress indicator on the main card.
       this.card.dispatchEvent(customEvent(PROGRESS_STARTED, { section: this.section }));
@@ -87,7 +87,7 @@ export class SoundTouchPlusService {
 
     try {
 
-      console.log("%c" + LOGPFX + "CallServiceWithResponse()\n Calling service '%s' (with response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest, null, 2));
+      //console.log("%c" + LOGPFX + "CallServiceWithResponse()\n Calling service '%s' (with response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest, null, 2));
 
       // show the progress indicator on the main card.
       this.card.dispatchEvent(customEvent(PROGRESS_STARTED, { section: this.section }));

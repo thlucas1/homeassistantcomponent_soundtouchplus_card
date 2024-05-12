@@ -19,7 +19,7 @@ console.groupCollapsed(
 );
 console.log(
   "Wiki Docs:",
-  "https://github.com/thlucas1/homeassistantcomponent_soundtouchplus/wiki"
+  "https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options"
 );
 console.groupEnd();
 
@@ -31,7 +31,7 @@ window.customCards.push({
   type: 'soundtouchplus-card',
   name: 'SoundTouchPlus Card',
   description: 'Home Assistant UI card that supports features unique to the SoundTouchPlus custom integration',
-  //documentationURL: 'https://github.com/thlucas1/homeassistantcomponent_soundtouchplus/wiki',
+  //documentationURL: 'https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options',
   preview: true,
 });
 

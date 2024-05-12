@@ -51,7 +51,7 @@ export class Store {
     // initialize storage.
     this.hass = hass;
     this.config = config;
-    this.hassService = new HassService(hass, config, card, section);
+    this.hassService = new HassService(hass, card, section);
     this.soundTouchPlusService = new SoundTouchPlusService(hass, card, section);
     this.player = this.getMediaPlayerObject(playerId);
     this.section = section;

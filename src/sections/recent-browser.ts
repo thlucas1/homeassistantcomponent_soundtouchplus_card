@@ -8,7 +8,7 @@ import '../components/media-browser-list';
 import '../components/media-browser-icons';
 import { Store } from '../model/store';
 import { customEvent } from '../utils/utils';
-import { formatPlayerInfo } from '../utils/media-browser-utils';
+import { formatTitleInfo } from '../utils/media-browser-utils';
 import { MediaPlayer } from '../model/media-player';
 import { ITEM_SELECTED } from '../constants';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
@@ -78,7 +78,7 @@ export class RecentBrowser extends LitElement {
 
       // was the media player recent list updated?
       const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_recents_lastupdated || 0);
-      console.log("%c recent-browser render - updateMediaList check info BEFORE update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
+      //console.log("%c recent-browser render - updateMediaList check info BEFORE update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
       if ((playerLastUpdatedOn != this.medialistLastUpdatedOn) && (this.medialistLastUpdatedOn > 0))
         this.updateMediaList(this.player);
 
@@ -86,8 +86,8 @@ export class RecentBrowser extends LitElement {
       //console.log(LOGPFX + "render()\n this.recentList='%s'", JSON.stringify(this.recentList));
 
       // format title and sub-title details.
-      const title = formatPlayerInfo(this.player, this.config.recentBrowserTitle);
-      const subtitle = formatPlayerInfo(this.player, this.config.recentBrowserSubTitle);
+      const title = formatTitleInfo(this.config.recentBrowserTitle, this.config, this.player);
+      const subtitle = formatTitleInfo(this.config.recentBrowserSubTitle, this.config, this.player);
 
       return html`
         ${title ? html`<div class="title">${title}</div>` : html``}
@@ -128,7 +128,7 @@ export class RecentBrowser extends LitElement {
 
     //  // log exceptions.
     //  const exObj = (ex as Error);
-    //  console.log("STPC - Error rendering recent browser html\n Name = '%s'\nMessage = %s", exObj.name, exObj.message);
+    //  //console.log("STPC - Error rendering recent browser html\n Name = '%s'\nMessage = %s", exObj.name, exObj.message);
     //  return html`Could not render card - check console log`;
 
     } finally {
@@ -180,8 +180,8 @@ export class RecentBrowser extends LitElement {
       .then(result => {
         this.recentList = result;
         this.medialistLastUpdatedOn = result.LastUpdatedOn || 0;
-        const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_recents_lastupdated || 0);
-        console.log("%c recent-browser render - updateMediaList check info AFTER update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
+        //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_recents_lastupdated || 0);
+        //console.log("%c recent-browser render - updateMediaList check info AFTER update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
         this.requestUpdate();
       });
   }

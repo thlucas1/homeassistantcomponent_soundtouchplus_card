@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.1 ] - 2024/05/12
+
+  * Removed `console.log` messages that were being used for testing.
+
 ###### [ 1.0.0 ] - 2024/05/10
 
   * Version 1 initial release.

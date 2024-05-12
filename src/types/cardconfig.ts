@@ -17,6 +17,10 @@ export interface CardConfig extends LovelaceCardConfig {
 
   /** 
    * Sections of the card to display. 
+   * Valid values are:
+   * - `presets` Presets section will be displayed.
+   * - `recents` Recently Played section will be displayed.
+   * - `pandorastations` Pandora Stations section will be displayed.
    */
   sections?: Section[];
 
@@ -70,7 +74,7 @@ export interface CardConfig extends LovelaceCardConfig {
   presetBrowserItemsHideTitle?: boolean;
 
   /** 
-   * Hide source titles displayed for Pandora media browser items.
+   * Hide source titles displayed for Preset media browser items.
    * Default is false.
    */
   presetBrowserItemsHideSource?: boolean;
@@ -172,5 +176,5 @@ export interface CardConfig extends LovelaceCardConfig {
 
 
   fallbackArtwork?: string;
-  replaceHttpWithHttpsForThumbnails?: boolean;
+  //imageUrlsReplaceHttpWithHttps?: boolean;
 }

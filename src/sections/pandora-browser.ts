@@ -9,7 +9,7 @@ import '../components/media-browser-icons';
 import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
 import { customEvent } from '../utils/utils';
-import { formatPlayerInfo } from '../utils/media-browser-utils';
+import { formatTitleInfo } from '../utils/media-browser-utils';
 import { ITEM_SELECTED, PANDORA_BROWSER_REFRESH } from '../constants';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { CardConfig } from '../types/cardconfig'
@@ -85,8 +85,8 @@ export class PandoraBrowser extends LitElement {
       //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
 
       // format title and sub-title details.
-      const title = formatPlayerInfo(this.player, this.config.pandoraBrowserTitle, this.medialistLastUpdatedOn);
-      const subtitle = formatPlayerInfo(this.player, this.config.pandoraBrowserSubTitle, this.medialistLastUpdatedOn);
+      const title = formatTitleInfo(this.config.pandoraBrowserTitle, this.config, this.player, this.medialistLastUpdatedOn);
+      const subtitle = formatTitleInfo(this.config.pandoraBrowserSubTitle, this.config, this.player, this.medialistLastUpdatedOn);
 
       return html`
         ${title ? html`<div class="title">${title}</div>` : html``}
@@ -128,7 +128,7 @@ export class PandoraBrowser extends LitElement {
 
     //  // log exceptions.
     //  const exObj = (ex as Error);
-    //  console.log("STPC - Error rendering pandora browser html\n Name = '%s'\nMessage = %s", exObj.name, exObj.message);
+    //  //console.log("STPC - Error rendering pandora browser html\n Name = '%s'\nMessage = %s", exObj.name, exObj.message);
     //  return html`Could not render card - check console log`;
 
     } finally {
@@ -243,7 +243,7 @@ export class PandoraBrowser extends LitElement {
       .then(result => {
         this.mediaList = result;
         this.medialistLastUpdatedOn = result.LastUpdatedOn || 0;
-        console.log("%c pandora-browser render - updateMediaList check info AFTER update:\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(this.medialistLastUpdatedOn));
+        //console.log("%c pandora-browser render - updateMediaList check info AFTER update:\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(this.medialistLastUpdatedOn));
         this.requestUpdate();
       });
   }

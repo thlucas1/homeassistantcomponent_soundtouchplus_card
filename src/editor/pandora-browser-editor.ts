@@ -85,11 +85,11 @@ class PandoraSettingsEditor extends BaseEditor {
         //  // if it has not been set, and fire the config-changed event to indicate
         //  // the configuration has changed.
         //  if ((!this.config.pandoraSourceAccount) && (result.length == 1)) {
-        //    console.log("pandora-browser-editor.getSourceAccountsPandora() 1 account match; defaulting to account: %s", result[0]);
+        //    //console.log("pandora-browser-editor.getSourceAccountsPandora() 1 account match; defaulting to account: %s", result[0]);
         //    this.config.pandoraSourceAccount = result[0];
-        //    console.log("pandora-browser-editor.getSourceAccountsPandora() calling configChanged");
+        //    //console.log("pandora-browser-editor.getSourceAccountsPandora() calling configChanged");
         //    this.configChanged();
-        //    console.log("pandora-browser-editor.getSourceAccountsPandora() dispatching media-browser-refresh event");
+        //    //console.log("pandora-browser-editor.getSourceAccountsPandora() dispatching media-browser-refresh event");
         //    this.dispatchEvent(customEvent(MEDIA_BROWSER_REFRESH, 'PANDORA'));
         //  }
         }

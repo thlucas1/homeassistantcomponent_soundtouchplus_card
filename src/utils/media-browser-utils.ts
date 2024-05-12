@@ -109,6 +109,30 @@ export function itemsWithFallbacks(collection: ContentItemParent[], config: Card
 
 
 /**
+ * Formats a string with various configuration information.  This method finds selected keywords
+ * and replaces them with the equivalent attribute values.
+ * 
+ * @param text Text string to replace keyword values with.
+ * @param config CardConfig configuration data.
+ * @param player MediaPlayer instance that contains information about the player.
+ * @param lastUpdatedOn Epoch date (in seconds) when the last refresh of the media list took place.  Only used for services that don't have a media player `lastupdatedon` attribute.
+ * @returns The text argument with keywords replaced with the equivalent attribute values.
+ */
+export function formatTitleInfo(
+  text: string | undefined,
+  config: CardConfig,
+  player: MediaPlayer,
+  lastUpdatedOn: number | undefined = undefined,
+): string | undefined {
+
+  // call various formatting methods.
+  let result = formatConfigInfo(text, config);
+  result = formatPlayerInfo(result, player, lastUpdatedOn);
+  return result;
+
+}
+
+/**
  * Formats a string with MediaPlayer information.  This method finds selected keywords
  * and replaces them with the equivalent MediaPlayer attribute values.
  * 
@@ -117,14 +141,14 @@ export function itemsWithFallbacks(collection: ContentItemParent[], config: Card
  * - {player.soundtouchplus_presets_lastupdated} : Date and Time the preset list was last refreshed from the device.
  * - {player.soundtouchplus_recents_lastupdated} : Date and Time the recents list was last refreshed from the device.
  * 
- * @param player MediaPlayer instance that contains information about the player.
  * @param text Text string to replace media player keyword values with.
- * @param lastUpdatedOn Epoch date (in seconds) when the last refresh of the media list took place.  Only used for services that don't have a media player `lastupdated` attribute.
+ * @param player MediaPlayer instance that contains information about the player.
+ * @param lastUpdatedOn Epoch date (in seconds) when the last refresh of the media list took place.  Only used for services that don't have a media player `lastupdatedon` attribute.
  * @returns The text argument with media player keywords replaced with media player details.
  */
 export function formatPlayerInfo(
-  player: MediaPlayer,
   text: string | undefined,
+  player: MediaPlayer,
   lastUpdatedOn: number | undefined = undefined,
   ): string | undefined {
 
@@ -136,6 +160,7 @@ export function formatPlayerInfo(
   if (text) {
 
     text = text.replace("{player.name}", player.name);
+    text = text.replace("{player.source}", player.attributes.source || '');
 
     if (text.indexOf("{player.soundtouchplus_presets_lastupdated}") > -1) {
       const localeDT = formatDateEpochSecondsToLocaleString(player.attributes.soundtouchplus_presets_lastupdated)
@@ -162,7 +187,6 @@ export function formatPlayerInfo(
     //media_artist: Big Daddy Weave
     //media_album_name: Love Come To Life
     //media_track: Redeemed
-    //source: Spotify(thlucas2010@gmail.com)
     //shuffle: false
     //repeat: "off"
     //soundtouchplus_nowplaying_isadvertisement: false
@@ -177,6 +201,37 @@ export function formatPlayerInfo(
     //icon: mdi: speaker
     //friendly_name: Bose - ST10 - 1
     //supported_features: 1040319
+
+  }
+
+  return text
+}
+
+
+/**
+ * Formats a string with CardConfig information.  This method finds selected keywords
+ * and replaces them with the equivalent CardConfig attribute values.
+ * 
+ * The following replacement keywords are supported:
+ * - {config.pandoraUserAccount} : player name (e.g. "Livingroom Soundbar").
+ * 
+ * @param text Text string to replace configuration keyword values with.
+ * @param config CardConfig configuration data.
+ * @returns The text argument with configuration keywords replaced with configuration details.
+ */
+export function formatConfigInfo(
+  text: string | undefined,
+  config: CardConfig,
+): string | undefined {
+
+  // if config instance not set then don't bother.
+  if (!config)
+    return text
+
+  // replace keyword parameters with configuration equivalents.
+  if (text) {
+
+    text = text.replace("{config.pandorasourceaccount}", config.pandoraSourceAccount || '');
 
   }
 
