@@ -13,8 +13,6 @@ import { SourceList } from '../types/soundtouchplus/sourcelist';
 import { Section } from '../types/section';
 import { ServiceCallResponse } from '../types/servicecallresponse';
 
-//const LOGPFX = "STPC - services/soundtouchplus-service."
-
 
 /** SoundTouchPlus custom services provider class. */
 export class SoundTouchPlusService {
@@ -54,7 +52,7 @@ export class SoundTouchPlusService {
 
     try {
 
-      //console.log("%c" + LOGPFX + "CallService()\n Calling service '%s' (no response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest,null,2));
+      //console.log("%csoundtouchplus-service.CallService()\n Calling service '%s' (no response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest,null,2));
 
       // show the progress indicator on the main card.
       this.card.dispatchEvent(customEvent(PROGRESS_STARTED, { section: this.section }));
@@ -87,7 +85,7 @@ export class SoundTouchPlusService {
 
     try {
 
-      //console.log("%c" + LOGPFX + "CallServiceWithResponse()\n Calling service '%s' (with response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest, null, 2));
+      //console.log("%csoundtouchplus-service.CallServiceWithResponse()\n Calling service '%s' (with response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest, null, 2));
 
       // show the progress indicator on the main card.
       this.card.dispatchEvent(customEvent(PROGRESS_STARTED, { section: this.section }));
@@ -107,7 +105,7 @@ export class SoundTouchPlusService {
         }]
       });
 
-      //console.log(LOGPFX + "CallServiceWithResponse()\n Service Response:\n%s", JSON.stringify(serviceResponse.response));
+      //console.log("soundtouchplus-service.CallServiceWithResponse()\n Service Response:\n%s", JSON.stringify(serviceResponse.response));
 
       // return the service response data or an empty dictionary if no response data was generated.
       return JSON.stringify(serviceResponse.response)
@@ -275,6 +273,35 @@ export class SoundTouchPlusService {
       const serviceRequest: ServiceCallRequest = {
         domain: DOMAIN_SOUNDTOUCHPLUS,
         service: 'recent_list',
+        serviceData: {
+          entity_id: entityId,
+        }
+      };
+
+      // call the service, and convert the response to a type.
+      const response = await this.CallServiceWithResponse(serviceRequest);
+      const responseObj = JSON.parse(response) as RecentList
+      return responseObj;
+
+    } finally {
+    }
+  }
+
+
+  /**
+   * Retrieves the cached list of recents defined to the file system.
+   * 
+   * @param entityId Entity ID of the SoundTouchPlus device that will process the request (e.g. "media_player.soundtouch_livingroom").
+   * @returns A RecentList object.
+  */
+  public async RecentListCache(entityId: string): Promise<RecentList> {
+
+    try {
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'recent_list_cache',
         serviceData: {
           entity_id: entityId,
         }

@@ -17,9 +17,15 @@ import { PROGRESS_DONE, PROGRESS_STARTED, SECTION_SELECTED } from './constants';
 import { formatTitleInfo, removeSpecialChars } from './utils/media-browser-utils';
 import { isNumber } from './utils/utils';
 
-//const LOGPFX = "STPC - card."
 
-const { PRESETS, RECENTS, PANDORA_STATIONS, PLAYER } = Section;
+const {
+  PANDORA_STATIONS,
+  PLAYER,
+  PRESETS,
+  RECENTS,
+  SOURCES
+} = Section;
+
 const HEADER_HEIGHT = 2;
 const FOOTER_HEIGHT = 4;
 const CARD_DEFAULT_HEIGHT = '35.15rem';
@@ -27,8 +33,8 @@ const CARD_DEFAULT_WIDTH = '35.15rem';
 const CARD_EDIT_PREVIEW_HEIGHT = '42rem';
 const CARD_EDIT_PREVIEW_WIDTH = '100%';
 
-const PARENTELEMENT_TAGNAME_HUI_CARD_OPTIONS = 'HUI-CARD-OPTIONS';
-const PARENTELEMENT_TAGNAME_HUI_CARD_PREVIEW = 'HUI-CARD-PREVIEW';
+//const PARENTELEMENT_TAGNAME_HUI_CARD_OPTIONS = 'HUI-CARD-OPTIONS';
+//const PARENTELEMENT_TAGNAME_HUI_CARD_PREVIEW = 'HUI-CARD-PREVIEW';
 
 const EDIT_TAB_HEIGHT = '48px';
 const EDIT_BOTTOM_TOOLBAR_HEIGHT = '59px';
@@ -84,7 +90,7 @@ export class Card extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    //console.log(LOGPFX + "render()\n Rendering card");
+    //console.log("card.render()\n Rendering card");
 
     // just in case hass property has not been set yet.
     if (!this.hass)
@@ -102,7 +108,7 @@ export class Card extends LitElement {
     const showFooter = !sections || sections.length > 1;
     const title = formatTitleInfo(this.config.title, this.config, this.store.player);
 
-    //console.log(LOGPFX + "render():\n this.section=%s", JSON.stringify(this.section))
+    //console.log("card.render():\n this.section=%s", JSON.stringify(this.section))
 
     // render html for the card.
     return html`
@@ -111,14 +117,15 @@ export class Card extends LitElement {
           <ha-circular-progress indeterminate></ha-circular-progress>
         </div>
         ${title ? html`<div class="stpc-card-header">${title}</div>` : html``}
-        <div class="stpc-card-content">
+        <div class="stpc-card-content-section">
           ${
               this.playerId
               ? choose(this.section, [
-                [PRESETS, () => html` <stpc-preset-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-presets-browser>`],
-                [RECENTS, () => html` <stpc-recent-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-recents-browser>`],
                 [PANDORA_STATIONS, () => html` <stpc-pandora-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-pandora-browser>`],
                 [PLAYER, () => html` <stpc-player .store=${this.store}></stpc-player>`],
+                [PRESETS, () => html` <stpc-preset-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-presets-browser>`],
+                [RECENTS, () => html` <stpc-recent-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-recents-browser>`],
+                [SOURCES, () => html` <stpc-source-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-source-browser>`],
               ])
               : html`<div class="stpc-not-configured">Player not configured</div>`
           }
@@ -133,6 +140,116 @@ export class Card extends LitElement {
             </stpc-footer>`,
         )}
       </ha-card>
+    `;
+  }
+
+
+  /**
+   * Style definitions used by this card.
+   */
+  static get styles() {
+    return css`
+      :host {
+        display: inline-block;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      * { 
+        margin: 0; 
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      soundtouchplus-card {
+        display: block;
+        height: 100% !important;
+        width: 100% !important;
+      }
+
+      hui-card-preview {
+        min-height: 10rem;
+        height: 40rem;
+        min-width: 10rem;
+        width: 40rem;
+      }
+
+      .stpc-card {
+        --stpc-card-header-height: ${HEADER_HEIGHT}rem;
+        --stpc-card-footer-height: ${FOOTER_HEIGHT}rem;
+        --stpc-card-edit-tab-height: 0px;
+        --stpc-card-edit-bottom-toolbar-height: 0px;
+        box-sizing: border-box;
+        color: var(--secondary-text-color);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 20rem;
+        height: calc(100vh - var(--stpc-card-footer-height) - var(--stpc-card-edit-tab-height) - var(--stpc-card-edit-bottom-toolbar-height));
+        min-width: 20rem;
+        width: calc(100vw - var(--mdc-drawer-width));
+      }
+
+      .stpc-card-header {
+        margin: 0.2rem;
+        display: flex;
+        align-self: flex-start;
+        align-items: center;
+        justify-content: space-around;
+        width: 100%;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: var(--secondary-text-color);
+      }
+
+      .stpc-card-content-section {
+        margin: 0.0rem;
+        flex-grow: 1;
+        flex-shrink: 0;
+        height: 1vh;
+        overflow: hidden;
+      }
+
+      .stpc-card-footer {
+        margin: 0.2rem;
+        display: flex;
+        align-self: flex-start;
+        align-items: center;
+        justify-content: space-around;
+        width: 100%;
+        --mdc-icon-size: 1.75rem;
+        --mdc-icon-button-size: 2.5rem;
+        --mdc-ripple-top: 0px;
+        --mdc-ripple-left: 0px;
+        --mdc-ripple-fg-size: 10px;
+      }
+
+      .stpc-loader {
+        position: absolute;
+        z-index: 1000;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        --mdc-theme-primary: var(--dark-primary-color);
+      }
+
+      .stpc-not-configured {
+        text-align: center;
+        margin-top: 50%;
+      }
+
+      ha-icon-button {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      ha-circular-progress {
+        --md-sys-color-primary: var(--dark-primary-color);
+      }
     `;
   }
 
@@ -211,7 +328,7 @@ export class Card extends LitElement {
     this.cancelLoader = true;
     const duration = Date.now() - this.loaderTimestamp;
 
-    //console.log(LOGPFX + "OnProgressDone()\nHiding progress indicator - duration=%s, this.showLoader=%s", JSON.stringify(duration), JSON.stringify(this.showLoader));
+    //console.log("card.OnProgressDone()\nHiding progress indicator - duration=%s, this.showLoader=%s", JSON.stringify(duration), JSON.stringify(this.showLoader));
     if (this.showLoader) {
       if (duration < 1000) {
         setTimeout(() => (this.showLoader = false), 1000 - duration);
@@ -264,6 +381,7 @@ export class Card extends LitElement {
   protected OnSectionSelected = (args: Event) => {
 
     const sectionToSelect = (args as CustomEvent).detail as Section;
+    //console.log("card.OnSectionSelected() - sectionToSelect:\n%s", sectionToSelect);
 
     // is section activated?  if so, then select it.
     if (this.config.sections?.includes(sectionToSelect)) {
@@ -286,10 +404,13 @@ export class Card extends LitElement {
     //console.log("OnShowSection\n this.config.sections=%s\n event section=%s\n this.section=%s", JSON.stringify(this.config.sections), JSON.stringify(args.detail), JSON.stringify(this.section));
 
     const section = args.detail;
+    //console.log("card.OnShowSection()\n this.section=%s", JSON.stringify(section));
 
     if (!this.config.sections || this.config.sections.indexOf(section) > -1) {
       this.section = section;
-      //console.log("card.OnShowSection()\n changed section - this.section=%s", JSON.stringify(this.section));
+      //this.requestUpdate();
+    } else {
+      console.log("STPC - card.OnShowSection()\n section is not active: %s", JSON.stringify(section));
     }
   }
 
@@ -348,12 +469,19 @@ export class Card extends LitElement {
     // remove any configuration properties that do not have a value set.
     for (const [key, value] of Object.entries(newConfig)) {
       if (Array.isArray(value) && value.length === 0) {
-        //console.log(LOGPFX + "setConfig()\n Removing empty value config key '%s'", key)
+        //console.log("card.setConfig()\n Removing empty value config key '%s'", key)
         delete newConfig[key];
       }
     }
 
     // default configration values if not set.
+    newConfig.playerHeaderHide = newConfig.playerHeaderHide || false;
+    newConfig.playerHeaderHideProgressBar = newConfig.playerHeaderHideProgressBar || false;
+    newConfig.playerControlsHidePlayPause = newConfig.playerControlsHidePlayPause || false;
+    newConfig.playerControlsHideRepeat = newConfig.playerControlsHideRepeat || false;
+    newConfig.playerControlsHideShuffle = newConfig.playerControlsHideShuffle || false;
+    newConfig.playerControlsHideTrackNext = newConfig.playerControlsHideTrackNext || false;
+    newConfig.playerControlsHideTrackPrev = newConfig.playerControlsHideTrackPrev || false;
     newConfig.presetBrowserItemsPerRow = newConfig.presetBrowserItemsPerRow || 3;
     newConfig.presetBrowserItemsHideSource = newConfig.presetBrowserItemsHideSource || false;
     newConfig.presetBrowserItemsHideTitle = newConfig.presetBrowserItemsHideTitle || false;
@@ -362,6 +490,7 @@ export class Card extends LitElement {
     newConfig.recentBrowserItemsHideTitle = newConfig.recentBrowserItemsHideTitle || false;
     newConfig.pandoraBrowserItemsPerRow = newConfig.pandoraBrowserItemsPerRow || 9;
     newConfig.pandoraBrowserItemsHideTitle = newConfig.pandoraBrowserItemsHideTitle || false;
+    newConfig.sourceBrowserItemsPerRow = newConfig.sourceBrowserItemsPerRow || 3;
 
     // if custom imageUrl's are supplied, then remove special characters from each title
     // to speed up comparison when imageUrl's are loaded later on.  we will also
@@ -450,24 +579,30 @@ export class Card extends LitElement {
       sections: [Section.PRESETS, Section.RECENTS],
       entity: "",
       title: 'SoundTouch Card "{player.name}"',
+      playerHeaderTitle: '{player.name}',
+      playerHeaderArtistTrack: '{player.media_artist} - {player.media_title}',
+      playerHeaderAlbum: '{player.media_album_name}',
+      playerHeaderNoMediaPlayingText: 'no media is playing',
+      sourceBrowserTitle: '"{player.name}" Sources ({medialist.itemcount} items)',
+      sourceBrowserSubTitle: 'click an item to select the source',
+      sourceBrowserItemsPerRow: 1,
       presetBrowserTitle: '"{player.name}" Presets',
-      presetBrowserSubTitle: "last updated on {player.soundtouchplus_presets_lastupdated}",
+      presetBrowserSubTitle: "last updated on {player.soundtouchplus_presets_lastupdated} ({medialist.itemcount} items)",
       presetBrowserItemsPerRow: 3,
       presetBrowserItemsHideTitle: false,
       presetBrowserItemsHideSource: false,
       recentBrowserTitle: '"{player.name}" Recently Played',
-      recentBrowserSubTitle: "last updated on {player.soundtouchplus_recents_lastupdated}",
-      recentBrowserItemsPerRow: 10,
+      recentBrowserSubTitle: "last updated on {player.soundtouchplus_recents_cache_lastupdated} ({medialist.itemcount} items)",
+      recentBrowserItemsPerRow: 4,
       recentBrowserItemsHideTitle: false,
       recentBrowserItemsHideSource: false,
       pandoraBrowserTitle: '"{player.name}" My Pandora Stations',
-      pandoraBrowserSubTitle: "refreshed on {lastupdatedon}",
-      pandoraBrowserItemsPerRow: 9,
+      pandoraBrowserSubTitle: "refreshed on {lastupdatedon} ({medialist.itemcount} items)",
+      pandoraBrowserItemsPerRow: 4,
       pandoraBrowserItemsHideTitle: false,
       customImageUrls: {
         "default": "/local/images/soundtouchplus_card_customimages/default.png",
         "empty preset": "/local/images/soundtouchplus_card_customimages/empty_preset.png",
-        "My Private Playlist": "/local/images/soundtouchplus_card_customimages/logo_spotify.png",
         "Daily Mix 1": "https://brands.home-assistant.io/spotifyplus/icon.png",
       }
     }
@@ -490,7 +625,7 @@ export class Card extends LitElement {
 
     // are we previewing the card in the card editor?
     // if so, then we will ignore the configuration dimensions and use constants.
-    if (this.parentElement?.tagName == PARENTELEMENT_TAGNAME_HUI_CARD_PREVIEW) {
+    if (this.store.isInCardEditPreview()) {
       //console.log("card.styleCard() - card is in edit preview");
       cardHeight = CARD_EDIT_PREVIEW_HEIGHT;
       cardWidth = CARD_EDIT_PREVIEW_WIDTH;
@@ -505,7 +640,7 @@ export class Card extends LitElement {
     // set card editor options.
     // we have to account for various editor toolbars in the height calculations when using 'fill' mode.
     // we do not have to worry about width calculations, as the width is the same with or without edit mode.
-    if (this.parentElement?.tagName == PARENTELEMENT_TAGNAME_HUI_CARD_OPTIONS) {
+    if (this.store.isInDashboardEditor()) {
       //console.log("card.styleCard() width - dashboard is in edit mode");
       editTabHeight = EDIT_TAB_HEIGHT;
       editBottomToolbarHeight = EDIT_BOTTOM_TOOLBAR_HEIGHT;
@@ -549,103 +684,5 @@ export class Card extends LitElement {
       height: `${cardHeight ? cardHeight : undefined}`,
       width: `${cardWidth ? cardWidth : undefined}`,
     });
-  }
-
-
-  /**
-   * Style definitions used by this card.
-   */
-  static get styles() {
-    return css`
-      :host {
-        display: inline-block;
-        width: 100% !important;
-        height: 100% !important;
-      }
-
-      * { 
-        margin: 0; 
-      }
-
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-      }
-
-      soundtouchplus-card {
-        display: block;
-        height: 100% !important;
-        width: 100% !important;
-      }
-
-      hui-card-preview {
-        min-height: 10rem;
-        height: 40rem;
-        min-width: 10rem;
-        width: 40rem;
-      }
-
-      .stpc-card {
-        --stpc-card-header-height: ${HEADER_HEIGHT}rem;
-        --stpc-card-footer-height: ${FOOTER_HEIGHT}rem;
-        --stpc-card-edit-tab-height: 0px;
-        --stpc-card-edit-bottom-toolbar-height: 0px;
-        box-sizing: border-box;
-        color: var(--secondary-text-color);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        min-height: 20rem;
-        height: calc(100vh - var(--stpc-card-footer-height) - var(--stpc-card-edit-tab-height) - var(--stpc-card-edit-bottom-toolbar-height));
-        min-width: 20rem;
-        width: calc(100vw - var(--mdc-drawer-width));
-      }
-
-      .stpc-card-header {
-        margin: 0.2rem 0;
-        text-align: center;
-        align-content: center;
-        font-weight: bold;
-        font-size: 1.2rem;
-        color: var(--secondary-text-color);
-        height: var(--stpc-card-header-height);
-      }
-
-      .stpc-card-content {
-        overflow-y: auto;
-        flex: 1;
-      }
-
-      .stpc-card-footer {
-        padding-top: 0.3rem;
-        padding-left: 0.3rem;
-        padding-right: 0.3rem;
-        height: var(--stpc-card-footer-height);
-      }
-
-      .stpc-loader {
-        position: absolute;
-        z-index: 1000;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        --mdc-theme-primary: var(--accent-color);
-      }
-
-      .stpc-not-configured {
-        text-align: center;
-        margin-top: 50%;
-      }
-
-      ha-icon-button {
-        padding-left: 1rem;
-        padding-right: 1rem;
-      }
-
-      ha-circular-progress {
-        --md-sys-color-primary: var(--accent-color);
-      }
-    `;
   }
 }

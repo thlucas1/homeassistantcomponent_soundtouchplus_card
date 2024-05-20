@@ -32,8 +32,11 @@ export class PresetBrowser extends LitElement {
   /** MediaPlayer instance created from the configuration entity id. */
   private player!: MediaPlayer;
 
+  /** Indicates if the media list is currently being updated. */
+  private isUpdateInProgress!: boolean;
+
   /** Date and time (in epoch format) of when the media list was last updated. */
-  private medialistLastUpdatedOn!: number;
+  private mediaListLastUpdatedOn!: number;
 
   /** SoundTouchPlus device preset list. */
   private mediaList!: PresetList;
@@ -51,7 +54,8 @@ export class PresetBrowser extends LitElement {
     super();
 
     // force refresh first time.
-    this.medialistLastUpdatedOn = 1;  
+    this.isUpdateInProgress = false;
+    this.mediaListLastUpdatedOn = -1;  
   }
 
 
@@ -65,86 +69,144 @@ export class PresetBrowser extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    try {
+    //console.log(LOGPFX + "render()\n Rendering preset browser html");
 
-      //console.log(LOGPFX + "render()\n Rendering preset browser html");
+    // set common references from application common storage area.
+    this.hass = this.store.hass
+    this.config = this.store.config;
+    this.player = this.store.player;
+    this.soundTouchPlusService = this.store.soundTouchPlusService;
 
-      // set common references from application common storage area.
-      this.hass = this.store.hass
-      this.config = this.store.config;
-      this.player = this.store.player;
-      this.soundTouchPlusService = this.store.soundTouchPlusService;
+    // if entity value not set then render an error card.
+    if (!this.player)
+      throw new Error("SoundTouchPlus media player entity id not configured");
 
-      // if entity value not set then render an error card.
-      if (!this.player)
-        throw new Error("SoundTouchPlus media player entity id not configured");
-
-      // was the media player preset list updated?
-      const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
-      //console.log("%c preset-browser render - updateMediaList check info BEFORE update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
-      if ((playerLastUpdatedOn != this.medialistLastUpdatedOn) && (this.medialistLastUpdatedOn > 0))
+    // was the media player preset list updated?
+    const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
+    //console.log("%c preset-browser - updateMediaList info BEFORE update:\n player id=%s\n %s=player.stp_presets_lastupdated\n %s=playerLastUpdatedOn\n %s=mediaListLastUpdatedOn",
+    //  "color: green;",
+    //  this.player.id,
+    //  this.player.attributes.soundtouchplus_presets_lastupdated,
+    //  playerLastUpdatedOn,
+    //  this.mediaListLastUpdatedOn);
+    if ((this.mediaListLastUpdatedOn == -1) || (playerLastUpdatedOn > this.mediaListLastUpdatedOn)) {
+      if (!this.isUpdateInProgress) {
+        this.isUpdateInProgress = true;
         this.updateMediaList(this.player);
-      
-      //console.log(LOGPFX + "render()\n PresetList.LastUpdatedOn=%s", this.mediaList ? this.mediaList.LastUpdatedOn : "unknown");
-      //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
-
-      // format title and sub-title details.
-      const title = formatTitleInfo(this.config.presetBrowserTitle, this.config, this.player);
-      const subtitle = formatTitleInfo(this.config.presetBrowserSubTitle, this.config, this.player);
-
-      return html`
-        ${title ? html`<div class="title">${title}</div>` : html``}
-        ${subtitle ? html`<div class="subtitle">${subtitle}</div>` : html``}
-        ${
-        (() => {
-          if (!this.mediaList) {
-            //console.log("%c render() !this.mediaList.Presets", "color: green;");
-            return (
-              html`<div class="no-items">No presets found</div>`
-            )
-          } else if (this.config.presetBrowserItemsPerRow === 1) {
-            //console.log("%c render() this.config.presetBrowserItemsPerRow === 1", "color: green;");
-            return (
-              html`<stpc-media-browser-list
-                  .items=${this.mediaList?.Presets}
-                  .store=${this.store}
-                  @item-selected=${this.OnItemSelected}
-                  @item-selected-with-hold=${this.OnItemSelectedWithHold}
-                  ></stpc-media-browser-list>
-                  `
-            )
-          } else {
-            //console.log("%c render() this.config.presetBrowserItemsPerRow > 1", "color: green;");
-            return (
-              html`<stpc-media-browser-icons
-                  .items=${this.mediaList?.Presets}
-                  .store=${this.store}
-                  @item-selected=${this.OnItemSelected}
-                  @item-selected-with-hold=${this.OnItemSelectedWithHold}
-                  ></stpc-media-browser-icons>
-                  `
-            )
-          }
-        })()  
-        }  
-      `;
-
-    //} catch (ex) {
-
-    //  // log exceptions.
-    //  const exObj = (ex as Error);
-    //  //console.log("STPC - Error rendering preset browser html\n Name = '%s'\nMessage = %s", exObj.name, exObj.message);
-    //  return html`Could not render card - check console log`;
-
-    } finally {
+      } else {
+        console.log("%c preset-browser - update already in progress!", "color: orange;");
+      }
     }
+      
+    //console.log(LOGPFX + "render()\n PresetList.LastUpdatedOn=%s", this.mediaList ? this.mediaList.LastUpdatedOn : "unknown");
+    //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
+
+    // format title and sub-title details.
+    const title = formatTitleInfo(this.config.presetBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Presets);
+    const subtitle = formatTitleInfo(this.config.presetBrowserSubTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Presets);
+
+    // check for conditions that prevent the content from showing.
+    let alertText = undefined
+    if (!this.mediaList) {
+      alertText = 'No SoundTouch Presets found';
+    }
+
+    // render html.
+    return html`
+      <div class="preset-browser-section">
+        ${title ? html`<div class="preset-browser-title">${title}</div>` : html``}
+        ${subtitle ? html`<div class="preset-browser-subtitle">${subtitle}</div>` : html``}
+        <div class="preset-browser-content">
+          ${
+          (() => {
+            if (alertText) {
+              return (
+                html`<div class="no-items">${alertText}</div>`
+              )
+            } else if (this.config.presetBrowserItemsPerRow === 1) {
+              return (
+                html`<stpc-media-browser-list
+                    .items=${this.mediaList?.Presets}
+                    .store=${this.store}
+                    @item-selected=${this.OnItemSelected}
+                    @item-selected-with-hold=${this.OnItemSelectedWithHold}
+                    ></stpc-media-browser-list>
+                    `
+              )
+            } else {
+              return (
+                html`<stpc-media-browser-icons
+                    .items=${this.mediaList?.Presets}
+                    .store=${this.store}
+                    @item-selected=${this.OnItemSelected}
+                    @item-selected-with-hold=${this.OnItemSelectedWithHold}
+                    ></stpc-media-browser-icons>
+                    `
+              )
+            }
+          })()  
+          }  
+        </div>
+      </div>
+    `;
+  }
+
+
+  /** 
+   * style definitions used by this component.
+   * */
+  static get styles() {
+    return css`
+
+      .preset-browser-section {
+        color: var(--secondary-text-color);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .preset-browser-title {
+        margin-top: 0.5rem;
+        align-items: center;
+        display: flex;
+        flex-shrink: 0;
+        flex-grow: 0;
+        justify-content: center;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.0rem;
+        color: var(--secondary-text-color);
+      }
+
+      .preset-browser-subtitle {
+        margin: 0.1rem 0;
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        text-align: center;
+        font-weight: normal;
+        font-size: 0.85rem;
+        color: var(--secondary-text-color);
+      }
+
+      .preset-browser-content {
+        margin: 0.5rem;
+        flex: 3;
+        max-height: 100vh;
+        overflow-y: auto;
+      }
+
+      .no-items {
+        text-align: center;
+        margin-top: 2rem;
+      }
+    `;
   }
 
 
   /**
    * Handles the `item-selected` event fired when a media browser item is clicked.
-   * 
-   * This will select the media browser item for playing.
    * 
    * @param args Event arguments that contain the media item that was clicked on.
    */
@@ -204,58 +266,25 @@ export class PresetBrowser extends LitElement {
    */
   private updateMediaList(player: MediaPlayer): void {
 
-    // update our media list; we will force the `medialistLastUpdatedOn` attribute to
+    // update our media list; we will force the `mediaListLastUpdatedOn` attribute to
     // match the device `soundtouchplus_presets_lastupdated` attribute so that the
     // refresh is only triggered once on the attribute change (or initial request).
-    this.medialistLastUpdatedOn = player.attributes.soundtouchplus_presets_lastupdated || 0;
+    this.mediaListLastUpdatedOn = player.attributes.soundtouchplus_presets_lastupdated || (Date.now() / 1000);
 
     // call the service to retrieve the media list.
     this.soundTouchPlusService.PresetList(player.id, true)
       .then(result => {
         this.mediaList = result;
-        this.medialistLastUpdatedOn = result.LastUpdatedOn || 0;
+        this.mediaListLastUpdatedOn = result.LastUpdatedOn || (Date.now() / 1000);
+        this.isUpdateInProgress = false;
         //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
-        //console.log("%c preset-browser render - updateMediaList check info AFTER update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
+        //console.log("%c preset-browser - updateMediaList info AFTER update:\n player id=%s\n %s=player.stp_presets_lastupdated\n %s=playerLastUpdatedOn\n %s=mediaListLastUpdatedOn",
+        //  "color: green;",
+        //  this.player.id,
+        //  this.player.attributes.soundtouchplus_presets_lastupdated,
+        //  playerLastUpdatedOn,
+        //  this.mediaListLastUpdatedOn);
         this.requestUpdate();
       });
-  }
-
-
-  /** 
-   * style definitions used by this section. 
-   * */
-  static get styles() {
-    return css`
-      //:host {
-      //  display: flex;
-      //  justify-content: space-between;
-      //  padding: 0.5rem;
-      //}
-
-      .title {
-        margin: 0.1rem 0;
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.0rem;
-        color: var(--secondary-text-color);
-      }
-
-      .subtitle {
-        margin: 0.1rem 0;
-        text-align: center;
-        font-weight: normal;
-        font-size: 0.85rem;
-        color: var(--secondary-text-color);
-      }
-
-      *[hide] {
-        display: none;
-      }
-
-      .no-items {
-        text-align: center;
-        margin-top: 2rem;
-      }
-    `;
   }
 }

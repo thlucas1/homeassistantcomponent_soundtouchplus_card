@@ -81,17 +81,6 @@ class PandoraSettingsEditor extends BaseEditor {
           const result = this.getSourceAccountsList('Pandora ');
           CONFIG_SETTINGS_SCHEMA[0].selector.select.options = result;
 
-        //  // if only 1 source account matched, then set the configuration value
-        //  // if it has not been set, and fire the config-changed event to indicate
-        //  // the configuration has changed.
-        //  if ((!this.config.pandoraSourceAccount) && (result.length == 1)) {
-        //    //console.log("pandora-browser-editor.getSourceAccountsPandora() 1 account match; defaulting to account: %s", result[0]);
-        //    this.config.pandoraSourceAccount = result[0];
-        //    //console.log("pandora-browser-editor.getSourceAccountsPandora() calling configChanged");
-        //    this.configChanged();
-        //    //console.log("pandora-browser-editor.getSourceAccountsPandora() dispatching media-browser-refresh event");
-        //    this.dispatchEvent(customEvent(MEDIA_BROWSER_REFRESH, 'PANDORA'));
-        //  }
         }
       }
     }
@@ -103,7 +92,7 @@ class PandoraSettingsEditor extends BaseEditor {
       </div>
       <stpc-editor-form
         .schema=${CONFIG_SETTINGS_SCHEMA}
-        .section=${Section.RECENTS}
+        .section=${Section.PANDORA_STATIONS}
         .store=${this.store}
         .config=${this.config}
         .hass=${this.hass}

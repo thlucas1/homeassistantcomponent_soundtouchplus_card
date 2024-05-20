@@ -5,6 +5,7 @@ import { css, html } from 'lit';
 import { MediaPlayer } from '../model/media-player';
 import { CustomImageUrls } from '../types/customimageurls'
 import { CardConfig } from '../types/cardconfig'
+import { Section } from '../types/section';
 import { ContentItem, ContentItemParent } from '../types/soundtouchplus/contentitem';
 import { formatDateEpochSecondsToLocaleString, formatStringProperCase } from './utils';
 
@@ -41,6 +42,8 @@ function hasItemsWithImage(items: ContentItemParent[]) {
  */
 export function getCustomImageUrl(collection: CustomImageUrls | undefined, title: string) {
 
+  //console.log("getCustomImageUrl - title=%s", title);
+
   // search collection for matching title and return the imageUrl.
   // remove any special characters from the title before comparing.
   // note that we already removed special characters from the collection 
@@ -48,7 +51,7 @@ export function getCustomImageUrl(collection: CustomImageUrls | undefined, title
   for (const itemTitle in collection) {
     //console.log("STPC - getCustomImageUrl():\n%s = itemTitle\n%s = title", JSON.stringify(itemTitle), JSON.stringify(removeSpecialChars(title)));
     if (itemTitle === removeSpecialChars(title)) {
-      //console.log("STPC - getCustomImageUrl():\ntitle '%s' found in customimageurls\nimageurl = %s", JSON.stringify(itemTitle), JSON.stringify(collection[itemTitle]));
+      //console.log("getCustomImageUrl():\ntitle '%s' found in customimageurls\nimageurl = %s", JSON.stringify(itemTitle), JSON.stringify(collection[itemTitle]));
       return collection[itemTitle];
     }
   }
@@ -59,7 +62,8 @@ export function getCustomImageUrl(collection: CustomImageUrls | undefined, title
 
 
 /**
- * Gets the image url that will be displayed in the media browser.  
+ * Gets the image url that will be displayed in the media browser for items that contain a 
+ * ContentItem attribute.
  * 
  * The image to display is resolved in the following sequence:
  * - configuration `customImageUrls` `title` for matching contentItem name (if one exists).
@@ -96,10 +100,23 @@ export function getContentItemImageUrl(contentItem: ContentItem | undefined, con
 }
 
 
+/**
+ * Converts an mdiIcon path to a url that can be used as a CSS `background-image url()` value.
+ * 
+ * @param mdi_icon mdi icon to convert.
+ */
+export function getMdiIconImageUrl(mdi_icon: string): string {
+
+  const mdiImageUrl = '\'data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%232196F3" d="' + mdi_icon + '"></path></svg>\'';
+  return mdiImageUrl
+}
+
+
 export function itemsWithFallbacks(collection: ContentItemParent[], config: CardConfig) {
   const itemsWithImage = hasItemsWithImage(collection);
   return collection.map((item) => {
     const thumbnail = getContentItemImageUrl(item.ContentItem, config, itemsWithImage);
+    //console.log("getContentItemImageUrl result:\nname=%s\nthumbnail:%s", item.ContentItem?.Name, thumbnail);
     return {
       ...item,
       thumbnail,
@@ -115,78 +132,117 @@ export function itemsWithFallbacks(collection: ContentItemParent[], config: Card
  * @param text Text string to replace keyword values with.
  * @param config CardConfig configuration data.
  * @param player MediaPlayer instance that contains information about the player.
- * @param lastUpdatedOn Epoch date (in seconds) when the last refresh of the media list took place.  Only used for services that don't have a media player `lastupdatedon` attribute.
+ * @param mediaListLastUpdatedOn Epoch date(in seconds) when the last refresh of the media list took place.  Only used for services that don't have a media player `lastupdatedon` attribute.
+ * @param mediaList A media list of content items.
  * @returns The text argument with keywords replaced with the equivalent attribute values.
  */
 export function formatTitleInfo(
   text: string | undefined,
   config: CardConfig,
   player: MediaPlayer,
-  lastUpdatedOn: number | undefined = undefined,
+  mediaListLastUpdatedOn: number | undefined = undefined,
+  mediaList: Array<any> | undefined = undefined,
 ): string | undefined {
 
   // call various formatting methods.
   let result = formatConfigInfo(text, config);
-  result = formatPlayerInfo(result, player, lastUpdatedOn);
+  result = formatPlayerInfo(result, player);
+  result = formatMediaListInfo(result, mediaListLastUpdatedOn, mediaList);
   return result;
-
 }
+
+
+/**
+ * Formats a string with MediaList information.  This method finds selected keywords
+ * and replaces them with the equivalent MediaList attribute values.
+ * 
+ * @param text Text string to replace keyword values with.
+ * @param mediaListLastUpdatedOn Epoch date(in seconds) when the last refresh of the media list took place.  Only used for services that don't have a media player `lastupdatedon` attribute.
+ * @param mediaList A media list of content items.
+ * @returns The text argument with keywords replaced with media list details.
+ */
+export function formatMediaListInfo(
+  text: string | undefined,
+  mediaListLastUpdatedOn: number | undefined = undefined,
+  mediaList: Array<any> | undefined = undefined,
+): string | undefined {
+
+  // if text not set then don't bother.
+  if (!text)
+    return text;
+
+  // if media list not set, then use an empty array to resolve to 0 items.
+  if (text.indexOf("{medialist.itemcount}") > -1) {
+    const count = (mediaList || []).length.toString();
+    text = text.replace("{medialist.itemcount}", count);
+  }
+
+  if (text.indexOf("{medialist.lastupdatedon}") > -1) {
+    const localeDT = formatDateEpochSecondsToLocaleString(mediaListLastUpdatedOn || 0);
+    text = text.replace("{medialist.lastupdatedon}", localeDT || '');
+  }
+
+  return text;
+}
+
 
 /**
  * Formats a string with MediaPlayer information.  This method finds selected keywords
  * and replaces them with the equivalent MediaPlayer attribute values.
  * 
- * The following replacement keywords are supported:
- * - {player.name} : player name (e.g. "Livingroom Soundbar").
- * - {player.soundtouchplus_presets_lastupdated} : Date and Time the preset list was last refreshed from the device.
- * - {player.soundtouchplus_recents_lastupdated} : Date and Time the recents list was last refreshed from the device.
- * 
  * @param text Text string to replace media player keyword values with.
  * @param player MediaPlayer instance that contains information about the player.
- * @param lastUpdatedOn Epoch date (in seconds) when the last refresh of the media list took place.  Only used for services that don't have a media player `lastupdatedon` attribute.
- * @returns The text argument with media player keywords replaced with media player details.
+ * @returns The text argument with keywords replaced with media player details.
  */
 export function formatPlayerInfo(
   text: string | undefined,
   player: MediaPlayer,
-  lastUpdatedOn: number | undefined = undefined,
   ): string | undefined {
 
   // if player instance not set then don't bother.
   if (!player)
-    return text
+    return text;
 
   // replace keyword parameters with media player equivalents.
   if (text) {
 
     text = text.replace("{player.name}", player.name);
+    text = text.replace("{player.friendly_name}", player.attributes.friendly_name || '');
     text = text.replace("{player.source}", player.attributes.source || '');
+    text = text.replace("{player.media_album_name}", player.attributes.media_album_name || '');
+    text = text.replace("{player.media_artist}", player.attributes.media_artist || '');
+    text = text.replace("{player.media_title}", player.attributes.media_title || '');
+    text = text.replace("{player.media_track}", player.attributes.media_track?.toString() || '');
+
+    // drop everything after the first parenthesis.
+    if (text.indexOf("{player.source_noaccount}") > -1) {
+      let value = player.attributes.source || '';
+      const idx = value.indexOf('(');
+      if (idx > 0) {
+        value = value.substring(0, idx - 1);
+      }
+      text = text.replace("{player.source_noaccount}", (value || '').trim());
+    }
 
     if (text.indexOf("{player.soundtouchplus_presets_lastupdated}") > -1) {
-      const localeDT = formatDateEpochSecondsToLocaleString(player.attributes.soundtouchplus_presets_lastupdated)
+      const localeDT = formatDateEpochSecondsToLocaleString(player.attributes.soundtouchplus_presets_lastupdated);
       text = text.replace("{player.soundtouchplus_presets_lastupdated}", localeDT || '');
     }
 
     if (text.indexOf("{player.soundtouchplus_recents_lastupdated}") > -1) {
-      const localeDT = formatDateEpochSecondsToLocaleString(player.attributes.soundtouchplus_presets_lastupdated)
+      const localeDT = formatDateEpochSecondsToLocaleString(player.attributes.soundtouchplus_recents_lastupdated);
       text = text.replace("{player.soundtouchplus_recents_lastupdated}", localeDT || '');
     }
 
-    if ((lastUpdatedOn || 0) > 0) {
-      if (text.indexOf("{lastupdatedon}") > -1) {
-        const localeDT = formatDateEpochSecondsToLocaleString(lastUpdatedOn || 0)
-        text = text.replace("{lastupdatedon}", localeDT || '');
-      }
+    if (text.indexOf("{player.soundtouchplus_recents_cache_lastupdated}") > -1) {
+      const localeDT = formatDateEpochSecondsToLocaleString(player.attributes.soundtouchplus_recents_cache_lastupdated);
+      text = text.replace("{player.soundtouchplus_recents_cache_lastupdated}", localeDT || '');
     }
 
     // other possible keywords:
     //media_duration: 276
     //media_position: 182
     //media_position_updated_at: "2024-04-30T21:32:12.303343+00:00"
-    //media_title: Redeemed
-    //media_artist: Big Daddy Weave
-    //media_album_name: Love Come To Life
-    //media_track: Redeemed
     //shuffle: false
     //repeat: "off"
     //soundtouchplus_nowplaying_isadvertisement: false
@@ -199,12 +255,11 @@ export function formatPlayerInfo(
     //entity_picture: > -
     //  /api/media_player_proxy / media_player.bose_st10_1 ? token = f447f9b3fbdb647d9df2f7b0a5a474be9e17ffa51d26eb18f414d5120a2bdeb8 & cache=2a8a6a76b27e209a
     //icon: mdi: speaker
-    //friendly_name: Bose - ST10 - 1
     //supported_features: 1040319
 
   }
 
-  return text
+  return text;
 }
 
 
@@ -217,7 +272,7 @@ export function formatPlayerInfo(
  * 
  * @param text Text string to replace configuration keyword values with.
  * @param config CardConfig configuration data.
- * @returns The text argument with configuration keywords replaced with configuration details.
+ * @returns The text argument with keywords replaced with configuration details.
  */
 export function formatConfigInfo(
   text: string | undefined,
@@ -226,27 +281,33 @@ export function formatConfigInfo(
 
   // if config instance not set then don't bother.
   if (!config)
-    return text
+    return text;
 
   // replace keyword parameters with configuration equivalents.
   if (text) {
 
     text = text.replace("{config.pandorasourceaccount}", config.pandoraSourceAccount || '');
-
   }
 
-  return text
+  return text;
 }
 
 
 /**
  * Style definition used to style a media browser item background image.
  */
-export function styleMediaBrowserItemBackgroundImage(thumbnail: string, index: number) {
+export function styleMediaBrowserItemBackgroundImage(thumbnail: string, index: number, section: Section) {
+
+  let bgSize = '100%';
+  if (section == Section.SOURCES) {
+    bgSize = '50%';
+  }
+
   return html`
     <style>
       .button:nth-of-type(${index + 1}) .thumbnail {
         background-image: url(${thumbnail});
+        background-size: ${bgSize};
       }
     </style>
   `;
@@ -276,6 +337,4 @@ export function renderMediaBrowserContentItem(contentItem: ContentItem | undefin
       <div class="title-source" ?hidden=${!showSource}>${formatStringProperCase(contentItem?.Source || '')}</div>
     </div>
   `;
-  // <div class="thumbnail"></div>
-  // <div class="thumbnail" ?hidden=${!contentItem.ContentItem?.ContainerArt}></div>
 }

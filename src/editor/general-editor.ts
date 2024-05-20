@@ -15,6 +15,7 @@ const CONFIG_SETTINGS_SCHEMA = [
     type: 'multi_select',
     options: {
       player: 'Player',
+      sources: 'Sources',
       presets: 'Presets',
       recents: 'Recently Played',
       pandorastations: 'Pandora Stations',
@@ -108,6 +109,7 @@ class GeneralEditor extends BaseEditor {
         font-size: 1rem;
         color: var(--secondary-text-color);
       }
+
       ha-formfield {
         height: 26px;
       }

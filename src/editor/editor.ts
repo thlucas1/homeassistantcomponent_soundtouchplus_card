@@ -10,20 +10,24 @@ import { SECTION_SELECTED } from '../constants';
 import './editor-form';
 import './general-editor';
 import './pandora-browser-editor';
+import './player-editor';
 import './preset-browser-editor';
 import './recent-browser-editor';
+import './source-browser-editor';
 import { dispatch } from '../utils/utils';
 
 /** Configuration area editor sections enum. */
 enum ConfigArea {
   GENERAL = 'General',
+  PLAYER = 'Player',
+  SOURCE_BROWSER = 'Sources',
   PRESET_BROWSER = 'Presets',
   RECENT_BROWSER = 'Recents',
   PANDORA_BROWSER = 'Pandora',
 }
 
 /** Configuration area editor section keys array. */
-const { GENERAL, PRESET_BROWSER, RECENT_BROWSER, PANDORA_BROWSER } = ConfigArea;
+const { GENERAL, PLAYER, SOURCE_BROWSER, PRESET_BROWSER, RECENT_BROWSER, PANDORA_BROWSER } = ConfigArea;
 
 class CardEditor extends BaseEditor {
 
@@ -43,17 +47,16 @@ class CardEditor extends BaseEditor {
 
     // if no sections are selected then select the defaults.
     if (!this.config.sections || this.config.sections.length === 0) {
-      //console.log("editor.render() selecting all sections");
       this.config.sections = [Section.PRESETS, Section.RECENTS];
     }
 
     return html`
       <ha-control-button-group>
-        ${[GENERAL, PRESET_BROWSER, RECENT_BROWSER, PANDORA_BROWSER].map(
+        ${[GENERAL, PLAYER, SOURCE_BROWSER, PRESET_BROWSER, RECENT_BROWSER, PANDORA_BROWSER].map(
           (configArea) => html`
             <ha-control-button
               selected=${this.configArea === configArea || nothing}
-              @click=${() => this.dispatchSection(configArea)}
+              @click=${() => this.OnSectionButtonClick(configArea)}
             >
               ${configArea}
             </ha-control-button>
@@ -77,6 +80,14 @@ class CardEditor extends BaseEditor {
         () => html`<stpc-general-editor .config=${this.config} .hass=${this.hass}></stpc-general-editor>`,
       ],
       [
+        PLAYER,
+        () => html`<stpc-player-editor .config=${this.config} .hass=${this.hass}></stpc-player-editor>`,
+      ],
+      [
+        SOURCE_BROWSER,
+        () => html`<stpc-source-browser-editor .config=${this.config} .hass=${this.hass}></stpc-source-browser-editor>`,
+      ],
+      [
         PRESET_BROWSER,
         () => html`<stpc-preset-browser-editor .config=${this.config} .hass=${this.hass}></stpc-preset-browser-editor>`,
       ],
@@ -92,12 +103,23 @@ class CardEditor extends BaseEditor {
   }
 
 
-  private dispatchSection(configArea: ConfigArea) {
+  /**
+   * Handles the `click` event fired when an editor section button is clicked.
+   * 
+   * This will set the configArea attribute, which will display the selected editor section settings.
+   * 
+   * @param args Event arguments that contain the configArea that was clicked on.
+   */
+  private OnSectionButtonClick(configArea: ConfigArea) {
 
     // show the section that we are editing.
     let sectionNew = Section.PLAYER;
     if (configArea == GENERAL) {
       sectionNew = Section.PLAYER;
+    } else if (configArea == PLAYER) {
+      sectionNew = Section.PLAYER;
+    } else if (configArea == SOURCE_BROWSER) {
+      sectionNew = Section.SOURCES;
     } else if (configArea == PRESET_BROWSER) {
       sectionNew = Section.PRESETS;
     } else if (configArea == RECENT_BROWSER) {
@@ -106,7 +128,7 @@ class CardEditor extends BaseEditor {
       sectionNew = Section.PANDORA_STATIONS;
     }
 
-    //console.log("editor.dispatchSection()\n OLD configArea=%s, NEW configArea=%s\n OLD section=%s, NEW section=%s", JSON.stringify(this.configArea), JSON.stringify(configArea), JSON.stringify(this.section), JSON.stringify(sectionNew));
+    //console.log("editor.OnSectionButtonClick()\n OLD configArea=%s, NEW configArea=%s\n OLD section=%s, NEW section=%s", JSON.stringify(this.configArea), JSON.stringify(configArea), JSON.stringify(this.section), JSON.stringify(sectionNew));
 
     // show the section editor form.
     this.configArea = configArea;

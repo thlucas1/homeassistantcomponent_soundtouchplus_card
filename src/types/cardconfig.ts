@@ -26,7 +26,7 @@ export interface CardConfig extends LovelaceCardConfig {
 
   /**
    * Title that is displayed at the top of the card, above the section area.
-   * This value supports MediaPlayer override parameters.
+   * This value supports Title Formatter Options.
    */
   title?: string;
 
@@ -47,16 +47,155 @@ export interface CardConfig extends LovelaceCardConfig {
   height?: any;
 
   /**
+   * User account used to connect to Pandora music service.
+   * This account must be defined in the SoundTouch device source list.
+   */
+  pandoraSourceAccount?: string;
+
+  /**
+   * Title displayed at the top of the Pandora media browser section form.
+   * Omit this parameter to hide the title display area.
+   * This value supports Title Formatter Options.
+   */
+  pandoraBrowserTitle?: string;
+
+  /**
+   * Sub-title displayed at the top of the Pandora media browser section form.
+   * Omit this parameter to hide the sub-title display area.
+   * This value supports Title Formatter Options.
+   */
+  pandoraBrowserSubTitle?: string;
+
+  /**
+   * Number of items to display in a single row of the Pandora media browser section form.
+   * Use a value of 1 to display the items as a vertical list.
+   * Default is 3.
+   */
+  pandoraBrowserItemsPerRow?: number;
+
+  /** 
+   * Hide titles displayed for Pandora media browser items.
+   * Default is false.
+   */
+  pandoraBrowserItemsHideTitle?: boolean;
+
+  /**
+   * Title displayed in the header area of the Player section form.
+   * Omit this parameter to hide the title display area.
+   * This value supports Title Formatter Options.
+   */
+  playerHeaderTitle?: string;
+
+  /**
+   * Artist and Track info displayed in the header area of the Player section form.
+   * Omit this parameter to hide this area.
+   * This value supports Title Formatter Options.
+   */
+  playerHeaderArtistTrack?: string;
+
+  /**
+   * Album info displayed in the header area of the Player section form.
+   * Omit this parameter to hide this area.
+   * This value supports Title Formatter Options.
+   */
+  playerHeaderAlbum?: string;
+
+  /**
+   * Text to display in the header area of the Player section form
+   * when no media is currently playing.
+   * Omit this parameter to display the default 'No Media Playing' value.
+   */
+  playerHeaderNoMediaPlayingText?: string;
+
+  /** 
+   * Hide progress bar in the header area of the Player section form.
+   * Default is false.
+   */
+  playerHeaderHideProgressBar?: boolean;
+
+  /**
+   * Opacity value for the header area background of the Player section form.
+   * Default is 0.4.
+   */
+  playerHeaderBackgroundOpacity?: number;
+
+  /** 
+   * Hide header area of the Player section form.
+   * Default is false.
+   */
+  playerHeaderHide?: boolean;
+
+  /** 
+   * Hide play / pause button in the controls area of the Player section form.
+   * Default is false.
+   */
+  playerControlsHidePlayPause?: boolean;
+
+  /**
+   * Hide repeat button in the controls area of the Player section form.
+   * Default is false.
+   */
+  playerControlsHideRepeat?: boolean;
+
+  /**
+   * Hide shuffle button in the controls area of the Player section form.
+   * Default is false.
+   */
+  playerControlsHideShuffle?: boolean;
+
+  /**
+   * Hide next track button in the controls area of the Player section form.
+   * Default is false.
+   */
+  playerControlsHideTrackNext?: boolean;
+
+  /**
+   * Hide previous track button in the controls area of the Player section form.
+   * Default is false.
+   */
+  playerControlsHideTrackPrev?: boolean;
+
+  /**
+   * Hide controls area of the Player section form.
+   * Default is false.
+   */
+  playerControlsHide?: boolean;
+
+  /**
+   * Opacity value for the controls area background of the Player section form.
+   * Default is 0.4.
+   */
+  playerControlsBackgroundOpacity?: number;
+
+  /**
+   * Hide mute button in the volume controls area of the Player section form.
+   * Default is false.
+   */
+  playerVolumeControlsHideMute?: boolean;
+
+  /** 
+   * Hide power button in the volume controls area of the Player section form.
+   * Default is false.
+   */
+  playerVolumeControlsHidePower?: boolean;
+
+  /**
+   * Hide volume slider in the volume controls area of the Player section form.
+   * Default is false.
+   */
+  playerVolumeControlsHideSlider?: boolean;
+
+  /**
    * Title displayed at the top of the Preset media browser section form.
    * Omit this parameter to hide the title display area.
-   * This value supports MediaPlayer override parameters.
+   * This value supports Title Formatter Options.
    */
   presetBrowserTitle?: string;
 
   /**
    * Sub-title displayed at the top of the Preset media browser section form.
    * Omit this parameter to hide the sub-title display area.
-   * This value supports MediaPlayer override parameters.
+   * This value supports Title Formatter Options.
    */
   presetBrowserSubTitle?: string;
 
@@ -82,14 +221,14 @@ export interface CardConfig extends LovelaceCardConfig {
   /**
    * Title displayed at the top of the Recently Played media browser section form.
    * Omit this parameter to hide the title display area.
-   * This value supports MediaPlayer override parameters.
+   * This value supports Title Formatter Options.
    */
   recentBrowserTitle?: string;
 
   /**
    * Sub-title displayed at the top of the Recently Played media browser section form.
    * Omit this parameter to hide the sub-title display area.
-   * This value supports MediaPlayer override parameters.
+   * This value supports Title Formatter Options.
    */
   recentBrowserSubTitle?: string;
 
@@ -112,39 +251,32 @@ export interface CardConfig extends LovelaceCardConfig {
    */
   recentBrowserItemsHideSource?: boolean;
 
-
   /**
-   * User account used to connect to Pandora music service.
-   * This account must be defined in the SoundTouch device source list.
-   */
-  pandoraSourceAccount?: string;
-
-  /**
-   * Title displayed at the top of the Pandora media browser section form.
+   * Title displayed at the top of the Source browser section form.
    * Omit this parameter to hide the title display area.
-   * This value supports MediaPlayer override parameters.
+   * This value supports Title Formatter Options.
    */
-  pandoraBrowserTitle?: string;
+  sourceBrowserTitle?: string;
 
   /**
-   * Sub-title displayed at the top of the Pandora media browser section form.
+   * Sub-title displayed at the top of the Source browser section form.
    * Omit this parameter to hide the sub-title display area.
-   * This value supports MediaPlayer override parameters.
+   * This value supports Title Formatter Options.
    */
-  pandoraBrowserSubTitle?: string;
+  sourceBrowserSubTitle?: string;
 
   /**
-   * Number of items to display in a single row of the Pandora media browser section form.
+   * Number of items to display in a single row of the Source browser section form.
    * Use a value of 1 to display the items as a vertical list.
    * Default is 3.
    */
-  pandoraBrowserItemsPerRow?: number;
+  sourceBrowserItemsPerRow?: number;
 
   /** 
-   * Hide titles displayed for Pandora media browser items.
+   * Hide titles displayed for Source browser items.
    * Default is false.
    */
-  pandoraBrowserItemsHideTitle?: boolean;
+  sourceBrowserItemsHideTitle?: boolean;
 
   /**
    * Collection of custom imageUrl's that can be displayed in various media browser
@@ -175,6 +307,5 @@ export interface CardConfig extends LovelaceCardConfig {
   customImageUrls?: CustomImageUrls;
 
 
-  fallbackArtwork?: string;
   //imageUrlsReplaceHttpWithHttps?: boolean;
 }

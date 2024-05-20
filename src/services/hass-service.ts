@@ -1,20 +1,20 @@
+// lovelace card imports.
 import { HomeAssistant } from 'custom-card-helpers';
-import { MediaPlayerItem, TemplateResult } from '../types';
 import { ServiceCallRequest } from 'custom-card-helpers/dist/types';
-import { PROGRESS_DONE, PROGRESS_STARTED } from '../constants';
-import { MediaPlayer } from '../model/media-player';
 import { HassEntity } from 'home-assistant-js-websocket';
+
+// our imports.
+import { MediaPlayer } from '../model/media-player';
 import { customEvent } from '../utils/utils';
-//import { CardConfig }  from '../types/cardconfig'
 import { Section } from '../types/section'
+import { MediaPlayerItem, TemplateResult } from '../types';
+import { PROGRESS_DONE, PROGRESS_STARTED } from '../constants';
+
 
 export class HassService {
 
   /** Home Assistant instance. */
   private readonly hass: HomeAssistant;
-
-  /** Card configuration data. */
-  //private readonly config: CardConfig;
 
   /** Custom card instance. */
   private readonly card: Element;
@@ -32,20 +32,32 @@ export class HassService {
    */
   constructor(hass: HomeAssistant, card: Element, section: Section) {
     this.hass = hass;
-    //this.config = config;
     this.card = card;
     this.section = section;
   }
 
 
-  async callMediaService(service: string, inOptions: ServiceCallRequest['serviceData']) {
+  /**
+   * Calls the specified MediaPlayer service, passing it the specified parameters.
+   * 
+   * @param serviceRequest Service request instance that contains the service to call and its parameters.
+  */
+  public async CallService(serviceRequest: ServiceCallRequest): Promise<void> {
 
     try {
+
+      //console.log("%chass-service.CallService()\n Calling service '%s' (no response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest,null,2));
 
       // show the progress indicator on the main card.
       this.card.dispatchEvent(customEvent(PROGRESS_STARTED, { section: this.section }));
 
-      await this.hass.callService('media_player', service, inOptions);
+      // call the service.
+      await this.hass.callService(
+        serviceRequest.domain,
+        serviceRequest.service,
+        serviceRequest.serviceData,
+        serviceRequest.target,
+      )
 
     } finally {
 

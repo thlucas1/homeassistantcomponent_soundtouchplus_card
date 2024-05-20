@@ -32,11 +32,14 @@ export class RecentBrowser extends LitElement {
   /** MediaPlayer instance created from the configuration entity id. */
   private player!: MediaPlayer;
 
+  /** Indicates if the media list is currently being updated. */
+  private isUpdateInProgress!: boolean;
+
   /** Date and time (in epoch format) of when the media list was last updated. */
-  private medialistLastUpdatedOn!: number;
+  private mediaListLastUpdatedOn!: number;
 
   /** SoundTouchPlus device recent list. */
-  private recentList!: RecentList;
+  private mediaList!: RecentList;
 
   /** SoundTouchPlus services instance. */
   private soundTouchPlusService!: SoundTouchPlusService;
@@ -51,7 +54,8 @@ export class RecentBrowser extends LitElement {
     super();
 
     // force refresh first time.
-    this.medialistLastUpdatedOn = 1;  
+    this.isUpdateInProgress = false;
+    this.mediaListLastUpdatedOn = -1;  
   }
 
 
@@ -62,83 +66,135 @@ export class RecentBrowser extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    try {
+    //console.log(LOGPFX + "render()\n Rendering recent browser html");
 
-      //console.log(LOGPFX + "render()\n Rendering recent browser html");
+    // set common references from application common storage area.
+    this.hass = this.store.hass
+    this.config = this.store.config;
+    this.player = this.store.player;
+    this.soundTouchPlusService = this.store.soundTouchPlusService;
 
-      // set common references from application common storage area.
-      this.hass = this.store.hass
-      this.config = this.store.config;
-      this.player = this.store.player;
-      this.soundTouchPlusService = this.store.soundTouchPlusService;
+    // if entity value not set then render an error card.
+    if (!this.player)
+      throw new Error("SoundTouchPlus media player entity id not configured");
 
-      // if entity value not set then render an error card.
-      if (!this.player)
-        throw new Error("SoundTouchPlus media player entity id not configured");
-
-      // was the media player recent list updated?
-      const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_recents_lastupdated || 0);
-      //console.log("%c recent-browser render - updateMediaList check info BEFORE update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
-      if ((playerLastUpdatedOn != this.medialistLastUpdatedOn) && (this.medialistLastUpdatedOn > 0))
+    // was the media player recent list cache updated?
+    const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_recents_cache_lastupdated || 0);
+    //console.log("%c recent-browser - updateMediaList info BEFORE update:\n player id=%s\n %s=player.stp_recents_cache_lastupdated\n %s=playerLastUpdatedOn\n %s=mediaListLastUpdatedOn",
+    //  "color: green;",
+    //  this.player.id,
+    //  this.player.attributes.soundtouchplus_recents_cache_lastupdated,
+    //  playerLastUpdatedOn,
+    //  this.mediaListLastUpdatedOn);
+    if ((this.mediaListLastUpdatedOn == -1) || (playerLastUpdatedOn > this.mediaListLastUpdatedOn)) {
+      if (!this.isUpdateInProgress) {
+        this.isUpdateInProgress = true;
         this.updateMediaList(this.player);
-
-      //console.log(LOGPFX + "render()\n RecentList.LastUpdatedOn=%s", this.recentList ? this.recentList.LastUpdatedOn : "unknown");
-      //console.log(LOGPFX + "render()\n this.recentList='%s'", JSON.stringify(this.recentList));
-
-      // format title and sub-title details.
-      const title = formatTitleInfo(this.config.recentBrowserTitle, this.config, this.player);
-      const subtitle = formatTitleInfo(this.config.recentBrowserSubTitle, this.config, this.player);
-
-      return html`
-        ${title ? html`<div class="title">${title}</div>` : html``}
-        ${subtitle ? html`<div class="subtitle">${subtitle}</div>` : html``}
-        ${
-        (() => {
-          if (!this.recentList) {
-            //console.log("%c render() !this.recentList.Recents", "color: green;");
-            return (
-              html`<div class="no-items">No recently played items found</div>`
-            )
-          } else if (this.config.recentBrowserItemsPerRow === 1) {
-            //console.log("%c render() this.config.recentBrowserItemsPerRow === 1", "color: green;");
-            return (
-              html`<stpc-media-browser-list
-                  .items=${this.recentList?.Recents}
-                  .store=${this.store}
-                  @item-selected=${this.OnItemSelected}
-                  ></stpc-media-browser-list>
-                  `
-            )
-          } else {
-            //console.log("%c render() this.config.recentBrowserItemsPerRow > 1", "color: green;");
-            return (
-              html`<stpc-media-browser-icons
-                  .items=${this.recentList?.Recents}
-                  .store=${this.store}
-                  @item-selected=${this.OnItemSelected}
-                  ></stpc-media-browser-icons>
-                  `
-            )
-          }
-        })()  
-        }  
-      `;
-
-    //} catch (ex) {
-
-    //  // log exceptions.
-    //  const exObj = (ex as Error);
-    //  //console.log("STPC - Error rendering recent browser html\n Name = '%s'\nMessage = %s", exObj.name, exObj.message);
-    //  return html`Could not render card - check console log`;
-
-    } finally {
+      } else {
+        console.log("%c recent-browser - update already in progress!", "color: orange;");
+      }
     }
+
+    //console.log(LOGPFX + "render()\n RecentList.LastUpdatedOn=%s", this.mediaList ? this.mediaList.LastUpdatedOn : "unknown");
+    //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
+
+    // format title and sub-title details.
+    const title = formatTitleInfo(this.config.recentBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Recents);
+    const subtitle = formatTitleInfo(this.config.recentBrowserSubTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Recents);
+
+    // check for conditions that prevent the content from showing.
+    let alertText = undefined 
+    if (!this.mediaList) {
+      alertText = 'No recently played items found';
+    } else if (!this.player.attributes.soundtouchplus_recents_cache_enabled) {
+      alertText = 'Recents cache disabled in "' + this.player.name + '" configuration';
+    }
+
+    return html`
+      <div class="recent-browser-section">
+        ${title ? html`<div class="recent-browser-title">${title}</div>` : html``}
+        ${subtitle ? html`<div class="recent-browser-subtitle">${subtitle}</div>` : html``}
+        <div class="recent-browser-content">
+          ${
+          (() => {
+            if (alertText) {
+              return (
+                html`<div class="no-items">${alertText}</div>`
+              )
+            } else if (this.config.recentBrowserItemsPerRow === 1) {
+              return (
+                html`<stpc-media-browser-list
+                    .items=${this.mediaList?.Recents}
+                    .store=${this.store}
+                    @item-selected=${this.OnItemSelected}
+                    ></stpc-media-browser-list>
+                    `
+              )
+            } else {
+              return (
+                html`<stpc-media-browser-icons
+                    .items=${this.mediaList?.Recents}
+                    .store=${this.store}
+                    @item-selected=${this.OnItemSelected}
+                    ></stpc-media-browser-icons>
+                    `
+              )
+            }
+          })()  
+          }  
+        </div>
+      </div>
+    `;
+  }
+
+
+  /** 
+   * style definitions used by this component.
+   * */
+  static get styles() {
+    return css`
+
+      .recent-browser-section {
+        color: var(--secondary-text-color);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .recent-browser-title {
+        margin-top: 0.5rem;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.0rem;
+        color: var(--secondary-text-color);
+      }
+
+      .recent-browser-subtitle {
+        margin: 0.1rem 0;
+        text-align: center;
+        font-weight: normal;
+        font-size: 0.85rem;
+        color: var(--secondary-text-color);
+      }
+
+      .recent-browser-content {
+        margin: 0.5rem;
+        flex: 3;
+        max-height: 100vh;
+        overflow-y: auto;
+      }
+
+      .no-items {
+        text-align: center;
+        margin-top: 2rem;
+     }
+    `;
   }
 
 
   /**
    * Handles the `item-selected` event fired when a media browser item is clicked.
-   * This will select the media browser item for playing.
    * 
    * @param args Event arguments that contain the media item that was clicked on.
    */
@@ -162,7 +218,7 @@ export class RecentBrowser extends LitElement {
 
 
   /**
-   * Updates the `recentList` attribute with the most current list of recents from
+   * Updates the `mediaList` attribute with the most current list of recents from
    * the SoundTouch device.  
    * 
    * This method is called when the section is initially displayed, as well as when
@@ -170,58 +226,25 @@ export class RecentBrowser extends LitElement {
    */
   private updateMediaList(player: MediaPlayer): void {
 
-    // update our media list; we will force the `medialistLastUpdatedOn` attribute to
-    // match the device `soundtouchplus_recents_lastupdated` attribute so that the
+    // update our media list; we will force the `mediaListLastUpdatedOn` attribute to
+    // match the device `soundtouchplus_recents_cache_lastupdated` attribute so that the
     // refresh is only triggered once on the attribute change (or initial request).
-    this.medialistLastUpdatedOn = player.attributes.soundtouchplus_recents_lastupdated || 0;
+    this.mediaListLastUpdatedOn = player.attributes.soundtouchplus_recents_cache_lastupdated || (Date.now() / 1000);
 
     // call the service to retrieve the media list.
-    this.soundTouchPlusService.RecentList(player.id)
+    this.soundTouchPlusService.RecentListCache(player.id)
       .then(result => {
-        this.recentList = result;
-        this.medialistLastUpdatedOn = result.LastUpdatedOn || 0;
-        //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_recents_lastupdated || 0);
-        //console.log("%c recent-browser render - updateMediaList check info AFTER update:\n %s=playerLastUpdatedOn\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(playerLastUpdatedOn), JSON.stringify(this.medialistLastUpdatedOn));
+        this.mediaList = result;
+        this.mediaListLastUpdatedOn = result.LastUpdatedOn || (Date.now() / 1000);
+        this.isUpdateInProgress = false;
+        //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_recents_cache_lastupdated || 0);
+        //console.log("%c recent-browser - updateMediaList info AFTER update:\n player id=%s\n %s=player.stp_recents_cache_lastupdated\n %s=playerLastUpdatedOn\n %s=mediaListLastUpdatedOn",
+        //  "color: green;",
+        //  this.player.id,
+        //  this.player.attributes.soundtouchplus_recents_cache_lastupdated,
+        //  playerLastUpdatedOn,
+        //  this.mediaListLastUpdatedOn);
         this.requestUpdate();
       });
-  }
-
-
-  /** 
-   * style definitions used by this section. 
-   * */
-  static get styles() {
-    return css`
-      //:host {
-      //  display: flex;
-      //  justify-content: space-between;
-      //  padding: 0.5rem;
-      //}
-
-      .title {
-        margin: 0.1rem 0;
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.0rem;
-        color: var(--secondary-text-color);
-      }
-
-      .subtitle {
-        margin: 0.1rem 0;
-        text-align: center;
-        font-weight: normal;
-        font-size: 0.85rem;
-        color: var(--secondary-text-color);
-      }
-
-      *[hide] {
-        display: none;
-      }
-
-      .no-items {
-        text-align: center;
-        margin-top: 2rem;
-     }
-    `;
   }
 }

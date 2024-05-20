@@ -1,10 +1,11 @@
 // our imports.
 import { CARD_VERSION } from './constants';
-import { Player } from './sections/player';
 import { Card } from './card';
 import { PandoraBrowser } from './sections/pandora-browser';
+import { Player } from './sections/player';
 import { PresetBrowser } from './sections/preset-browser';
 import { RecentBrowser } from './sections/recent-browser';
+import { SourceBrowser } from './sections/source-browser';
 import './components/ha-player';
 
 
@@ -37,7 +38,8 @@ window.customCards.push({
 
 // add our card sections to the HA UI card picker dialog.
 customElements.define('soundtouchplus-card', Card);
-customElements.define('stpc-player', Player);
 customElements.define('stpc-pandora-browser', PandoraBrowser);
+customElements.define('stpc-player', Player);
 customElements.define('stpc-preset-browser', PresetBrowser);
 customElements.define('stpc-recent-browser', RecentBrowser);
+customElements.define('stpc-source-browser', SourceBrowser);

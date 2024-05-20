@@ -1,7 +1,13 @@
 // lovelace card imports.
 import { css, html, LitElement, TemplateResult, nothing } from 'lit';
 import { property } from 'lit/decorators.js';
-import { mdiHome, mdiStarOutline, mdiHistory, mdiPandora } from '@mdi/js';
+import {
+  mdiAudioInputRca,
+  mdiHistory,
+  mdiPandora,
+  mdiPlayCircle,
+  mdiStarOutline,
+} from '@mdi/js';
 
 // our imports.
 import { SHOW_SECTION } from '../constants';
@@ -10,7 +16,13 @@ import { Section } from '../types/section'
 import { customEvent } from '../utils/utils';
 
 
-const { PRESETS, RECENTS, PANDORA_STATIONS, PLAYER } = Section;
+const {
+  PANDORA_STATIONS,
+  PLAYER,
+  PRESETS,
+  RECENTS,
+  SOURCES,
+} = Section;
 
 class Footer extends LitElement {
 
@@ -26,44 +38,43 @@ class Footer extends LitElement {
 
     return html`
       <ha-icon-button
-        hide=${this.hide(PLAYER)}
-        .path=${mdiHome}
-        @click=${() => this.dispatchSection(PLAYER)}
-        selected=${this.selected(PLAYER)}
+        .path=${mdiPlayCircle}
+        .label="Player"
+        @click=${() => this.OnSectionClick(PLAYER)}
+        selected=${this.setSection(PLAYER)}
+        hide=${this.getSectionEnabled(PLAYER)}
       ></ha-icon-button>
       <ha-icon-button
-        hide=${this.hide(PRESETS)}
+        .path=${mdiAudioInputRca}
+        .label="Sources"
+        @click=${() => this.OnSectionClick(SOURCES)}
+        selected=${this.setSection(SOURCES)}
+        hide=${this.getSectionEnabled(SOURCES)}
+      ></ha-icon-button>
+      <ha-icon-button
         .path=${mdiStarOutline}
-        @click=${() => this.dispatchSection(PRESETS)}
-        selected=${this.selected(PRESETS)}
+        .label="Presets"
+        @click=${() => this.OnSectionClick(PRESETS)}
+        selected=${this.setSection(PRESETS)}
+        hide=${this.getSectionEnabled(PRESETS)}
       ></ha-icon-button>
       <ha-icon-button
-        hide=${this.hide(RECENTS)}
         .path=${mdiHistory}
-        @click=${() => this.dispatchSection(RECENTS)}
-        selected=${this.selected(RECENTS)}
+        .label="Recently Played"
+        @click=${() => this.OnSectionClick(RECENTS)}
+        selected=${this.setSection(RECENTS)}
+        hide=${this.getSectionEnabled(RECENTS)}
       ></ha-icon-button>
       <ha-icon-button
-        hide=${this.hide(PANDORA_STATIONS)}
         .path=${mdiPandora}
-        @click=${() => this.dispatchSection(PANDORA_STATIONS)}
-        selected=${this.selected(PANDORA_STATIONS)}
+        .label='Pandora Stations'
+        .hideTitle=false
+        .ariaHasPopup=true
+        @click=${() => this.OnSectionClick(PANDORA_STATIONS)}
+        selected=${this.setSection(PANDORA_STATIONS)}
+        hide=${this.getSectionEnabled(PANDORA_STATIONS)}
       ></ha-icon-button>
     `;
-  }
-
-
-  private dispatchSection(section: Section) {
-    this.dispatchEvent(customEvent(SHOW_SECTION, section));
-  }
-
-  private selected(section: Section | typeof nothing) {
-    return this.section === section || nothing;
-  }
-
-
-  private hide(searchElement: Section) {
-    return (this.config.sections && !this.config.sections?.includes(searchElement)) || nothing;
   }
 
 
@@ -73,7 +84,7 @@ class Footer extends LitElement {
   static get styles() {
     return css`
       :host > *[selected] {
-        color: var(--accent-color);
+        color: var(--dark-primary-color);
       }
 
       :host > *[hide] {
@@ -87,30 +98,36 @@ class Footer extends LitElement {
     `;
   }
 
-//  /**
-//   * Style definitions used by this card section.
-//   */
-//  static get styles() {
-//    return css`
-//      :host {
-//        display: flex;
-//        justify-content: space-between;
-//      }
-//      :host > * {
-//        padding: 0;
-//      }
-//      :host > *[selected] {
-//        color: var(--accent-color);
-//      }
-//      :host > *[hide] {
-//        display: none;
-//      }
-//      .ha-icon-button {
-//        --mwc-icon-button-size: 3rem;
-//        --mwc-icon-size: 2rem;
-//      }
-//    `;
-//  }
+
+  /**
+   * Handles the `click` event fired when a section icon is clicked.
+   * 
+   * @param section Event arguments.
+   */
+  private OnSectionClick(section: Section) {
+    this.dispatchEvent(customEvent(SHOW_SECTION, section));
+  }
+
+
+  /**
+   * Stores a reference to the selected section.
+   * 
+   * @param section Section identifier to store.
+   */
+  private setSection(section: Section | typeof nothing) {
+    return this.section === section || nothing;
+  }
+
+
+  /**
+   * Returns nothing if the specified section value is NOT enabled in the configuration,
+   * which will cause the section icon to be hidden (via css styling).
+   * 
+   * @param section Section identifier to check.
+   */
+  private getSectionEnabled(searchElement: Section) {
+    return (this.config.sections && !this.config.sections?.includes(searchElement)) || nothing;
+  }
 }
 
 customElements.define('stpc-footer', Footer);

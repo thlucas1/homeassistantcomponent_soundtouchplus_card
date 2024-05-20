@@ -32,8 +32,11 @@ export class PandoraBrowser extends LitElement {
   /** MediaPlayer instance created from the configuration entity id. */
   private player!: MediaPlayer;
 
+  /** Indicates if the media list is currently being updated. */
+  private isUpdateInProgress!: boolean;
+
   /** Date and time (in epoch format) of when the media list was last updated. */
-  private medialistLastUpdatedOn!: number;
+  private mediaListLastUpdatedOn!: number;
 
   /** SoundTouchPlus device navigate response list. */
   private mediaList!: NavigateResponse;
@@ -51,7 +54,8 @@ export class PandoraBrowser extends LitElement {
     super();
 
     // force refresh first time.
-    this.medialistLastUpdatedOn = 1;  
+    this.isUpdateInProgress = false;
+    this.mediaListLastUpdatedOn = -1;  
   }
 
 
@@ -63,76 +67,132 @@ export class PandoraBrowser extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    try {
+    //console.log("pandora-browser.render()\n Rendering pandora browser html");
 
-      //console.log("pandora-browser.render()\n Rendering pandora browser html");
+    // set common references from application common storage area.
+    this.hass = this.store.hass
+    this.config = this.store.config;
+    this.player = this.store.player;
+    this.soundTouchPlusService = this.store.soundTouchPlusService;
 
-      // set common references from application common storage area.
-      this.hass = this.store.hass
-      this.config = this.store.config;
-      this.player = this.store.player;
-      this.soundTouchPlusService = this.store.soundTouchPlusService;
+    // if entity value not set then render an error card.
+    if (!this.player)
+      throw new Error("SoundTouchPlus media player entity id not configured");
 
-      // if entity value not set then render an error card.
-      if (!this.player)
-        throw new Error("SoundTouchPlus media player entity id not configured");
-
-      // is this the first render?  if so, then refresh the list.
-      if (this.medialistLastUpdatedOn == 1)
+    // is this the first render?  if so, then refresh the list.
+    if (this.mediaListLastUpdatedOn == -1) {
+      if (!this.isUpdateInProgress) {
+        this.isUpdateInProgress = true;
         this.updateMediaList(this.player);
-
-      //console.log(LOGPFX + "render()\n NavigateResponse.LastUpdatedOn=%s", this.mediaList ? this.mediaList.LastUpdatedOn : "unknown");
-      //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
-
-      // format title and sub-title details.
-      const title = formatTitleInfo(this.config.pandoraBrowserTitle, this.config, this.player, this.medialistLastUpdatedOn);
-      const subtitle = formatTitleInfo(this.config.pandoraBrowserSubTitle, this.config, this.player, this.medialistLastUpdatedOn);
-
-      return html`
-        ${title ? html`<div class="title">${title}</div>` : html``}
-        ${subtitle ? html`<div class="subtitle">${subtitle}</div>` : html``}
-        ${
-        (() => {
-          if (!this.config.pandoraSourceAccount) {
-            return (
-              html`<div class="no-items">Pandora user account not configured</div>`
-            )
-          } else if (!this.mediaList) {
-            return (
-              html`<div class="no-items">No items found</div>`
-            )
-          } else if (this.config.pandoraBrowserItemsPerRow === 1) {
-            return (
-              html`<stpc-media-browser-list
-                  .items=${this.mediaList?.Items}
-                  .store=${this.store}
-                  @item-selected=${this.onItemSelected}
-                  ></stpc-media-browser-list>
-                  `
-            )
-          } else {
-            return (
-              html`<stpc-media-browser-icons
-                  .items=${this.mediaList?.Items}
-                  .store=${this.store}
-                  @item-selected=${this.onItemSelected}
-                  ></stpc-media-browser-icons>
-                  `
-            )
-          }
-        })()  
-        }  
-      `;
-       
-    //} catch (ex) {
-
-    //  // log exceptions.
-    //  const exObj = (ex as Error);
-    //  //console.log("STPC - Error rendering pandora browser html\n Name = '%s'\nMessage = %s", exObj.name, exObj.message);
-    //  return html`Could not render card - check console log`;
-
-    } finally {
+      } else {
+        console.log("%c pandora-browser - update already in progress!", "color: orange;");
+      }
     }
+
+    //console.log(LOGPFX + "render()\n NavigateResponse.LastUpdatedOn=%s", this.mediaList ? this.mediaList.LastUpdatedOn : "unknown");
+    //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
+
+    // format title and sub-title details.
+    const title = formatTitleInfo(this.config.pandoraBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Items);
+    const subtitle = formatTitleInfo(this.config.pandoraBrowserSubTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Items);
+
+    // check for conditions that prevent the content from showing.
+    let alertText = undefined
+    if (!this.mediaList) {
+      alertText = 'No Pandora stations found';
+    } else if (!this.config.pandoraSourceAccount) {
+      alertText = 'Pandora user account not configured';
+    }
+
+    // render html.
+    return html`
+      <div class="pandora-browser-section">
+        ${title ? html`<div class="pandora-browser-title">${title}</div>` : html``}
+        ${subtitle ? html`<div class="pandora-browser-subtitle">${subtitle}</div>` : html``}
+        <div class="pandora-browser-content">
+          ${
+          (() => {
+            if (alertText) {
+              return (
+                html`<div class="no-items">${alertText}</div>`
+              )
+            } else if (this.config.pandoraBrowserItemsPerRow === 1) {
+              return (
+                html`<stpc-media-browser-list
+                    .items=${this.mediaList?.Items}
+                    .store=${this.store}
+                    @item-selected=${this.OnItemSelected}
+                    ></stpc-media-browser-list>
+                    `
+              )
+            } else {
+              return (
+                html`<stpc-media-browser-icons
+                    .items=${this.mediaList?.Items}
+                    .store=${this.store}
+                    @item-selected=${this.OnItemSelected}
+                    ></stpc-media-browser-icons>
+                    `
+              )
+            }
+          })()  
+          }  
+        </div>
+      </div>
+    `;
+  }
+
+
+  /** 
+   * style definitions used by this component.
+   * */
+  static get styles() {
+    return css`
+
+      .pandora-browser-section {
+        color: var(--secondary-text-color);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .pandora-browser-title {
+        margin-top: 0.5rem;
+        align-items: center;
+        display: flex;
+        flex-shrink: 0;
+        flex-grow: 0;
+        justify-content: center;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.0rem;
+        color: var(--secondary-text-color);
+      }
+
+      .pandora-browser-subtitle {
+        margin: 0.1rem 0;
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        text-align: center;
+        font-weight: normal;
+        font-size: 0.85rem;
+        color: var(--secondary-text-color);
+      }
+
+      .pandora-browser-content {
+        margin: 0.5rem;
+        flex: 3;
+        max-height: 100vh;
+        overflow-y: auto;
+      }
+
+      .no-items {
+        text-align: center;
+        margin-top: 2rem;
+      }
+    `;
   }
 
 
@@ -180,8 +240,6 @@ export class PandoraBrowser extends LitElement {
   /**
    * Handles the `PANDORA_BROWSER_REFRESH` event.
    * 
-   * This will refresh the media list display.
-   * 
    * @param args Event arguments (none passed).
   */
   protected OnPandoraBrowserRefresh = () => {
@@ -189,18 +247,17 @@ export class PandoraBrowser extends LitElement {
     //console.log("OnPandoraBrowserRefresh event handler - event data:\n%s", JSON.stringify(args, null, 2));
 
     // force media list to refresh on next render.
-    this.medialistLastUpdatedOn = 1;
+    this.mediaListLastUpdatedOn = -1;
   };
 
 
   /**
    * Handles the `item-selected` event fired when a media browser item is clicked.
    * 
-   * This will select the media browser item for playing.
-   * 
    * @param args Event arguments that contain the media item that was clicked on.
    */
-  protected onItemSelected = (args: CustomEvent) => {
+  protected OnItemSelected = (args: CustomEvent) => {
+    console.log("pandora-browser.OnItemSelected - args:\n%s", JSON.stringify(args));
     const mediaItem = args.detail;
     this.PlayItem(mediaItem);
     this.dispatchEvent(customEvent(ITEM_SELECTED, mediaItem));
@@ -228,13 +285,12 @@ export class PandoraBrowser extends LitElement {
    */
   private updateMediaList(player: MediaPlayer): void {
 
-    // update the media list; we will force the `medialistLastUpdatedOn` attribute 
+    // update the media list; we will force the `mediaListLastUpdatedOn` attribute 
     // with the current epoch date (in seconds) so that the refresh is only triggered once.
-    this.medialistLastUpdatedOn = Date.now() / 1000;
+    this.mediaListLastUpdatedOn = (Date.now() / 1000);
 
-    // was a user account configured?
+    // was a user account configured?  if not, then we are done!
     if (!this.config.pandoraSourceAccount) {
-      //console.log("pandora-browser.updateMediaList() - source account not configured!");
       return;
     }
 
@@ -242,48 +298,10 @@ export class PandoraBrowser extends LitElement {
     this.soundTouchPlusService.MusicServiceStationList(player.id, "PANDORA", this.config.pandoraSourceAccount, "stationName")
       .then(result => {
         this.mediaList = result;
-        this.medialistLastUpdatedOn = result.LastUpdatedOn || 0;
-        //console.log("%c pandora-browser render - updateMediaList check info AFTER update:\n %s=medialistLastUpdatedOn", "color: green;", JSON.stringify(this.medialistLastUpdatedOn));
+        this.mediaListLastUpdatedOn = result.LastUpdatedOn || (Date.now() / 1000);
+        this.isUpdateInProgress = false;
+        //console.log("%c pandora-browser render - updateMediaList check info AFTER update:\n %s=mediaListLastUpdatedOn", "color: green;", JSON.stringify(this.mediaListLastUpdatedOn));
         this.requestUpdate();
       });
-  }
-
-
-  /** 
-   * style definitions used by this section. 
-   * */
-  static get styles() {
-    return css`
-      //:host {
-      //  display: flex;
-      //  justify-content: space-between;
-      //  padding: 0.5rem;
-      //}
-
-      .title {
-        margin: 0.1rem 0;
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.0rem;
-        color: var(--secondary-text-color);
-      }
-
-      .subtitle {
-        margin: 0.1rem 0;
-        text-align: center;
-        font-weight: normal;
-        font-size: 0.85rem;
-        color: var(--secondary-text-color);
-      }
-
-      *[hide] {
-        display: none;
-      }
-
-      .no-items {
-        text-align: center;
-        margin-top: 2rem;
-      }
-    `;
   }
 }

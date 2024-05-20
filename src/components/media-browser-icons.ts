@@ -63,6 +63,10 @@ export class MediaBrowserIcons extends LitElement {
       itemsPerRow = this.config.pandoraBrowserItemsPerRow || 3;
       hideTitle = this.config.pandoraBrowserItemsHideTitle || false;
       hideSource = true;
+    } else if (this.section == Section.SOURCES) {
+      itemsPerRow = this.config.sourceBrowserItemsPerRow || 3;
+      hideTitle = this.config.sourceBrowserItemsHideTitle || false;
+      hideSource = true;
     }
 
     return html`
@@ -74,7 +78,7 @@ export class MediaBrowserIcons extends LitElement {
       <div class="icons">
         ${itemsWithFallbacks(this.items, this.config).map(
           (item, index) => html`
-            ${styleMediaBrowserItemBackgroundImage(item.thumbnail, index)}
+            ${styleMediaBrowserItemBackgroundImage(item.thumbnail, index, this.section)}
             <ha-control-button
               class="button"
               @click=${() => this.buttonMediaBrowserItemClick(customEvent(ITEM_SELECTED, item))}
@@ -86,42 +90,6 @@ export class MediaBrowserIcons extends LitElement {
         )}
       </div>
     `;
-  }
-
-
-  /**
-   * Event fired when a mousedown event takes place for a media browser item button.
-   * In this case, we will store the current time (in milliseconds) so that we can calculate
-   * the duration in the "click" event (occurs after a mouseup event).
-   * 
-   * @param event Event arguments.
-   */
-  private buttonMediaBrowserItemMouseDown(): boolean {
-    // store when the mouse down event took place.
-    this.mousedownTimestamp = Date.now();
-    return true;
-  }
-
-
-  /**
-   * Event fired when a click event takes place for a media browser item button.
-   * 
-   * In this case, we are looking to determine how long the mouse button was in the
-   * down position (e.g. the duration).  If the duration was greater than 1500 milliseconds,
-   * then we will treat the event as a "click and hold" operation; otherwise, we will treat
-   * the event as a "click" operation.
-   * 
-   * @param event Event arguments.
-   */
-  private buttonMediaBrowserItemClick(event: CustomEvent): boolean {
-    // calculate the duration of the mouse down / up operation.
-    const duration = Date.now() - this.mousedownTimestamp;
-    this.mousedownTimestamp = 0;
-    if (duration < 1500) {
-      return this.dispatchEvent(event);
-    } else {
-      return this.dispatchEvent(customEvent(ITEM_SELECTED_WITH_HOLD, event.detail));
-    }
   }
 
 
@@ -168,14 +136,47 @@ export class MediaBrowserIcons extends LitElement {
 
         .title-source {
           font-size: 0.8rem;
-          //position: absolute;
           width: 100%;
           line-height: 160%;
-          //bottom: 0;
-          //background-color: rgba(var(--rgb-card-background-color), 0.733);
         }
       `,
     ];
+  }
+
+
+  /**
+   * Event fired when a mousedown event takes place for a media browser item button.
+   * In this case, we will store the current time (in milliseconds) so that we can calculate
+   * the duration in the "click" event (occurs after a mouseup event).
+   * 
+   * @param event Event arguments.
+   */
+  private buttonMediaBrowserItemMouseDown(): boolean {
+    // store when the mouse down event took place.
+    this.mousedownTimestamp = Date.now();
+    return true;
+  }
+
+
+  /**
+   * Event fired when a click event takes place for a media browser item button.
+   * 
+   * In this case, we are looking to determine how long the mouse button was in the
+   * down position (e.g. the duration).  If the duration was greater than 1500 milliseconds,
+   * then we will treat the event as a "click and hold" operation; otherwise, we will treat
+   * the event as a "click" operation.
+   * 
+   * @param event Event arguments.
+   */
+  private buttonMediaBrowserItemClick(event: CustomEvent): boolean {
+    // calculate the duration of the mouse down / up operation.
+    const duration = Date.now() - this.mousedownTimestamp;
+    this.mousedownTimestamp = 0;
+    if (duration < 1500) {
+      return this.dispatchEvent(event);
+    } else {
+      return this.dispatchEvent(customEvent(ITEM_SELECTED_WITH_HOLD, event.detail));
+    }
   }
 }
 

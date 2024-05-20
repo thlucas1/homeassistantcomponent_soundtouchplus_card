@@ -52,6 +52,7 @@ export class MediaBrowserList extends LitElement {
     let hideTitle = true;
     let hideSource = true;
     let itemsPerRow = 1;
+    let listItemClass = 'button';
     if (this.section == Section.PRESETS) {
       itemsPerRow = this.config.presetBrowserItemsPerRow || 3;
       hideTitle = this.config.presetBrowserItemsHideTitle || false;
@@ -64,8 +65,15 @@ export class MediaBrowserList extends LitElement {
       itemsPerRow = this.config.pandoraBrowserItemsPerRow || 3;
       hideTitle = this.config.pandoraBrowserItemsHideTitle || false;
       hideSource = true;
+    } else if (this.section == Section.SOURCES) {
+      itemsPerRow = this.config.sourceBrowserItemsPerRow || 3;
+      hideTitle = this.config.sourceBrowserItemsHideTitle || false;
+      hideSource = true;
+      // make the source icons half the size of regular list buttons.
+      listItemClass += ' button-source';
     }
 
+    // render html.
     return html`
       <style>
         :host {
@@ -75,9 +83,9 @@ export class MediaBrowserList extends LitElement {
       <mwc-list multi class="list">
         ${itemsWithFallbacks(this.items, this.config).map((item, index) => {
           return html`
-            ${styleMediaBrowserItemBackgroundImage(item.thumbnail, index)}
-            <mwc-list-item 
-              class="button"
+            ${styleMediaBrowserItemBackgroundImage(item.thumbnail, index, this.section)}
+            <mwc-list-item
+              class="${listItemClass}"
               @click=${() => this.buttonMediaBrowserItemClick(customEvent(ITEM_SELECTED, item))}
               @mousedown=${() => this.buttonMediaBrowserItemMouseDown()}
 
@@ -117,6 +125,7 @@ export class MediaBrowserList extends LitElement {
    * @param event Event arguments.
    */
   private buttonMediaBrowserItemClick(event: CustomEvent): boolean {
+
     // calculate the duration of the mouse down / up operation.
     const duration = Date.now() - this.mousedownTimestamp;
     this.mousedownTimestamp = 0;
@@ -142,7 +151,13 @@ export class MediaBrowserList extends LitElement {
         .button {
           --control-button-padding: 0px;
           --icon-width: 94px;
-          height: 100px;
+          height: var(--icon-width);
+          margin: 0.4rem 0.0rem;
+        }
+
+        .button-source {
+          --icon-width: 50px !important;
+          margin: 0 !important;
         }
 
         .row {
@@ -155,6 +170,7 @@ export class MediaBrowserList extends LitElement {
           background-size: contain;
           background-repeat: no-repeat;
           background-position: left;
+          border-radius: 0.5rem;
         }
 
         .title {

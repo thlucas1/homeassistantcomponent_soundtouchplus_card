@@ -78,5 +78,3 @@ export function formatStringProperCase(str: string): string | void {
 export function isNumber(numStr: string) {
   return !isNaN(parseFloat(numStr)) && !isNaN(+numStr)
 }
-
-

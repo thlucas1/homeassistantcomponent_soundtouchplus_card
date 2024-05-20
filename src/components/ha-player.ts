@@ -4,7 +4,7 @@ import { property } from 'lit/decorators.js';
 
 // our imports.
 import { Store } from '../model/store';
-import { MediaPlayerEntityFeature } from '../types';
+import { MediaPlayerEntityFeature } from '../types/mediaplayer-entityfeature';
 
 class HaPlayer extends LitElement {
 
@@ -18,7 +18,10 @@ class HaPlayer extends LitElement {
   */
   protected render(): TemplateResult | void {
 
+    // get current media player state.
     const state = this.store.hass.states[this.store.player.id];
+
+    // load all features supported by the player.
     let supportedFeatures = 0;
     this.features.forEach((feature) => (supportedFeatures += feature));
 
@@ -26,7 +29,13 @@ class HaPlayer extends LitElement {
       ...state,
       attributes: { ...state.attributes, supported_features: supportedFeatures },
     };
-    return html` <more-info-content .stateObj=${playerState} .hass=${this.store.hass}></more-info-content> `;
+
+    // render content.
+    return html` 
+      <more-info-content
+        .stateObj=${playerState} 
+        .hass=${this.store.hass}>
+      </more-info-content> `;
   }
 }
 

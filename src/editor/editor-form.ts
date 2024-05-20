@@ -38,9 +38,15 @@ class Form extends BaseEditor {
       .root > * {
         display: block;
       }
+
       .root > *:not([own-margin]):not(:last-child) {
         margin-bottom: 0px;
       }
+
+      .root > :not([own-margin]):not(:last-child) {
+          margin-bottom: 4px;
+      }
+
       ha-alert[own-margin] {
         margin-bottom: 4px;
       }

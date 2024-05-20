@@ -12,6 +12,9 @@ export declare type SoundTouchPlusHassEntityAttributes = HassEntityAttributesMed
   soundtouchplus_nowplaying_isfavorite?: boolean;
   soundtouchplus_presets_lastupdated?: number;
   soundtouchplus_recents_lastupdated?: number;
+  soundtouchplus_recents_cache_lastupdated?: number;
+  soundtouchplus_recents_cache_enabled?: boolean;
+  soundtouchplus_recents_cache_max_items?: number;
   soundtouchplus_source?: string;
   soundtouchplus_sound_mode?: string;
   soundtouchplus_tone_bass_level?: string;

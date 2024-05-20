@@ -1,5 +1,9 @@
+// our imports.
 import { SoundTouchPlusHassEntity } from '../types/hassentity-soundtouchplus'
 import { SoundTouchPlusHassEntityAttributes } from '../types/hassentityattributes-soundtouchplus'
+import { MediaPlayerEntityFeature } from '../types/mediaplayer-entityfeature'
+
+const { TURN_ON } = MediaPlayerEntityFeature;
 
 //const LOGPFX = "STPC - model/media-player."
 
@@ -30,6 +34,55 @@ export class MediaPlayer {
     this.state = hassEntity.state;
     this.attributes = hassEntity.attributes;
     this.name = this.attributes.friendly_name || '';
-
   }
+
+
+  /**
+   * Returns a string containing currently playing media track information in the form of:
+   * "<media_artist> - <media_title>"
+   */
+  public getCurrentTrack(): string {
+    return `${this.attributes.media_artist || ''} - ${this.attributes.media_title || ''}`.replace(/^ - | - $/g, '');
+  }
+
+
+  /**
+   * Returns the current volume of the player as a percentage value (e.g. 0-100).
+   */
+  public getVolume() {
+    if (this.attributes.volume_level) {
+      return 100 * this.attributes.volume_level;
+    } else {
+      return 0;
+    }
+  }
+
+
+  /**
+   * Returns true if the player is currently playing something (e.g. state = 'playing'); 
+   * otherwise, false.
+   */
+  public isPlaying() {
+    return this.state === 'playing';
+  }
+
+
+  /**
+   * Returns true if the player volume is currently muted; 
+   * otherwise, false.
+   */
+  public isMuted(): boolean {
+    return this.attributes.is_volume_muted || false;
+  }
+
+
+  /**
+   * Returns true if the player supports TURN_ON feature;
+   * otherwise, false.
+   */
+  public supportsTurnOn() {
+    return ((this.attributes.supported_features || 0) & TURN_ON) == TURN_ON;
+  }
+
+
 }

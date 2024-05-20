@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{19dfee94-5cae-417c-ac13-38b165e4121e}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <ProjectView>ShowAllFiles</ProjectView>
+    <ProjectView>ProjectFiles</ProjectView>
     <StartupFile>dist\soundtouchplus-card.js</StartupFile>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -34,6 +34,9 @@
     <Content Include=".prettierrc.js" />
     <Content Include=".vscode\launch.json" />
     <Content Include="CHANGELOG.md" />
+    <Content Include="data\recently_played_cache_9070658C9D4A.xml">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="developer_notes.txt">
       <SubType>Code</SubType>
     </Content>
@@ -76,6 +79,7 @@
     <Folder Include=".vscode\" />
     <Folder Include="dist" />
     <Folder Include="images\" />
+    <Folder Include="data\" />
     <Folder Include="src" />
     <Folder Include="src\components" />
     <Folder Include="src\editor" />
@@ -89,10 +93,23 @@
   <ItemGroup>
     <TypeScriptCompile Include="src\components\media-browser-icons.ts" />
     <TypeScriptCompile Include="src\components\media-browser-list.ts" />
+    <TypeScriptCompile Include="src\components\player-controls.ts" />
+    <TypeScriptCompile Include="src\components\player-header.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\components\player-progress.ts" />
+    <TypeScriptCompile Include="src\components\player-volume.ts" />
+    <TypeScriptCompile Include="src\editor\source-browser-editor.ts" />
+    <TypeScriptCompile Include="src\editor\player-volume-editor.ts" />
+    <TypeScriptCompile Include="src\editor\player-editor.ts" />
+    <TypeScriptCompile Include="src\editor\player-controls-editor.ts" />
+    <TypeScriptCompile Include="src\editor\player-header-editor.ts" />
     <TypeScriptCompile Include="src\editor\pandora-browser-editor.ts" />
     <TypeScriptCompile Include="src\editor\recent-browser-editor.ts" />
+    <TypeScriptCompile Include="src\sections\source-browser.ts" />
     <TypeScriptCompile Include="src\sections\pandora-browser.ts" />
     <TypeScriptCompile Include="src\sections\recent-browser.ts" />
+    <TypeScriptCompile Include="src\services\media-control-service.ts" />
     <TypeScriptCompile Include="src\services\soundtouchplus-service.ts" />
     <TypeScriptCompile Include="src\types\cardconfig.ts">
       <SubType>Code</SubType>
@@ -102,6 +119,9 @@
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\types\hassentityattributes-mediaplayer.ts" />
     <TypeScriptCompile Include="src\types\hassentity-soundtouchplus.ts" />
+    <TypeScriptCompile Include="src\types\mediaplayer-entityfeature.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\types\soundtouchplus\navigateresponse.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\navigateitem.ts">
       <SubType>Code</SubType>
