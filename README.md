@@ -24,25 +24,25 @@ with more to come!
 Here's a quick overview on what the card can look like.  The card is highly customizable when it comes to the information displayed.  Check out the [UI Dashboards wiki](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/UI-Dashboards) page for more examples and YAML configuration.
 
 #### Media Player Control (Panel Mode)  
-![Media Player Control, Panel Mode](images/player_nofooter_panel.png?v01_20240613)  
+![Media Player Control, Panel Mode](https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/player_nofooter_panel.png?v01_20240613)  
 
 #### SoundTouch Recently Played (Panel Mode)  
-![SoundTouch Recently Played, Panel Mode](images/recentlyplayed_nofooter_panel.png?v01_20240613)  
+![SoundTouch Recently Played, Panel Mode](https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/recentlyplayed_nofooter_panel.png?v01_20240613)  
 
 #### User-Defined Presets (Panel Mode)  
-![SoundTouch Presets, Panel Mode](images/presets_user_nofooter_panel.png?v01_20240613)  
+![SoundTouch Presets, Panel Mode](https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/presets_user_nofooter_panel.png?v01_20240613)  
 
 #### SoundTouch Device Presets (Panel Mode)  
-![SoundTouch Presets, Panel Mode](images/presets_device_nofooter_panel.png?v01_20240613)  
+![SoundTouch Presets, Panel Mode](https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/presets_device_nofooter_panel.png?v01_20240613)  
 
 #### SoundTouch Sources (Panel Mode)  
-![SoundTouch Sources Panel Mode](images/sources_nofooter_panel.png?v01_20240613)  
+![SoundTouch Sources Panel Mode](https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/sources_nofooter_panel.png?v01_20240613)  
 
 #### Pandora Stations (Panel Mode)  
-![Pandora Stations Panel Mode](images/pandora_nofooter_panel.png?v01_20240613)  
+![Pandora Stations Panel Mode](https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/UIDashboards/pandora_nofooter_panel.png?v01_20240613)  
 
 #### Editor UI, General Options  
-![Editor UI, General Options](images/general_editor_options.png?v01_20240613)  
+![Editor UI, General Options](https://raw.githubusercontent.com/wiki/thlucas1/homeassistantcomponent_soundtouchplus_card/images/ConfigurationOptions/general_editor_options.png?v01_20240613)  
 
 ## HACS Installation Instructions (recommended)
 
