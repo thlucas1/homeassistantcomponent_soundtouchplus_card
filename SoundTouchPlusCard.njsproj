@@ -28,7 +28,7 @@
     <Content Include=".github\ISSUE_TEMPLATE\config.yml" />
     <Content Include=".github\ISSUE_TEMPLATE\feature_request.yml" />
     <Content Include=".github\workflows\build.yml" />
-    <Content Include=".github\workflows\hacs.yml" />
+    <Content Include=".github\workflows\validate.yml" />
     <Content Include=".github\workflows\release.yml" />
     <Content Include=".gitignore" />
     <Content Include=".prettierrc.js" />
