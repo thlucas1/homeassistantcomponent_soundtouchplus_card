@@ -38,10 +38,13 @@
       <SubType>Code</SubType>
     </Content>
     <Content Include="hacs.json" />
-    <Content Include="images\panel_pandora.png" />
-    <Content Include="images\panel_presets.png" />
-    <Content Include="images\panel_recently_played.png" />
-    <Content Include="images\general_editor_ui.jpg" />
+    <Content Include="images\general_editor_options.png" />
+    <Content Include="images\pandora_nofooter_panel.png" />
+    <Content Include="images\player_nofooter_panel.png" />
+    <Content Include="images\presets_device_nofooter_panel.png" />
+    <Content Include="images\presets_user_nofooter_panel.png" />
+    <Content Include="images\recentlyplayed_nofooter_panel.png" />
+    <Content Include="images\sources_nofooter_panel.png" />
     <Content Include="LICENSE" />
     <Content Include="package-lock.json" />
     <Content Include="package.json" />
