@@ -48,7 +48,6 @@
     <Content Include="LICENSE" />
     <Content Include="package-lock.json" />
     <Content Include="package.json" />
-    <Content Include="INFO.md" />
     <Content Include="rollup.config.js" />
     <Content Include="src\types\hassentityattributes-soundtouchplus.ts">
       <SubType>Code</SubType>
