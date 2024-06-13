@@ -10,13 +10,12 @@ import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
 import { customEvent } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
-import { ITEM_SELECTED, PANDORA_BROWSER_REFRESH } from '../constants';
+import { ITEM_SELECTED, PANDORA_BROWSER_REFRESH, SECTION_SELECTED } from '../constants';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { CardConfig } from '../types/cardconfig'
 import { NavigateItem } from '../types/soundtouchplus/navigateitem';
 import { NavigateResponse } from '../types/soundtouchplus/navigateresponse';
-
-//const LOGPFX = "STPC - sections/pandora-browser."
+import { Section } from '../types/section';
 
 export class PandoraBrowser extends LitElement {
 
@@ -85,7 +84,7 @@ export class PandoraBrowser extends LitElement {
         this.isUpdateInProgress = true;
         this.updateMediaList(this.player);
       } else {
-        console.log("%c pandora-browser - update already in progress!", "color: orange;");
+        //console.log("%c pandora-browser - update already in progress!", "color: orange;");
       }
     }
 
@@ -257,7 +256,7 @@ export class PandoraBrowser extends LitElement {
    * @param args Event arguments that contain the media item that was clicked on.
    */
   protected OnItemSelected = (args: CustomEvent) => {
-    console.log("pandora-browser.OnItemSelected - args:\n%s", JSON.stringify(args));
+    //console.log("pandora-browser.OnItemSelected - args:\n%s", JSON.stringify(args));
     const mediaItem = args.detail;
     this.PlayItem(mediaItem);
     this.dispatchEvent(customEvent(ITEM_SELECTED, mediaItem));
@@ -270,8 +269,15 @@ export class PandoraBrowser extends LitElement {
    * @param mediaItem The NavigateItem item that was selected.
    */
   private async PlayItem(mediaItem: NavigateItem) {
+
     if (mediaItem.ContentItem) {
+
+      // play the content.
       await this.soundTouchPlusService.PlayContentItem(this.player.id, mediaItem.ContentItem);
+
+      // show the player section (only shown if it's active).
+      const event = customEvent(SECTION_SELECTED, Section.PLAYER);
+      window.dispatchEvent(event);
     }
   }
 

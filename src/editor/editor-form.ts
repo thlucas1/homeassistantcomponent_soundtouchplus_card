@@ -33,22 +33,17 @@ class Form extends BaseEditor {
   }
 
 
-  static get styles() { //: CSSResultGroup {
+  static get styles() {
     return css`
-      .root > * {
-        display: block;
-      }
-
-      .root > *:not([own-margin]):not(:last-child) {
+      /* TODO TEST - reduce margin between editor controls */
+      :host > *:not([own-margin]):not(:last-child) {
         margin-bottom: 0px;
+        // border: 2px solid yellow !important;
       }
-
-      .root > :not([own-margin]):not(:last-child) {
-          margin-bottom: 4px;
-      }
-
-      ha-alert[own-margin] {
-        margin-bottom: 4px;
+      /* TODO TEST - reduce margin between editor controls */
+      :host > * {
+        margin-bottom: 0px;
+        // border: 2px solid yellow !important;
       }
     `;
   }

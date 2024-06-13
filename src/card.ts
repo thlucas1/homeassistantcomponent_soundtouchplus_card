@@ -23,7 +23,8 @@ const {
   PLAYER,
   PRESETS,
   RECENTS,
-  SOURCES
+  SOURCES,
+  USERPRESETS
 } = Section;
 
 const HEADER_HEIGHT = 2;
@@ -33,12 +34,8 @@ const CARD_DEFAULT_WIDTH = '35.15rem';
 const CARD_EDIT_PREVIEW_HEIGHT = '42rem';
 const CARD_EDIT_PREVIEW_WIDTH = '100%';
 
-//const PARENTELEMENT_TAGNAME_HUI_CARD_OPTIONS = 'HUI-CARD-OPTIONS';
-//const PARENTELEMENT_TAGNAME_HUI_CARD_PREVIEW = 'HUI-CARD-PREVIEW';
-
 const EDIT_TAB_HEIGHT = '48px';
 const EDIT_BOTTOM_TOOLBAR_HEIGHT = '59px';
-//const CARD_EDIT_PREVIEW_WIDTH = 35.3;  // width of card editor parent.
 
 // Good source of help documentation on HA custom cards:
 // https://gist.github.com/thomasloven/1de8c62d691e754f95b023105fe4b74b
@@ -126,6 +123,7 @@ export class Card extends LitElement {
                 [PRESETS, () => html` <stpc-preset-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-presets-browser>`],
                 [RECENTS, () => html` <stpc-recent-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-recents-browser>`],
                 [SOURCES, () => html` <stpc-source-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-source-browser>`],
+                [USERPRESETS, () => html` <stpc-userpreset-browser .store=${this.store} @item-selected=${this.onMediaListItemSelected}></stp-userpresets-browser>`],
               ])
               : html`<div class="stpc-not-configured">Player not configured</div>`
           }
@@ -249,6 +247,18 @@ export class Card extends LitElement {
 
       ha-circular-progress {
         --md-sys-color-primary: var(--dark-primary-color);
+      }
+
+      /* TODO TEST - reduce margin between editor controls */
+      .root > * {
+        display: block;
+        margin-bottom: 0px;
+        border: 1px solid red !important;
+      }
+      /* TODO TEST - reduce margin between editor controls */
+      .root > *:not([own-margin]):not(:last-child) {
+        margin-bottom: 0px;
+        border: 1px solid yellow !important;
       }
     `;
   }
@@ -381,11 +391,9 @@ export class Card extends LitElement {
   protected OnSectionSelected = (args: Event) => {
 
     const sectionToSelect = (args as CustomEvent).detail as Section;
-    //console.log("card.OnSectionSelected() - sectionToSelect:\n%s", sectionToSelect);
 
     // is section activated?  if so, then select it.
     if (this.config.sections?.includes(sectionToSelect)) {
-      //setTimeout(() => (this.section = sectionToSelect), 1000);
       this.section = sectionToSelect;
     }
   }
@@ -401,16 +409,13 @@ export class Card extends LitElement {
   */
   protected OnShowSection = (args: CustomEvent) => {
 
-    //console.log("OnShowSection\n this.config.sections=%s\n event section=%s\n this.section=%s", JSON.stringify(this.config.sections), JSON.stringify(args.detail), JSON.stringify(this.section));
-
     const section = args.detail;
-    //console.log("card.OnShowSection()\n this.section=%s", JSON.stringify(section));
 
     if (!this.config.sections || this.config.sections.indexOf(section) > -1) {
       this.section = section;
       //this.requestUpdate();
     } else {
-      console.log("STPC - card.OnShowSection()\n section is not active: %s", JSON.stringify(section));
+      //console.log("STPC - card.OnShowSection()\n section is not active: %s", JSON.stringify(section));
     }
   }
 
@@ -475,6 +480,8 @@ export class Card extends LitElement {
     }
 
     // default configration values if not set.
+    newConfig.pandoraBrowserItemsPerRow = newConfig.pandoraBrowserItemsPerRow || 9;
+    newConfig.pandoraBrowserItemsHideTitle = newConfig.pandoraBrowserItemsHideTitle || false;
     newConfig.playerHeaderHide = newConfig.playerHeaderHide || false;
     newConfig.playerHeaderHideProgressBar = newConfig.playerHeaderHideProgressBar || false;
     newConfig.playerControlsHidePlayPause = newConfig.playerControlsHidePlayPause || false;
@@ -488,9 +495,10 @@ export class Card extends LitElement {
     newConfig.recentBrowserItemsPerRow = newConfig.recentBrowserItemsPerRow || 10;
     newConfig.recentBrowserItemsHideSource = newConfig.recentBrowserItemsHideSource || false;
     newConfig.recentBrowserItemsHideTitle = newConfig.recentBrowserItemsHideTitle || false;
-    newConfig.pandoraBrowserItemsPerRow = newConfig.pandoraBrowserItemsPerRow || 9;
-    newConfig.pandoraBrowserItemsHideTitle = newConfig.pandoraBrowserItemsHideTitle || false;
     newConfig.sourceBrowserItemsPerRow = newConfig.sourceBrowserItemsPerRow || 3;
+    newConfig.userPresetBrowserItemsPerRow = newConfig.userPresetBrowserItemsPerRow || 3;
+    newConfig.userPresetBrowserItemsHideSource = newConfig.userPresetBrowserItemsHideSource || false;
+    newConfig.userPresetBrowserItemsHideTitle = newConfig.userPresetBrowserItemsHideTitle || false;
 
     // if custom imageUrl's are supplied, then remove special characters from each title
     // to speed up comparison when imageUrl's are loaded later on.  we will also
@@ -568,25 +576,17 @@ export class Card extends LitElement {
    */
   public static getStubConfig(): Record<string, unknown> {
 
-    // TODO - add code to search for SoundTouch entities that are already installed,
-    // and default the "entity" key value.
-
-    // does entity id exist in hass state data?
-    //for const player as SoundTouchPlusHassEntity = Object.values(hass.states)
-    //  .filter((ent) => ent.entity_id.match(entityId));
-
     return {
       sections: [Section.PRESETS, Section.RECENTS],
       entity: "",
-      title: 'SoundTouch Card "{player.name}"',
-      playerHeaderTitle: '{player.name}',
+      playerHeaderTitle: '{player.source_noaccount}',
       playerHeaderArtistTrack: '{player.media_artist} - {player.media_title}',
       playerHeaderAlbum: '{player.media_album_name}',
-      playerHeaderNoMediaPlayingText: 'no media is playing',
+      playerHeaderNoMediaPlayingText: '"{player.name}" state is "{player.state}"',
       sourceBrowserTitle: '"{player.name}" Sources ({medialist.itemcount} items)',
       sourceBrowserSubTitle: 'click an item to select the source',
       sourceBrowserItemsPerRow: 1,
-      presetBrowserTitle: '"{player.name}" Presets',
+      presetBrowserTitle: '"{player.name}" Device Presets',
       presetBrowserSubTitle: "last updated on {player.soundtouchplus_presets_lastupdated} ({medialist.itemcount} items)",
       presetBrowserItemsPerRow: 3,
       presetBrowserItemsHideTitle: false,
@@ -597,9 +597,14 @@ export class Card extends LitElement {
       recentBrowserItemsHideTitle: false,
       recentBrowserItemsHideSource: false,
       pandoraBrowserTitle: '"{player.name}" My Pandora Stations',
-      pandoraBrowserSubTitle: "refreshed on {lastupdatedon} ({medialist.itemcount} items)",
+      pandoraBrowserSubTitle: "refreshed on {medialist.lastupdatedon} ({medialist.itemcount} items)",
       pandoraBrowserItemsPerRow: 4,
       pandoraBrowserItemsHideTitle: false,
+      userPresetBrowserTitle: 'User Presets',
+      userPresetBrowserSubTitle: "refreshed on {medialist.lastupdatedon} ({medialist.itemcount} items)",
+      userPresetBrowserItemsPerRow: 4,
+      userPresetBrowserItemsHideTitle: false,
+      userPresetBrowserItemsHideSource: false,
       customImageUrls: {
         "default": "/local/images/soundtouchplus_card_customimages/default.png",
         "empty preset": "/local/images/soundtouchplus_card_customimages/empty_preset.png",
@@ -651,13 +656,10 @@ export class Card extends LitElement {
     // - if number value specified, then use as width (in rem units).
     // - if no value specified, then use default.
     if (this.config.width == 'fill') {
-      //console.log("card.styleCard() width - fill specified");
       cardWidth = '100%';
-    } else if (isNumber(this.config.width)) {
-      //console.log("card.styleCard() width - number was specified");
-      cardWidth = this.config.width + 'rem';
+    } else if (isNumber(String(this.config.width))) {
+      cardWidth = String(this.config.width) + 'rem';
     } else {
-      //console.log("card.styleCard() width - config not specified; use default");
       cardWidth = CARD_DEFAULT_WIDTH;
     }
 
@@ -666,13 +668,10 @@ export class Card extends LitElement {
     // - if number value specified, then use as height (in rem units).
     // - if no value specified, then use default.
     if (this.config.height == 'fill') {
-      //console.log("card.styleCard() height - fill specified");
       cardHeight = 'calc(100vh - var(--stpc-card-footer-height) - var(--stpc-card-edit-tab-height) - var(--stpc-card-edit-bottom-toolbar-height))';
-    } else if (isNumber(this.config.height)) {
-      //console.log("card.styleCard() height - number was specified");
-      cardHeight = this.config.height + 'rem';
+    } else if (isNumber(String(this.config.height))) {
+      cardHeight = String(this.config.height) + 'rem';
     } else {
-      //console.log("card.styleCard() height - config not specified; use default");
       cardHeight = CARD_DEFAULT_HEIGHT;
     }
 

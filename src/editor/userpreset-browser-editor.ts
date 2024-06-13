@@ -7,37 +7,37 @@ import { Section } from '../types/section'
 
 const CONFIG_SETTINGS_SCHEMA = [
   {
-    name: 'recentBrowserTitle',
+    name: 'userPresetBrowserTitle',
     label: 'Section title text',
     help: 'displayed at the top of the section',
     required: false,
     type: 'string',
   },
   {
-    name: 'recentBrowserSubTitle',
+    name: 'userPresetBrowserSubTitle',
     label: 'Section sub-title text',
     help: 'displayed below the section title',
     required: false,
     type: 'string',
   },
   {
-    name: 'recentBrowserItemsPerRow',
+    name: 'userPresetBrowserItemsPerRow',
     label: '# of items to display per row',
     help: 'use 1 for list format',
     required: true,
     type: 'integer',
-    default: 3,
+    default: 4,
     valueMin: 1,
     valueMax: 12,
   },
   {
-    name: 'recentBrowserItemsHideTitle',
+    name: 'userPresetBrowserItemsHideTitle',
     label: 'Hide item row title text',
     required: false,
     selector: { boolean: {} },
   },
   {
-    name: 'recentBrowserItemsHideSource',
+    name: 'userPresetBrowserItemsHideSource',
     label: 'Hide item row source title text',
     help: 'if Title visible',
     required: false,
@@ -46,7 +46,7 @@ const CONFIG_SETTINGS_SCHEMA = [
 ];
 
 
-class RecentSettingsEditor extends BaseEditor {
+class UserPresetSettingsEditor extends BaseEditor {
 
   /**
    * Invoked on each update to perform rendering tasks. 
@@ -56,23 +56,28 @@ class RecentSettingsEditor extends BaseEditor {
   */
   protected render(): TemplateResult {
 
-    //console.log("recent-browser-editor.render() Rendering card");
+    //console.log("userpreset-browser-editor.render() Rendering card");
 
     // create application common storage area.
-    this.section = Section.RECENTS;
+    this.section = Section.USERPRESETS;
     super.createStore();
 
     // render html.
     return html`
       <div class="schema-title">
-        Settings that control the Recent Browser section look and feel
+        Settings that control the User Preset Browser section look and feel
       </div>
       <stpc-editor-form
         .schema=${CONFIG_SETTINGS_SCHEMA}
-        .section=${Section.RECENTS}
+        .section=${Section.USERPRESETS}
         .config=${this.config}
         .hass=${this.hass}
       ></stpc-editor-form>
+      <div class="schema-title">
+        User Preset items must be defined manually in the configuration code editor.
+        Please refer to the <a href="https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#userpresets-user-preset-content-items" target="_blank">
+        wiki documentation</a> for more details and examples.
+      </div>
     `;
   }
 
@@ -93,4 +98,4 @@ class RecentSettingsEditor extends BaseEditor {
 
 }
 
-customElements.define('stpc-recent-browser-editor', RecentSettingsEditor);
+customElements.define('stpc-userpreset-browser-editor', UserPresetSettingsEditor);

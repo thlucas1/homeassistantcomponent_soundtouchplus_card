@@ -65,7 +65,7 @@ class PresetSettingsEditor extends BaseEditor {
     // render html.
     return html`
       <div class="schema-title">
-        Settings that control the Preset Browser section look and feel
+        Settings that control the Device Preset Browser section look and feel
       </div>
       <stpc-editor-form
         .schema=${CONFIG_SETTINGS_SCHEMA}
@@ -90,7 +90,6 @@ class PresetSettingsEditor extends BaseEditor {
       }
       `;
   }
-
 }
 
 customElements.define('stpc-preset-browser-editor', PresetSettingsEditor);

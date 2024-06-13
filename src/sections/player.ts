@@ -112,13 +112,10 @@ export class Player extends LitElement {
       backgroundSize = 'contain';
     }
     
-    //if (this.store.isInCardEditPreview()) {
-    //  backgroundSize = 'contain';
-    //}
-
     // get various image source settings.
     const playerImage = this.player.attributes.entity_picture;
     const configImagePlayerBg = this.config.customImageUrls?.['playerBackground'];
+    const configImagePlayerOffBg = this.config.customImageUrls?.['playerOffBackground'];
     const configImageDefault = this.config.customImageUrls?.['default'];
 
     // use customImageUrls configuration player background image for the background image if found;
@@ -126,7 +123,9 @@ export class Player extends LitElement {
     // otherwise, use customImageUrls configuration default image if found;
     // otherwise, use static music notes image.
     let imageUrl = '';
-    if (configImagePlayerBg) {
+    if (configImagePlayerOffBg && this.player.isPoweredOff()) {
+      imageUrl = configImagePlayerOffBg;
+    } else if (configImagePlayerBg) {
       imageUrl = configImagePlayerBg;
     } else if (playerImage) {
       imageUrl = playerImage;

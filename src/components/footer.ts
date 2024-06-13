@@ -3,6 +3,7 @@ import { css, html, LitElement, TemplateResult, nothing } from 'lit';
 import { property } from 'lit/decorators.js';
 import {
   mdiAudioInputRca,
+  mdiBookmarkMusicOutline,
   mdiHistory,
   mdiPandora,
   mdiPlayCircle,
@@ -22,6 +23,7 @@ const {
   PRESETS,
   RECENTS,
   SOURCES,
+  USERPRESETS,
 } = Section;
 
 class Footer extends LitElement {
@@ -57,6 +59,13 @@ class Footer extends LitElement {
         @click=${() => this.OnSectionClick(PRESETS)}
         selected=${this.setSection(PRESETS)}
         hide=${this.getSectionEnabled(PRESETS)}
+      ></ha-icon-button>
+      <ha-icon-button
+        .path=${mdiBookmarkMusicOutline}
+        .label="Presets"
+        @click=${() => this.OnSectionClick(USERPRESETS)}
+        selected=${this.setSection(USERPRESETS)}
+        hide=${this.getSectionEnabled(USERPRESETS)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiHistory}

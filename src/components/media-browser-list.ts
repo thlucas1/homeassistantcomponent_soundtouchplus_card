@@ -53,7 +53,11 @@ export class MediaBrowserList extends LitElement {
     let hideSource = true;
     let itemsPerRow = 1;
     let listItemClass = 'button';
-    if (this.section == Section.PRESETS) {
+    if (this.section == Section.PANDORA_STATIONS) {
+      itemsPerRow = this.config.pandoraBrowserItemsPerRow || 3;
+      hideTitle = this.config.pandoraBrowserItemsHideTitle || false;
+      hideSource = true;
+    } else if (this.section == Section.PRESETS) {
       itemsPerRow = this.config.presetBrowserItemsPerRow || 3;
       hideTitle = this.config.presetBrowserItemsHideTitle || false;
       hideSource = this.config.presetBrowserItemsHideSource || false;
@@ -61,16 +65,16 @@ export class MediaBrowserList extends LitElement {
       itemsPerRow = this.config.recentBrowserItemsPerRow || 3;
       hideTitle = this.config.recentBrowserItemsHideTitle || false;
       hideSource = this.config.recentBrowserItemsHideSource || false;
-    } else if (this.section == Section.PANDORA_STATIONS) {
-      itemsPerRow = this.config.pandoraBrowserItemsPerRow || 3;
-      hideTitle = this.config.pandoraBrowserItemsHideTitle || false;
-      hideSource = true;
     } else if (this.section == Section.SOURCES) {
       itemsPerRow = this.config.sourceBrowserItemsPerRow || 3;
       hideTitle = this.config.sourceBrowserItemsHideTitle || false;
       hideSource = true;
       // make the source icons half the size of regular list buttons.
       listItemClass += ' button-source';
+    } else if (this.section == Section.USERPRESETS) {
+      itemsPerRow = this.config.presetBrowserItemsPerRow || 3;
+      hideTitle = this.config.presetBrowserItemsHideTitle || false;
+      hideSource = this.config.presetBrowserItemsHideSource || false;
     }
 
     // render html.
@@ -81,7 +85,7 @@ export class MediaBrowserList extends LitElement {
         }
       </style>
       <mwc-list multi class="list">
-        ${itemsWithFallbacks(this.items, this.config).map((item, index) => {
+        ${itemsWithFallbacks(this.items, this.config, this.section).map((item, index) => {
           return html`
             ${styleMediaBrowserItemBackgroundImage(item.thumbnail, index, this.section)}
             <mwc-list-item

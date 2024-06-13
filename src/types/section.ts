@@ -7,4 +7,5 @@ export enum Section {
   PRESETS = 'presets',
   RECENTS = 'recents',
   SOURCES = 'sources',
+  USERPRESETS = 'userpresets',
 }

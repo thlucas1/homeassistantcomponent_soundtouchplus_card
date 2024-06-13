@@ -10,11 +10,12 @@ import { Store } from '../model/store';
 import { customEvent } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
 import { MediaPlayer } from '../model/media-player';
-import { ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD } from '../constants';
+import { ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD, SECTION_SELECTED } from '../constants';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { CardConfig } from '../types/cardconfig'
 import { Preset } from '../types/soundtouchplus/preset';
 import { PresetList } from '../types/soundtouchplus/presetlist';
+import { Section } from '../types/section';
 
 //const LOGPFX = "STPC - sections/preset-browser."
 
@@ -94,7 +95,7 @@ export class PresetBrowser extends LitElement {
         this.isUpdateInProgress = true;
         this.updateMediaList(this.player);
       } else {
-        console.log("%c preset-browser - update already in progress!", "color: orange;");
+        //console.log("%c preset-browser - update already in progress!", "color: orange;");
       }
     }
       
@@ -237,8 +238,15 @@ export class PresetBrowser extends LitElement {
    * @param mediaItem The Preset item that was selected.
    */
   private async SelectPreset(mediaItem: Preset) {
+
     if (mediaItem.PresetId) {
+
+      // play the content.
       await this.soundTouchPlusService.RemoteKeyPress(this.player.id, "PRESET_" + JSON.stringify(mediaItem.PresetId), "release");
+
+      // show the player section (only shown if it's active).
+      const event = customEvent(SECTION_SELECTED, Section.PLAYER);
+      window.dispatchEvent(event);
     }
   }
 

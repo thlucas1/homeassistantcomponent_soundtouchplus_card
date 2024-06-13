@@ -34,9 +34,6 @@
     <Content Include=".prettierrc.js" />
     <Content Include=".vscode\launch.json" />
     <Content Include="CHANGELOG.md" />
-    <Content Include="data\recently_played_cache_9070658C9D4A.xml">
-      <SubType>Code</SubType>
-    </Content>
     <Content Include="developer_notes.txt">
       <SubType>Code</SubType>
     </Content>
@@ -79,7 +76,6 @@
     <Folder Include=".vscode\" />
     <Folder Include="dist" />
     <Folder Include="images\" />
-    <Folder Include="data\" />
     <Folder Include="src" />
     <Folder Include="src\components" />
     <Folder Include="src\editor" />
@@ -99,6 +95,7 @@
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\components\player-progress.ts" />
     <TypeScriptCompile Include="src\components\player-volume.ts" />
+    <TypeScriptCompile Include="src\editor\userpreset-browser-editor.ts" />
     <TypeScriptCompile Include="src\editor\source-browser-editor.ts" />
     <TypeScriptCompile Include="src\editor\player-volume-editor.ts" />
     <TypeScriptCompile Include="src\editor\player-editor.ts" />
@@ -109,6 +106,7 @@
     <TypeScriptCompile Include="src\sections\source-browser.ts" />
     <TypeScriptCompile Include="src\sections\pandora-browser.ts" />
     <TypeScriptCompile Include="src\sections\recent-browser.ts" />
+    <TypeScriptCompile Include="src\sections\userpreset-browser.ts" />
     <TypeScriptCompile Include="src\services\media-control-service.ts" />
     <TypeScriptCompile Include="src\services\soundtouchplus-service.ts" />
     <TypeScriptCompile Include="src\types\cardconfig.ts">

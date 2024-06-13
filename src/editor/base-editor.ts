@@ -38,13 +38,6 @@ export abstract class BaseEditor extends LitElement {
   public soundTouchPlusService!: SoundTouchPlusService;
 
 
-
-  setConfig(config: CardConfig) {
-    this.config = JSON.parse(JSON.stringify(config));
-    //console.log("base-editor.setConfig():\n%s", JSON.stringify(this.config, null, 2));  // prettyprint
-  }
-
-
   /**
    * Initializes a new instance of the class.
    */
@@ -52,13 +45,54 @@ export abstract class BaseEditor extends LitElement {
 
     super();
 
+    // initialize storage.
     if (!this.sourceListLastUpdatedOn) {
-      //console.log("base-editor.constructor() Initializing instance\nsourceListLastUpdatedOn=%s", this.sourceListLastUpdatedOn);
       this.section = Section.PRESETS;
       this.sourceListLastUpdatedOn = 1;
-    } else {
-      //console.log("base-editor.constructor() Already Initialized\nsourceListLastUpdatedOn=%s", this.sourceListLastUpdatedOn);
     }
+  }
+
+
+  /**
+   * Style definitions used by this TemplateResult.
+   */
+  static get styles() {
+    return css`
+      ha-svg-icon {
+        margin: 5px;
+      }
+      ha-control-button {
+        white-space: nowrap;
+      }
+      ha-control-button-group {
+        margin: 5px;
+      }
+      div {
+        margin-top: 20px;
+      }
+    `;
+  }
+
+
+  /**
+   * Home Assistant will call setConfig(config) when the configuration changes.  This
+   * is most likely to occur when changing the configuration via the UI editor, but
+   * can also occur if YAML changes are made (for cards without UI config editor).
+   * 
+   * If you throw an exception in this method (e.g. invalid configuration, etc), then
+   * Home Assistant will render an error card to notify the user.
+   * 
+   * Note that setConfig will ALWAYS be called at the start of the lifetime of the card
+   * BEFORE the `hass` object is first provided.  It MAY be called several times during 
+   * the lifetime of the card, e.g. if the configuration of the card is changed.
+   * 
+   * @param config Contains the configuration specified by the user for the card.
+   */
+  setConfig(config: CardConfig) {
+
+    // store a reference to the card configuration.
+    this.config = JSON.parse(JSON.stringify(config));
+    //console.log("base-editor.setConfig():\n%s", JSON.stringify(this.config, null, 2));  // prettyprint
   }
 
 
@@ -81,53 +115,23 @@ export abstract class BaseEditor extends LitElement {
     // create the store.
     // we only need to do this once, as each editor section will call this from their render() methods.
     if (!this.store) {
-      //console.log("base-editor.createStore() creating store\nconfig.entity=%s", this.config.entity);
       this.store = new Store(this.hass, this.config, this, this.section, this.config.entity);
-    } else {
-      //console.log("base-editor.createStore() store already created\nconfig.entity=%s", this.config.entity);
     }
 
     // set other references obtained from the store.
     this.player = this.store.player;
     this.section = this.store.section;
-
-    //console.log("base-editor.createStore() player reference set - player:\n%s", JSON.stringify(this.config.entity,null,2));
-
-    // TODO - we could also get the source list from the media player attributes.
-    // TODO - note that it could be a limited list (versus ALL sources), based upon user configuration.
-    //this.player.attributes.source_list
-
-  //  // is this the first render?  if so, then refresh the list.
-  //  if (this.sourceListLastUpdatedOn == 1) {
-  //    //console.log("base-editor.createStore() calling updateSourceList()");
-  //    this.updateSourceList(this.player);
-  //  }
   }
 
 
-  static get styles() {
-    return css`
-      ha-svg-icon {
-        margin: 5px;
-      }
-      ha-control-button {
-        white-space: nowrap;
-      }
-      ha-control-button-group {
-        margin: 5px;
-      }
-      div {
-        margin-top: 20px;
-      }
-    `;
-  }
-
-
+  /**
+   * Called by the various editor forms when a value has been changed in the configuration editor(s).
+   * 
+   * @param changedConfig A CardConfig object that contains changes made in the editor.
+   */
   protected configChanged(changedConfig: CardConfig | undefined = undefined) {
 
-    //console.log("base-editor.configChanged() - configuration has changed");
-
-    // if card configuration changes were supplied, then update the existing configuration.
+    // update the existing configuration if configuration changes were supplied.
     if (changedConfig) {
       this.config = {
         ...this.config,
@@ -143,51 +147,30 @@ export abstract class BaseEditor extends LitElement {
   }
 
 
-  //protected configChanged() {
-  //  //console.log("base-editor.configChanged() - configuration has changed");
-  //  fireEvent(this, 'config-changed', { config: this.config });
-  //  this.requestUpdate();
-  //}
-
-
   protected dispatchClose() {
     return this.dispatchEvent(new CustomEvent('closed'));
   }
 
 
-  ///**
-  // * Updates the sourceList with the most current list of sources from the SoundTouch device.  
-  // * 
-  // * This method is called when the section is initially displayed.
-  // */
-  //private updateSourceList(player: MediaPlayer): void {
-
-  //  //console.log("base-editor.updateSourceList() - player object:\n%s", JSON.stringify(player,null,2));
-
-  //  // update the media list; we will force the `sourceListLastUpdatedOn` attribute 
-  //  // with the current epoch date (in seconds) so that the refresh is only triggered once.
-  //  this.sourceListLastUpdatedOn = Date.now() / 1000;
-
-  //  // call the service to retrieve the media list.
-  //  this.soundTouchPlusService.GetSourceList(player.id)
-  //    .then(result => {
-  //      this.sourceList = result;
-  //      this.sourceListLastUpdatedOn = Date.now() / 1000;
-  //      //console.log("%c base-editor.render - updateSourceList AFTER update:\n %s=sourceListLastUpdatedOn", "color: green;", JSON.stringify(this.sourceListLastUpdatedOn));
-  //      this.requestUpdate();
-  //    });
-  //}
-
-
+  /**
+   * Called by various editor forms to retrieve a list of source accounts that match
+   * the specified sourcePrefix argument.
+   * 
+   * @param sourcePrefix A source prefix (e.g. "PANDORA", "SPOTIFY", etc).
+   * @returns A list of accounts defined for that source.
+   * 
+   * For example, let's say the following sources are defined to the SoundTouch device:
+   * - source="SPOTIFY", sourceAccount="mySpotifyUserId"
+   * - source="SPOTIFY", sourceAccount="SpotifyConnectUserName"
+   * - source="SPOTIFY", sourceAccount="SpotifyAlexaUserName"
+   * This method would return: ["mySpotifyUserId", "SpotifyConnectUserName", "SpotifyAlexaUserName"]
+   * 
+   */
   public getSourceAccountsList(sourcePrefix: string): any {
-
-    //console.log("base-editor.getSourceAccountsList() Getting source account options");
 
     const result = [];
 
     if (this.player) {
-      //console.log("base-editor.getSourceAccountsList() Getting sources from player source_list attribute");
-      this.player.attributes.source_list
       for (const source of (this.player.attributes.source_list || [])) {
         if (source.startsWith(sourcePrefix)) {
           let value = source.replace(sourcePrefix, '');
@@ -199,23 +182,11 @@ export abstract class BaseEditor extends LitElement {
       }
     }
 
-    //// add all pandora source accounts to the list.
-    //if (this.sourceList) {
-    //  for (const sourceItem of (this.sourceList.SourceItems || [])) {
-    //    if (sourceItem.Source == 'PANDORA')
-    //      result.push(sourceItem.SourceAccount);
-    //  }
-    //}
-
     // if no sources found, then add a dummy entry.
     if (result.length == 0) {
-      //console.log("base-editor.getSourceAccountsList() No PANDORA sources in SoundTouch source list");
-      result.push('No PANDORA sources in SoundTouch source list');
+      result.push('No ' + sourcePrefix + ' sources in SoundTouch source list');
     }
-
-    //console.log("base-editor.getSourceAccountsList() - source list:\n%s", JSON.stringify(result));
 
     return result;
   }
-
 }

@@ -7,7 +7,10 @@ import { mdiVolumeHigh, mdiVolumeMute } from '@mdi/js';
 import { CardConfig } from '../types/cardconfig';
 import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
+import { MediaPlayerEntityFeature } from '../types/mediaplayer-entityfeature'
 import { MediaControlService } from '../services/media-control-service';
+
+const { TURN_OFF, TURN_ON } = MediaPlayerEntityFeature;
 
 class Volume extends LitElement {
 
@@ -60,7 +63,7 @@ class Volume extends LitElement {
             <div style="flex: ${maxVolume - volume};text-align: right">${maxVolume}%</div>
           </div>
         </div>
-        <stpc-ha-player .store=${this.store} .features=${this.store.showPower()}></stpc-ha-player>
+        <stpc-ha-player .store=${this.store} .features=${this.showPower()}></stpc-ha-player>
       </div>
     `;
   }
@@ -89,6 +92,21 @@ class Volume extends LitElement {
    */
   private async OnMuteClick() {
     return await this.mediaControlService.volumeMuteToggle(this.player);
+  }
+
+
+  /**
+   * Returns the media player features to be displayed if TURN_OFF, TURN_ON feature is enabled.
+   */
+  private showPower() {
+
+    // media player does not support power (TURN_ON, TURN_OFF) features.
+    if (!this.player.supportsTurnOn()) {
+      return [];
+    }
+
+    // user enabled / disabled power control in configuration.
+    return this.config.playerVolumeControlsHidePower ? [] : [TURN_OFF, TURN_ON];
   }
 
 

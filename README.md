@@ -9,27 +9,40 @@ Extended support for the Bose SoundTouch line of speaker products for use in Hom
 
 ## Features
 
+* Media player interface with customizable controls and information display
 * Display / Select / Store SoundTouch Device Presets
+* Display / Select User-Defined Presets
 * Display / Select SoundTouch Device Recently Played items
 * Display / Select your Pandora Stations
+* Display / Select Source Inputs
+* Card Configuration Editor User-Interface for changing options
 
 with more to come!
 
 ## How it Looks
 
-Here's a quick overview on what the card looks like; check out the [UI Dashboards wiki](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/UI-Dashboards) page for more examples and YAML configuration.
+Here's a quick overview on what the card can look like.  The card is highly customizable when it comes to the information displayed.  Check out the [UI Dashboards wiki](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/UI-Dashboards) page for more examples and YAML configuration.
 
-_Pandora Stations, Panel Mode_  
-<img src="images/panel_pandora.png?v01_20240317">   
+#### Media Player Control (Panel Mode)  
+![Media Player Control, Panel Mode](images/player_nofooter_panel.png?v01_20240613)  
 
-_SoundTouch Presets, Panel Mode_  
-<img src="images/panel_presets.png?v01_20240512">   
+#### SoundTouch Recently Played (Panel Mode)  
+![SoundTouch Recently Played, Panel Mode](images/recentlyplayed_nofooter_panel.png?v01_20240613)  
 
-_SoundTouch Recently Played, Panel Mode_  
-<img src="images/panel_recently_played.png?v01_20240512">   
+#### User-Defined Presets (Panel Mode)  
+![SoundTouch Presets, Panel Mode](images/presets_user_nofooter_panel.png?v01_20240613)  
 
-_Editor UI, General Options_  
-<img src="images/general_editor_ui.jpg?v01_20240512">   
+#### SoundTouch Device Presets (Panel Mode)  
+![SoundTouch Presets, Panel Mode](images/presets_device_nofooter_panel.png?v01_20240613)  
+
+#### SoundTouch Sources (Panel Mode)  
+![SoundTouch Sources Panel Mode](images/sources_nofooter_panel.png?v01_20240613)  
+
+#### Pandora Stations (Panel Mode)  
+![Pandora Stations Panel Mode](images/pandora_nofooter_panel.png?v01_20240613)  
+
+#### Editor UI, General Options  
+![Editor UI, General Options](images/general_editor_options.png?v01_20240613)  
 
 ## HACS Installation Instructions (recommended)
 

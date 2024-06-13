@@ -68,6 +68,15 @@ export class MediaPlayer {
 
 
   /**
+   * Returns true if the player is currently powered off (e.g. state = 'off'); 
+   * otherwise, false.
+   */
+  public isPoweredOff() {
+    return this.state === 'off';
+  }
+
+
+  /**
    * Returns true if the player volume is currently muted; 
    * otherwise, false.
    */

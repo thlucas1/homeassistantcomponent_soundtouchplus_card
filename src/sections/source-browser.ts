@@ -89,7 +89,7 @@ export class SourceBrowser extends LitElement {
         this.isUpdateInProgress = true;
         this.updateMediaList(this.player);
       } else {
-        console.log("%c source-browser - update already in progress!", "color: orange;");
+        //console.log("%c source-browser - update already in progress!", "color: orange;");
       }
     }
 

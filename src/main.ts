@@ -6,6 +6,7 @@ import { Player } from './sections/player';
 import { PresetBrowser } from './sections/preset-browser';
 import { RecentBrowser } from './sections/recent-browser';
 import { SourceBrowser } from './sections/source-browser';
+import { UserPresetBrowser } from './sections/userpreset-browser';
 import './components/ha-player';
 
 
@@ -43,3 +44,4 @@ customElements.define('stpc-player', Player);
 customElements.define('stpc-preset-browser', PresetBrowser);
 customElements.define('stpc-recent-browser', RecentBrowser);
 customElements.define('stpc-source-browser', SourceBrowser);
+customElements.define('stpc-userpreset-browser', UserPresetBrowser);

@@ -10,11 +10,12 @@ import { Store } from '../model/store';
 import { customEvent } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
 import { MediaPlayer } from '../model/media-player';
-import { ITEM_SELECTED } from '../constants';
+import { ITEM_SELECTED, SECTION_SELECTED } from '../constants';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { CardConfig } from '../types/cardconfig'
 import { Recent } from '../types/soundtouchplus/recent';
 import { RecentList } from '../types/soundtouchplus/recentlist';
+import { Section } from '../types/section';
 
 //const LOGPFX = "STPC - sections/recent-browser."
 
@@ -91,7 +92,7 @@ export class RecentBrowser extends LitElement {
         this.isUpdateInProgress = true;
         this.updateMediaList(this.player);
       } else {
-        console.log("%c recent-browser - update already in progress!", "color: orange;");
+        //console.log("%c recent-browser - update already in progress!", "color: orange;");
       }
     }
 
@@ -211,8 +212,15 @@ export class RecentBrowser extends LitElement {
    * @param mediaItem The Recent item that was selected.
    */
   private async PlayItem(mediaItem: Recent) {
+
     if (mediaItem.ContentItem) {
+
+      // play the content.
       await this.soundTouchPlusService.PlayContentItem(this.player.id, mediaItem.ContentItem);
+
+      // show the player section (only shown if it's active).
+      const event = customEvent(SECTION_SELECTED, Section.PLAYER);
+      window.dispatchEvent(event);
     }
   }
 

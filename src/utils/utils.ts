@@ -75,6 +75,6 @@ export function formatStringProperCase(str: string): string | void {
  * @param numStr String to check for a numeric value.
  * @returns true if the specified string can be converted to a number; otherwise, false.
  */
-export function isNumber(numStr: string) {
+export function isNumber(numStr: string): boolean {
   return !isNaN(parseFloat(numStr)) && !isNaN(+numStr)
 }

@@ -14,6 +14,7 @@ import './player-editor';
 import './preset-browser-editor';
 import './recent-browser-editor';
 import './source-browser-editor';
+import './userpreset-browser-editor';
 import { dispatch } from '../utils/utils';
 
 /** Configuration area editor sections enum. */
@@ -21,13 +22,22 @@ enum ConfigArea {
   GENERAL = 'General',
   PLAYER = 'Player',
   SOURCE_BROWSER = 'Sources',
-  PRESET_BROWSER = 'Presets',
-  RECENT_BROWSER = 'Recents',
+  RECENT_BROWSER = 'Recently Played',
+  PRESET_BROWSER = 'Device Presets',
+  USERPRESET_BROWSER = 'User Presets',
   PANDORA_BROWSER = 'Pandora',
 }
 
 /** Configuration area editor section keys array. */
-const { GENERAL, PLAYER, SOURCE_BROWSER, PRESET_BROWSER, RECENT_BROWSER, PANDORA_BROWSER } = ConfigArea;
+const {
+  GENERAL,
+  PLAYER,
+  SOURCE_BROWSER,
+  RECENT_BROWSER,
+  USERPRESET_BROWSER,
+  PRESET_BROWSER,
+  PANDORA_BROWSER
+} = ConfigArea;
 
 class CardEditor extends BaseEditor {
 
@@ -52,7 +62,19 @@ class CardEditor extends BaseEditor {
 
     return html`
       <ha-control-button-group>
-        ${[GENERAL, PLAYER, SOURCE_BROWSER, PRESET_BROWSER, RECENT_BROWSER, PANDORA_BROWSER].map(
+        ${[GENERAL, PLAYER, SOURCE_BROWSER, PANDORA_BROWSER].map(
+          (configArea) => html`
+            <ha-control-button
+              selected=${this.configArea === configArea || nothing}
+              @click=${() => this.OnSectionButtonClick(configArea)}
+            >
+              ${configArea}
+            </ha-control-button>
+          `,
+        )}
+      </ha-control-button-group>
+      <ha-control-button-group>
+        ${[PRESET_BROWSER, USERPRESET_BROWSER, RECENT_BROWSER].map(
           (configArea) => html`
             <ha-control-button
               selected=${this.configArea === configArea || nothing}
@@ -69,6 +91,25 @@ class CardEditor extends BaseEditor {
   }
 
 
+  static get styles() {
+    return css`
+      ha-control-button-group {
+        margin-bottom: 8px;
+      }
+
+      ha-control-button[selected] {
+        --control-button-background-color: var(--primary-color);
+      }
+
+      /* TODO TEST - hide CONFIG VISIBILITY tab bar */
+      paper-tabs {
+        display: none !important;
+        border: 1px solid red !important;
+      }
+    `;
+  }
+
+
   private subEditor() {
 
     //console.log("subEditor()\n this.configArea=%s", this.configArea);
@@ -80,12 +121,12 @@ class CardEditor extends BaseEditor {
         () => html`<stpc-general-editor .config=${this.config} .hass=${this.hass}></stpc-general-editor>`,
       ],
       [
-        PLAYER,
-        () => html`<stpc-player-editor .config=${this.config} .hass=${this.hass}></stpc-player-editor>`,
+        PANDORA_BROWSER,
+        () => html`<stpc-pandora-browser-editor .config=${this.config} .hass=${this.hass}></stpc-pandora-browser-editor>`,
       ],
       [
-        SOURCE_BROWSER,
-        () => html`<stpc-source-browser-editor .config=${this.config} .hass=${this.hass}></stpc-source-browser-editor>`,
+        PLAYER,
+        () => html`<stpc-player-editor .config=${this.config} .hass=${this.hass}></stpc-player-editor>`,
       ],
       [
         PRESET_BROWSER,
@@ -96,8 +137,12 @@ class CardEditor extends BaseEditor {
         () => html`<stpc-recent-browser-editor .config=${this.config} .hass=${this.hass}></stpc-recent-browser-editor>`,
       ],
       [
-        PANDORA_BROWSER,
-        () => html`<stpc-pandora-browser-editor .config=${this.config} .hass=${this.hass}></stpc-pandora-browser-editor>`,
+        SOURCE_BROWSER,
+        () => html`<stpc-source-browser-editor .config=${this.config} .hass=${this.hass}></stpc-source-browser-editor>`,
+      ],
+      [
+        USERPRESET_BROWSER,
+        () => html`<stpc-userpreset-browser-editor .config=${this.config} .hass=${this.hass}></stpc-userpreset-browser-editor>`,
       ],
     ]);
   }
@@ -116,16 +161,18 @@ class CardEditor extends BaseEditor {
     let sectionNew = Section.PLAYER;
     if (configArea == GENERAL) {
       sectionNew = Section.PLAYER;
+    } else if (configArea == PANDORA_BROWSER) {
+      sectionNew = Section.PANDORA_STATIONS;
     } else if (configArea == PLAYER) {
       sectionNew = Section.PLAYER;
-    } else if (configArea == SOURCE_BROWSER) {
-      sectionNew = Section.SOURCES;
     } else if (configArea == PRESET_BROWSER) {
       sectionNew = Section.PRESETS;
     } else if (configArea == RECENT_BROWSER) {
       sectionNew = Section.RECENTS;
-    } else if (configArea == PANDORA_BROWSER) {
-      sectionNew = Section.PANDORA_STATIONS;
+    } else if (configArea == SOURCE_BROWSER) {
+      sectionNew = Section.SOURCES;
+    } else if (configArea == USERPRESET_BROWSER) {
+      sectionNew = Section.USERPRESETS;
     }
 
     //console.log("editor.OnSectionButtonClick()\n OLD configArea=%s, NEW configArea=%s\n OLD section=%s, NEW section=%s", JSON.stringify(this.configArea), JSON.stringify(configArea), JSON.stringify(this.section), JSON.stringify(sectionNew));
@@ -136,15 +183,6 @@ class CardEditor extends BaseEditor {
     // show the rendered section.
     this.section = sectionNew;
     dispatch(SECTION_SELECTED, sectionNew);
-  }
-
-
-  static get styles() {
-    return css`
-      ha-control-button[selected] {
-        --control-button-background-color: var(--primary-color);
-      }
-    `;
   }
 }
 

@@ -51,7 +51,7 @@ class PlayerHeader extends LitElement {
 
     // if nothing is playing then display configured 'no media playing' text.
     if (!this.player.attributes.media_title) {
-      artistTrack = this.config.playerHeaderNoMediaPlayingText || 'No Media Playing';
+      artistTrack = formatTitleInfo(this.config.playerHeaderNoMediaPlayingText, this.config, this.player) || 'No Media Playing';
       album = undefined;
     }
 

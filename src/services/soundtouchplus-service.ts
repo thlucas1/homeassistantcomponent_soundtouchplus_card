@@ -21,7 +21,7 @@ export class SoundTouchPlusService {
   private readonly hass: HomeAssistant;
 
   /** Custom card instance. */
-  private readonly card: Element;
+  public readonly card: Element;
 
   /** Currently selected section of the card. */
   private readonly section: Section;

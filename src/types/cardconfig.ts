@@ -4,6 +4,7 @@ import { LovelaceCardConfig } from 'custom-card-helpers';
 // our imports.
 import { Section } from './section'
 import { CustomImageUrls } from './customimageurls'
+import { ContentItemParent } from './soundtouchplus/contentitem';
 
 /**
  * Card configuration settings.
@@ -36,7 +37,7 @@ export interface CardConfig extends LovelaceCardConfig {
    * the available horizontal space (good for panel dashboards).
    * Default is 35.15rem.
    */
-  width?: any;
+  width?: string | number;
 
   /**
    * Height of the card (in 'rem' units).
@@ -44,7 +45,7 @@ export interface CardConfig extends LovelaceCardConfig {
    * the available vertical space (good for panel dashboards).
    * Default is 35.15rem.
    */
-  height?: any;
+  height?: string | number;
 
   /**
    * User account used to connect to Pandora music service.
@@ -104,6 +105,7 @@ export interface CardConfig extends LovelaceCardConfig {
    * Text to display in the header area of the Player section form
    * when no media is currently playing.
    * Omit this parameter to display the default 'No Media Playing' value.
+   * This value supports Title Formatter Options.
    */
   playerHeaderNoMediaPlayingText?: string;
 
@@ -279,6 +281,39 @@ export interface CardConfig extends LovelaceCardConfig {
   sourceBrowserItemsHideTitle?: boolean;
 
   /**
+   * Title displayed at the top of the Preset media browser section form.
+   * Omit this parameter to hide the title display area.
+   * This value supports Title Formatter Options.
+   */
+  userPresetBrowserTitle?: string;
+
+  /**
+   * Sub-title displayed at the top of the User Preset media browser section form.
+   * Omit this parameter to hide the sub-title display area.
+   * This value supports Title Formatter Options.
+   */
+  userPresetBrowserSubTitle?: string;
+
+  /**
+   * Number of items to display in a single row of the User Preset media browser section form.
+   * Use a value of 1 to display the items as a vertical list.
+   * Default is 3.
+   */
+  userPresetBrowserItemsPerRow?: number;
+
+  /** 
+   * Hide titles displayed for User Preset media browser items.
+   * Default is false.
+   */
+  userPresetBrowserItemsHideTitle?: boolean;
+
+  /** 
+   * Hide source titles displayed for User Preset media browser items.
+   * Default is false.
+   */
+  userPresetBrowserItemsHideSource?: boolean;
+
+  /**
    * Collection of custom imageUrl's that can be displayed in various media browser
    * displays.  This allows the user to override the image that is supplied by the
    * media player service, as well as provide imageUrl's for items that do not contain
@@ -306,6 +341,34 @@ export interface CardConfig extends LovelaceCardConfig {
    */
   customImageUrls?: CustomImageUrls;
 
+  /**
+   * Collection of user-defined preset items that can be displayed in various media browser
+   * displays.  This allows the user to define their own custom presets along with device presets.
+   * 
+   * This configuration data must be configured manually in the card configuration.
+   * Some things to keep in mind when adding entries:
+   * - attribute names are are CaSe-SeNsItIvE.
+   * 
+   * See wiki dicumentation for more examples.
+   * 
+   * Example:
+   * userPresets:
+   * - ContentItem:
+   *     Name: "K-Love Radio"
+   *     ContainerArt: "http://cdn-profiles.tunein.com/s33828/images/logog.png?t=637986894890000000"
+   *     Location: "/v1/playback/station/s33828"
+   *     Source: "TUNEIN"
+   *     TypeValue: "stationurl"
+   */
+  userPresets?: Array<ContentItemParent>;
+
+  /**
+   * File path to a collection of user-defined preset items that can be displayed in various media browser
+   * displays.  This allows the user to define their own custom presets along with device presets.
+   * 
+   * See `userPresets` configuration item for file content format.
+   */
+  userPresetsFile?: string;
 
   //imageUrlsReplaceHttpWithHttps?: boolean;
 }

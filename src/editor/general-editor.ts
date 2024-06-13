@@ -16,7 +16,8 @@ const CONFIG_SETTINGS_SCHEMA = [
     options: {
       player: 'Player',
       sources: 'Sources',
-      presets: 'Presets',
+      presets: 'Device Presets',
+      userpresets: 'User Presets',
       recents: 'Recently Played',
       pandorastations: 'Pandora Stations',
     },
@@ -112,6 +113,23 @@ class GeneralEditor extends BaseEditor {
 
       ha-formfield {
         height: 26px;
+      }
+
+      /* TODO TEST - reduce margin between editor controls */
+      .root > * {
+        display: block;
+        margin-bottom: 0px;
+        // border: 4px solid red !important;
+      }
+      /* TODO TEST - reduce margin between editor controls */
+      .root > *:not([own-margin]):not(:last-child) {
+        margin-bottom: 0px;
+        // border: 4px solid yellow !important;
+      }
+      /* TODO TEST - reduce margin between editor controls */
+      :host > *:not([own-margin]):not(:last-child) {
+        margin-bottom: 0px;
+        // border: 4px solid yellow !important;
       }
       `;
   }

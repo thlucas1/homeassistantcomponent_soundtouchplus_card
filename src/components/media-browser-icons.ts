@@ -51,7 +51,11 @@ export class MediaBrowserIcons extends LitElement {
     let hideTitle = true;
     let hideSource = true;
     let itemsPerRow = 1;
-    if (this.section == Section.PRESETS) {
+    if (this.section == Section.PANDORA_STATIONS) {
+      itemsPerRow = this.config.pandoraBrowserItemsPerRow || 3;
+      hideTitle = this.config.pandoraBrowserItemsHideTitle || false;
+      hideSource = true;
+    } else if (this.section == Section.PRESETS) {
       itemsPerRow = this.config.presetBrowserItemsPerRow || 3;
       hideTitle = this.config.presetBrowserItemsHideTitle || false;
       hideSource = this.config.presetBrowserItemsHideSource || false;
@@ -59,14 +63,14 @@ export class MediaBrowserIcons extends LitElement {
       itemsPerRow = this.config.recentBrowserItemsPerRow || 3;
       hideTitle = this.config.recentBrowserItemsHideTitle || false;
       hideSource = this.config.recentBrowserItemsHideSource || false;
-    } else if (this.section == Section.PANDORA_STATIONS) {
-      itemsPerRow = this.config.pandoraBrowserItemsPerRow || 3;
-      hideTitle = this.config.pandoraBrowserItemsHideTitle || false;
-      hideSource = true;
     } else if (this.section == Section.SOURCES) {
       itemsPerRow = this.config.sourceBrowserItemsPerRow || 3;
       hideTitle = this.config.sourceBrowserItemsHideTitle || false;
       hideSource = true;
+    } else if (this.section == Section.USERPRESETS) {
+      itemsPerRow = this.config.userPresetBrowserItemsPerRow || 3;
+      hideTitle = this.config.userPresetBrowserItemsHideTitle || false;
+      hideSource = this.config.userPresetBrowserItemsHideSource || false;
     }
 
     return html`
@@ -76,7 +80,7 @@ export class MediaBrowserIcons extends LitElement {
         }
       </style>
       <div class="icons">
-        ${itemsWithFallbacks(this.items, this.config).map(
+        ${itemsWithFallbacks(this.items, this.config, this.section).map(
           (item, index) => html`
             ${styleMediaBrowserItemBackgroundImage(item.thumbnail, index, this.section)}
             <ha-control-button

@@ -10,7 +10,7 @@ import { MediaPlayer } from '../model/media-player';
 import { MediaPlayerEntityFeature } from '../types/mediaplayer-entityfeature'
 import { PLAYER_CONTROLS_BACKGROUND_OPACITY_DEFAULT } from '../constants'
 
-const { SHUFFLE_SET, REPEAT_SET, PLAY, PAUSE, NEXT_TRACK, PREVIOUS_TRACK } = MediaPlayerEntityFeature;
+const { NEXT_TRACK, PAUSE, PLAY, PREVIOUS_TRACK, REPEAT_SET, SHUFFLE_SET } = MediaPlayerEntityFeature;
 
 class PlayerControls extends LitElement {
 
@@ -34,8 +34,9 @@ class PlayerControls extends LitElement {
     this.config = this.store.config;
     this.player = this.store.player;
 
-    const stopped = ['paused', 'playing'].includes(this.player.state) && nothing;
-
+    //const stopped = ['paused', 'playing'].includes(this.player.state) && nothing;
+    const stopped = ['on', 'idle', 'playing', 'paused', 'buffering'].includes(this.player.state) && nothing;
+    
     // render html.
     // note that the "showPower" feature will only be displayed if the player is off AND if
     // the device supports the TURN_ON feature.
@@ -51,7 +52,7 @@ class PlayerControls extends LitElement {
           </div>
           <stpc-player-volume hide=${stopped} .store=${this.store} .player=${this.player}></stpc-player-volume>
           <div class="icons">
-              <stpc-ha-player .store=${this.store} .features=${this.store.showPower(true)}></stpc-ha-player>
+              <stpc-ha-player .store=${this.store} .features=${this.store.showMainPower()}></stpc-ha-player>
           </div">
       </div>
   `;
@@ -134,6 +135,7 @@ class PlayerControls extends LitElement {
         --mdc-icon-button-size: 2.5rem !important;
         --mdc-icon-size: 1.5rem !important;
         mix-blend-mode: screen;
+        overflow: hidden;
       }
 
       *[hide] {

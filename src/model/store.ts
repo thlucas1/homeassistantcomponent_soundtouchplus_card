@@ -102,8 +102,8 @@ export class Store {
     if (!hassEntity)
       throw new Error("Entity id '" + JSON.stringify(entityId) + "' does not exist in the state machine");
 
-    //console.log("getMediaPlayerObject - hassEntity[0]:\n", JSON.stringify(hassEntity[0]))
-    
+    //console.log("getMediaPlayerObject - hassEntity[0]:\n", JSON.stringify(hassEntity[0], null, 2))
+
     // convert the hass state representation to a media player object.
     return new MediaPlayer(hassEntity[0]);
   }
@@ -124,21 +124,35 @@ export class Store {
   /**
    * Returns [TURN_ON, TURN_OFF] if the power button should be shown;
    * otherwise, [].
-   * 
-   * @param hideIfOn True if the power button should be hidden while the player is on; 
-   * otherwise, False to always show the power button if the media player supports the TURN_ON feature.
    */
-  public showPower(hideIfOn = false) {
+  public showMainPower() {
+
+    // determine if the media player is powered on.
+    const isPoweredOn = (['on', 'idle', 'playing', 'paused', 'standby', 'buffering'].indexOf(this.player.state) >= 0);
+    //console.log("store.showMainPower()\ncurrent state=%s\nisPowerOn=%s", this.player.state, isPoweredOn);
+
     if (this.config.playerVolumeControlsHidePower || false) {
-      console.log("store.showPower() - power is hidden");
+      // user disabled power control in configuration.
+      //console.log("hide main power control since user disabled it in config");
       return [];
-    } else if (!this.player.supportsTurnOn()) {
-      return [];
-    } else if (hideIfOn && this.player.state != 'off') {
-      return [];
-    } else {
-      return [TURN_ON, TURN_OFF];
     }
+
+    if (!this.player.supportsTurnOn()) {
+      // media player does not support power (TURN_ON, TURN_OFF) features.
+      //console.log("hide main power control since media_player does not support it");
+      return [];
+    }
+
+    if (isPoweredOn == true) {
+      // media player is powered on; hide main power control.
+      // note that a power control is already shown in player controls next to volume.
+      //console.log("hide main power control since media_player is powered on");
+      return [];
+    }
+
+    // media player is powered off; show main power control.
+    //console.log("show main power control");
+    return [TURN_OFF, TURN_ON];
   }
 
 
