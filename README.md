@@ -24,9 +24,11 @@ with more to come!
 Here's a quick overview on what the card can look like.  The card is highly customizable when it comes to the information displayed.  Check out the [UI Dashboards wiki](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/UI-Dashboards) page for more examples and YAML configuration.
 
 #### Media Player Control (Panel Mode)  
+
+[![player_nofooter_panel](./images/player_nofooter_panel.png)](https://raw.githubusercontent.com/thlucas1/homeassistantcomponent_soundtouchplus_card/master/images/player_nofooter_panel.png)
+
 <img src="https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/blob/master/images/player_nofooter_panel.png?raw=true">
 <img src="https://raw.githubusercontent.com/thlucas1/homeassistantcomponent_soundtouchplus_card/master/images/player_nofooter_panel.png">
-
 
 #### SoundTouch Recently Played (Panel Mode)  
 ![recentlyplayed_nofooter_panel](./images/recentlyplayed_nofooter_panel.png) 

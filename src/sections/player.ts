@@ -123,7 +123,7 @@ export class Player extends LitElement {
     // otherwise, use customImageUrls configuration default image if found;
     // otherwise, use static music notes image.
     let imageUrl = '';
-    if (configImagePlayerOffBg && this.player.isPoweredOff()) {
+    if (configImagePlayerOffBg && this.player.isPoweredOffOrUnknown()) {
       imageUrl = configImagePlayerOffBg;
     } else if (configImagePlayerBg) {
       imageUrl = configImagePlayerBg;
