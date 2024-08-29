@@ -56,11 +56,13 @@ class UserPresetSettingsEditor extends BaseEditor {
   */
   protected render(): TemplateResult {
 
-    //console.log("userpreset-browser-editor.render() Rendering card");
-
-    // create application common storage area.
-    this.section = Section.USERPRESETS;
+    // ensure store is created.
     super.createStore();
+
+    //console.log("render (userpreset-browser-editor) - rendering userpreset settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
 
     // render html.
     return html`
@@ -70,6 +72,7 @@ class UserPresetSettingsEditor extends BaseEditor {
       <stpc-editor-form
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.USERPRESETS}
+        .store=${this.store}
         .config=${this.config}
         .hass=${this.hass}
       ></stpc-editor-form>

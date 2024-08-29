@@ -6,6 +6,7 @@ import { BaseEditor } from './base-editor';
 import { Section } from '../types/section'
 import { DOMAIN_MEDIA_PLAYER, DOMAIN_SOUNDTOUCHPLUS } from '../constants';
 
+
 const CONFIG_SETTINGS_SCHEMA = [
   {
     name: 'sections',
@@ -79,10 +80,13 @@ class GeneralEditor extends BaseEditor {
   */
   protected render(): TemplateResult {
 
-    //console.log("general-editor.render() Rendering card");
-
-    // create application common storage area.
+    // ensure store is created.
     super.createStore();
+
+    //console.log("render (general-editor) - rendering general editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
 
     // render html.
     return html`
@@ -92,6 +96,7 @@ class GeneralEditor extends BaseEditor {
       <stpc-editor-form
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PLAYER}
+        .store=${this.store}
         .config=${this.config}
         .hass=${this.hass}
       ></stpc-editor-form>

@@ -21,6 +21,11 @@ class Form extends BaseEditor {
   */
   protected render(): TemplateResult {
 
+    //console.log("render (editor-form) - rendering editor form\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
+
     return html`
       <ha-form
         .data=${this.data || this.config}
@@ -58,7 +63,9 @@ class Form extends BaseEditor {
    */
   protected OnValueChanged(args: CustomEvent): void {
 
-    //console.log("OnValueChanged (editor-form) - event:\n%s", JSON.stringify(args, null, 2));
+    //console.log("OnValueChanged (editor-form) - event:\n%s",
+    //  JSON.stringify(args,null,2)
+    //);
 
     // get the updated changes from event details.
     const changedConfig = (args.detail.value as CardConfig);

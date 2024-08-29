@@ -43,35 +43,35 @@ class Footer extends LitElement {
         .path=${mdiPlayCircle}
         .label="Player"
         @click=${() => this.OnSectionClick(PLAYER)}
-        selected=${this.setSection(PLAYER)}
+        selected=${this.getSectionSelected(PLAYER)}
         hide=${this.getSectionEnabled(PLAYER)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiAudioInputRca}
         .label="Sources"
         @click=${() => this.OnSectionClick(SOURCES)}
-        selected=${this.setSection(SOURCES)}
+        selected=${this.getSectionSelected(SOURCES)}
         hide=${this.getSectionEnabled(SOURCES)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiStarOutline}
         .label="Presets"
         @click=${() => this.OnSectionClick(PRESETS)}
-        selected=${this.setSection(PRESETS)}
+        selected=${this.getSectionSelected(PRESETS)}
         hide=${this.getSectionEnabled(PRESETS)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiBookmarkMusicOutline}
         .label="Presets"
         @click=${() => this.OnSectionClick(USERPRESETS)}
-        selected=${this.setSection(USERPRESETS)}
+        selected=${this.getSectionSelected(USERPRESETS)}
         hide=${this.getSectionEnabled(USERPRESETS)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiHistory}
         .label="Recently Played"
         @click=${() => this.OnSectionClick(RECENTS)}
-        selected=${this.setSection(RECENTS)}
+        selected=${this.getSectionSelected(RECENTS)}
         hide=${this.getSectionEnabled(RECENTS)}
       ></ha-icon-button>
       <ha-icon-button
@@ -80,7 +80,7 @@ class Footer extends LitElement {
         .hideTitle=false
         .ariaHasPopup=true
         @click=${() => this.OnSectionClick(PANDORA_STATIONS)}
-        selected=${this.setSection(PANDORA_STATIONS)}
+        selected=${this.getSectionSelected(PANDORA_STATIONS)}
         hide=${this.getSectionEnabled(PANDORA_STATIONS)}
       ></ha-icon-button>
     `;
@@ -114,16 +114,26 @@ class Footer extends LitElement {
    * @param section Event arguments.
    */
   private OnSectionClick(section: Section) {
+    //console.log("OnSectionClick (footer)\n- section=%s",
+    //  JSON.stringify(section),
+    //);
     this.dispatchEvent(customEvent(SHOW_SECTION, section));
   }
 
 
   /**
-   * Stores a reference to the selected section.
+   * Checks to see if a section is active or not, and returns true for the specified
+   * section if it's the active section.  This is what shows the selected section
+   * in the footer area.
    * 
-   * @param section Section identifier to store.
+   * @param section Section identifier to check.
    */
-  private setSection(section: Section | typeof nothing) {
+  private getSectionSelected(section: Section | typeof nothing) {
+    //console.log("getSectionSelected (footer)\n CURRENT section=%s, COMPARE section=%s, result=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(section),
+    //  JSON.stringify(this.section === section || nothing),
+    //);
     return this.section === section || nothing;
   }
 
@@ -137,6 +147,8 @@ class Footer extends LitElement {
   private getSectionEnabled(searchElement: Section) {
     return (this.config.sections && !this.config.sections?.includes(searchElement)) || nothing;
   }
+
 }
+
 
 customElements.define('stpc-footer', Footer);

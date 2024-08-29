@@ -67,11 +67,13 @@ class PandoraSettingsEditor extends BaseEditor {
   */
   protected render(): TemplateResult {
 
-    //console.log("pandora-browser-editor.render() Rendering card");
-
-    // create application common storage area.
-    this.section = Section.PANDORA_STATIONS;
+    // ensure store is created.
     super.createStore();
+
+    //console.log("render (pandora-browser-editor) - rendering pandora settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
 
     // update select options in configuration settings schema.
     if (CONFIG_SETTINGS_SCHEMA[0]) {
@@ -125,7 +127,9 @@ class PandoraSettingsEditor extends BaseEditor {
    */
   protected OnValueChanged(args: CustomEvent): void {
 
-    //console.log("OnValueChanged (pandora-browser-editor) - event:\n%s", JSON.stringify(args, null, 2));
+    //console.log("OnValueChanged (pandora-browser-editor) - event:\n%s",
+    //  JSON.stringify(args, null, 2)
+    //);
 
     // get the updated changes from event details.
     const changedConfig = (args.detail.value as CardConfig);
@@ -139,7 +143,6 @@ class PandoraSettingsEditor extends BaseEditor {
     // note that we do not need to call`this.configChanged()`, as that has already happened
     // in the base class (editor-form) `OnValueChanged` event.
   }
-
 }
 
 customElements.define('stpc-pandora-browser-editor', PandoraSettingsEditor);

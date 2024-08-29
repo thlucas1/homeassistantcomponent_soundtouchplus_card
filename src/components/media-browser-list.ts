@@ -77,6 +77,12 @@ export class MediaBrowserList extends LitElement {
       hideSource = this.config.presetBrowserItemsHideSource || false;
     }
 
+    //console.log("%c render (media-browser-list)\n Section %s items:\n%s",
+    //  "color: orange;",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(this.items, null, 2),
+    //);
+
     // render html.
     return html`
       <style>

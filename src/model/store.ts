@@ -6,14 +6,12 @@ import { HassService } from '../services/hass-service';
 import { MediaControlService } from '../services/media-control-service';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { CardConfig } from '../types/cardconfig'
+import { ConfigArea } from '../types/configarea';
 import { Section } from '../types/section'
 import { MediaPlayerEntityFeature } from '../types/mediaplayer-entityfeature'
 import { MediaPlayer } from './media-player';
 
 const { TURN_OFF, TURN_ON } = MediaPlayerEntityFeature;
-
-const PARENTELEMENT_TAGNAME_HUI_CARD_OPTIONS = 'HUI-CARD-OPTIONS';
-const PARENTELEMENT_TAGNAME_HUI_CARD_PREVIEW = 'HUI-CARD-PREVIEW';
 
 
 /**
@@ -31,7 +29,7 @@ export class Store {
   public config: CardConfig;
 
   /** Custom card instance. */
-  private readonly card: Element;
+  public readonly card: Element;
 
   /** Home Assistant services helper instance. */
   public hassService: HassService;
@@ -47,6 +45,9 @@ export class Store {
 
   /** Currently selected section. */
   public section: Section;
+
+  /** Currently selected ConfigArea **/
+  static selectedConfigArea: ConfigArea = ConfigArea.GENERAL;
 
 
   /**
@@ -74,14 +75,6 @@ export class Store {
     this.soundTouchPlusService = new SoundTouchPlusService(hass, card, section);
     this.player = this.getMediaPlayerObject(playerId);
     this.section = section;
-
-  //  console.log("View ParentElement tagname info:\n parentElement1=%s\n parentElement2=%s\n parentElement3=%s\n parentElement4=%s\n parentElement5=%s\n parentElement6=%s",
-  //    this.card.parentElement?.tagName,
-  //    this.card.parentElement?.parentElement?.tagName,
-  //    this.card.parentElement?.parentElement?.parentElement?.tagName,
-  //    this.card.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-  //    this.card.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-  //    this.card.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName);
   }
 
 
@@ -153,34 +146,6 @@ export class Store {
     // media player is powered off; show main power control.
     //console.log("show main power control");
     return [TURN_OFF, TURN_ON];
-  }
-
-
-  /**
-   * Returns true if the dashboard editor is active;
-   * otherwise, false.
-   */
-  public isInPanelView() {
-    //return (this.card.parentElement?.tagName == PARENTELEMENT_TAGNAME_HUI_CARD_OPTIONS);
-    return false;
-  }
-
-
-  /**
-   * Returns true if the dashboard editor is active;
-   * otherwise, false.
-   */
-  public isInDashboardEditor() {
-    return (this.card.parentElement?.tagName == PARENTELEMENT_TAGNAME_HUI_CARD_OPTIONS);
-  }
-
-
-  /**
-   * Returns true if the card is currently being previewed in the card editor; 
-   * otherwise, false.
-   */
-  public isInCardEditPreview() {
-    return (this.card.parentElement?.tagName == PARENTELEMENT_TAGNAME_HUI_CARD_PREVIEW);
   }
 
 }

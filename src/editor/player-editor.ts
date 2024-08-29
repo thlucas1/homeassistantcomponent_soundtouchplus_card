@@ -5,7 +5,6 @@ import { choose } from 'lit/directives/choose.js';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { Section } from '../types/section'
 import './editor-form';
 import './player-header-editor';
 import './player-controls-editor';
@@ -33,14 +32,13 @@ class PlayerSettingsEditor extends BaseEditor {
   */
   protected render(): TemplateResult {
 
-    if (!this.section) {
-      this.section = Section.PLAYER;
-    }
+    // ensure store is created.
+    super.createStore();
 
-    //// if no sections are selected then select the defaults.
-    //if (!this.config.sections || this.config.sections.length === 0) {
-    //  this.config.sections = [Section.PLAYER];
-    //}
+    //console.log("render (player-editor) - rendering player settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
 
     return html`
       <div class="schema-title">

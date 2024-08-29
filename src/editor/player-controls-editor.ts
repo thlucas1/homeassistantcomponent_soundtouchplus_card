@@ -56,11 +56,13 @@ class PlayerControlsSettingsEditor extends BaseEditor {
   */
   protected render(): TemplateResult {
 
-    //console.log("player-editor.render() Rendering card");
-
-    // create application common storage area.
-    this.section = Section.PLAYER;
+    // ensure store is created.
     super.createStore();
+
+    //console.log("render (player-editor) - rendering player control settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
 
     // render html.
     return html`

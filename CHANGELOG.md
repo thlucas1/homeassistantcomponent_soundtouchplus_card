@@ -6,6 +6,11 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.5 ] - 2024/08/29
+
+  * Fixed various card configuration issues, which will make the card easier to configure via the HA UI.
+  * Miscellaneous bug fixes.
+
 ###### [ 1.0.4 ] - 2024/06/13
 
   * Added UserPreset section to allow an unlimited number of user-defined presets to be selected for playing.  Note that these are not SoundTouch device presets, but user-defined presets.  They can be added in the card configuration, or a specified as a JSON data file (for sharing among multiple card instances).

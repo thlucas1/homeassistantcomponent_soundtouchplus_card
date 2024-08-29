@@ -1,6 +1,6 @@
 // lovelace card imports.
 import { HomeAssistant } from 'custom-card-helpers';
-import { css, html, LitElement, TemplateResult } from 'lit';
+import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
 import { styleMap } from 'lit-html/directives/style-map.js';
 import { property, state } from 'lit/decorators.js';
 import { choose } from 'lit/directives/choose.js';
@@ -10,12 +10,19 @@ import { when } from 'lit/directives/when.js';
 import { Store } from './model/store';
 import { CardConfig } from './types/cardconfig'
 import { CustomImageUrls } from './types/customimageurls'
+import { ConfigArea } from './types/configarea';
 import { Section } from './types/section'
 import './components/footer';
 import './editor/editor';
 import { PROGRESS_DONE, PROGRESS_STARTED, SECTION_SELECTED } from './constants';
 import { formatTitleInfo, removeSpecialChars } from './utils/media-browser-utils';
-import { isNumber } from './utils/utils';
+import {
+  getConfigAreaForSection,
+  getSectionForConfigArea,
+  isCardInEditPreview,
+  isCardInDashboardEditor,
+  isNumber,
+} from './utils/utils';
 
 
 const {
@@ -64,8 +71,9 @@ export class Card extends LitElement {
   @state() cancelLoader!: boolean;
   @state() playerId!: string;
 
-  /** Indicates if setConfig setup is executing for the first time (true) or not (false). */
+  /** Indicates if createStore method is executing for the first time (true) or not (false). */
   private _isFirstTimeSetup: boolean = true;
+
 
   /**
    * Initializes a new instance of the class.
@@ -87,8 +95,6 @@ export class Card extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    //console.log("card.render()\n Rendering card");
-
     // just in case hass property has not been set yet.
     if (!this.hass)
       return html``;
@@ -96,6 +102,12 @@ export class Card extends LitElement {
     // note that this cannot be called from `setConfig` method, as the `hass` property
     // has not been set set.
     this.createStore();
+
+    //console.log("render (card) - rendering card\n- this.store.section=%s\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.store.section),
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
 
     // TODO - add a check to see if the player is of integration type 'soundtouchplus'.
 
@@ -105,7 +117,11 @@ export class Card extends LitElement {
     const showFooter = !sections || sections.length > 1;
     const title = formatTitleInfo(this.config.title, this.config, this.store.player);
 
-    //console.log("card.render():\n this.section=%s", JSON.stringify(this.section))
+    // if no sections are configured then configure the default.
+    if (!this.config.sections || this.config.sections.length === 0) {
+      //console.log("render (card) - sections not configured, adding PLAYER selection")
+      this.config.sections = [Section.PLAYER];
+    }
 
     // render html for the card.
     return html`
@@ -273,11 +289,44 @@ export class Card extends LitElement {
   private createStore() {
 
     // create the store.
+    //console.log("createStore (card) - creating store");
     this.store = new Store(this.hass, this.config, this, this.section, this.config.entity);
+
+    //console.log("createStore (card) - store created\n- this.store.section=%s\n- Store.selectedConfigArea=%s\n- isCardInEditPreview=%s",
+    //  JSON.stringify(this.store.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //  JSON.stringify(isCardInEditPreview(this)),
+    //);
 
     // have we set the player id yet?  if not, then make it so.
     if (this.playerId == undefined) {
       this.playerId = this.config.entity;
+    }
+
+    // is this the first time executing setConfig method?
+    if (this._isFirstTimeSetup) {
+
+      // if there are things that you only want to happen one time when the configuration
+      // is initially loaded, then do them here.
+
+      //console.log("createStore (card) - isFirstTimeSetup logic invoked");
+
+      // set the initial section reference; if none defined, then default;
+      if ((!this.config.sections) || (this.config.sections.length == 0)) {
+        //console.log("createStore (card) - config change event\n- sections not configured, adding PLAYER section");
+        this.config.sections = [PLAYER];
+        this.section = PLAYER;
+        this.store.section = this.section;
+        this.requestUpdate();
+      } else if (!this.section) {
+        this.section = getSectionForConfigArea(Store.selectedConfigArea);
+        this.store.section = this.section;
+        //console.log("createStore (card) - config change event\n- section was not set, so section %s was selected based on selected ConfigArea", JSON.stringify(this.section));
+        this.requestUpdate();
+      }
+
+      // indicate first time setup has completed.
+      this._isFirstTimeSetup = false;
     }
   }
 
@@ -328,6 +377,114 @@ export class Card extends LitElement {
 
 
   /**
+   * Called when an update was triggered, before rendering. Receives a Map of changed
+   * properties, and their previous values. This can be used for modifying or setting
+   * new properties before a render occurs.
+   */
+  protected update(changedProperties: PropertyValues) {
+
+    // invoke base class method.
+    super.update(changedProperties);
+
+    //  console.log("update (card) - update event (pre-render)\n- this.section=%s\n- Store.selectedConfigArea=%s\nChanged Property Keys:\n%s",
+    //    JSON.stringify(this.section || '*undefined*'),
+    //    JSON.stringify(Store.selectedConfigArea),
+    //    JSON.stringify(changedProperties.keys()),
+    //  );
+  }
+
+
+  /**
+   * Called when an update was triggered, after rendering. Receives a Map of changed
+   * properties, and their previous values. This can be used for observing and acting
+   * on property changes.
+   */
+  protected updated(changedProperties: PropertyValues) {
+
+    // invoke base class method.
+    super.updated(changedProperties);
+
+    //  console.log("updated (card) - update event (post-render)\n- this.section=%s\n- Store.selectedConfigArea=%s\nChanged Property Keys:\n%s",
+    //    JSON.stringify(this.section || '*undefined*'),
+    //    JSON.stringify(Store.selectedConfigArea),
+    //    JSON.stringify(changedProperties.keys()),
+    //  );
+  }
+
+
+  /**
+   * Called when your element has rendered for the first time. Called once in the
+   * lifetime of an element. Useful for one-time setup work that requires access to
+   * the DOM.
+   */
+  protected firstUpdated(_changedProperties: PropertyValues): void {
+
+    // invoke base class method.
+    super.firstUpdated(_changedProperties);
+
+    // if there are things that you only want to happen one time when the configuration
+    // is initially loaded, then do them here.
+
+    //console.log("firstUpdated (card) - first render complete\n- isCardInEditPreview=%s",
+    //  JSON.stringify(isCardInEditPreview(this)),
+    //);
+
+    // at this point, the first render has occurred.
+    // ensure that the specified section is configured; if not, find the first available
+    // section that IS configured and display it.
+    const sectionsConfigured = this.config.sections || []
+    if (!sectionsConfigured.includes(this.section)) {
+
+      //console.log("firstUpdated (card) - active section is not configured\n- active section=%s\n- configured sections:\n%s",
+      //  JSON.stringify(this.section || '*undefined*'),
+      //  JSON.stringify(this.config.sections),
+      //);
+
+      // find the first active section, as determined by the order listed in the footer.
+      let sectionNew: Section = Section.PLAYER;
+      if (sectionsConfigured.includes(Section.PLAYER)) {
+        sectionNew = Section.PLAYER;
+      } else if (sectionsConfigured.includes(Section.SOURCES)) {
+        sectionNew = Section.SOURCES;
+      } else if (sectionsConfigured.includes(Section.PRESETS)) {
+        sectionNew = Section.PRESETS;
+      } else if (sectionsConfigured.includes(Section.USERPRESETS)) {
+        sectionNew = Section.USERPRESETS;
+      } else if (sectionsConfigured.includes(Section.RECENTS)) {
+        sectionNew = Section.RECENTS;
+      } else if (sectionsConfigured.includes(Section.PANDORA_STATIONS)) {
+        sectionNew = Section.PANDORA_STATIONS;
+      }
+
+      // set the default editor configarea value, so that if the card is edited
+      // it will automatically select the configuration settings for the section.
+      Store.selectedConfigArea = getConfigAreaForSection(sectionNew);
+
+      //console.log("firstUpdated (card) - default editor configarea set: %s",
+      //  JSON.stringify(Store.selectedConfigArea),
+      //);
+
+      // show the rendered section.
+      this.section = sectionNew;
+      this.store.section = sectionNew;
+      this.requestUpdate();
+
+    } else if (isCardInEditPreview(this)) {
+
+      //console.log("firstUpdated (card) - in edit mode; refreshing due to card size differences for edit mode");
+
+      // if in edit mode, then refresh display as card size is different.
+      this.requestUpdate();
+    }
+
+    //  console.log("firstUpdated (card) - first render complete\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //    JSON.stringify(this.section || '*undefined*'),
+    //    JSON.stringify(Store.selectedConfigArea),
+    //  );
+  }
+
+
+  /**
    * Handles the `PROGRESS_DONE` event.
    * This will hide the circular progress indicator on the main card display.
    * 
@@ -344,7 +501,7 @@ export class Card extends LitElement {
         setTimeout(() => (this.showLoader = false), 1000 - duration);
       } else {
         this.showLoader = false;
-        //console.log("progress is hidden");
+        //console.log("OnProgressDone (card) - progress is hidden");
       }
     }
   }
@@ -374,7 +531,9 @@ export class Card extends LitElement {
         if (!this.cancelLoader) {
           this.showLoader = true;
           this.loaderTimestamp = Date.now();
-          //console.log("progress is showing - loaderTimestamp=%s", JSON.stringify(this.loaderTimestamp));
+          //  console.log("OnProgressStarted (card) - progress is showing - loaderTimestamp=%s",
+          //    JSON.stringify(this.loaderTimestamp),
+          //  );
         }
       }, 250);
     }
@@ -394,7 +553,15 @@ export class Card extends LitElement {
 
     // is section activated?  if so, then select it.
     if (this.config.sections?.includes(sectionToSelect)) {
+      //console.log("OnSectionSelected (card) - SECTION_SELECTED event\n- OLD section=%s\n- NEW section=%s",
+      //  JSON.stringify(this.section),
+      //  JSON.stringify(sectionToSelect));
       this.section = sectionToSelect;
+      this.store.section = this.section;
+    } else {
+      //  console.log("OnSectionSelected (card) - SECTION_SELECTED event\n- Section is not active: %s",
+      //    JSON.stringify(sectionToSelect)
+      //  );
     }
   }
 
@@ -410,12 +577,18 @@ export class Card extends LitElement {
   protected OnShowSection = (args: CustomEvent) => {
 
     const section = args.detail;
-
     if (!this.config.sections || this.config.sections.indexOf(section) > -1) {
+      //console.log("OnShowSection (card) - SHOW_SECTION event\n- OLD section=%s\n- NEW section=%s",
+      //  JSON.stringify(this.section),
+      //  JSON.stringify(section)
+      //);
       this.section = section;
-      //this.requestUpdate();
+      this.store.section = this.section;
+      this.requestUpdate();
     } else {
-      //console.log("STPC - card.OnShowSection()\n section is not active: %s", JSON.stringify(section));
+      //  console.log("OnShowSection (card) - SHOW_SECTION event\n- section is not active: %s",
+      //    JSON.stringify(section)
+      //  );
     }
   }
 
@@ -463,6 +636,12 @@ export class Card extends LitElement {
    * @param config Contains the configuration specified by the user for the card.
    */
   public setConfig(config: CardConfig): void {
+
+    //console.log("setConfig (card) - method start");
+    //console.log("setConfig (card) - configuration change\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
 
     // copy the passed configuration object to create a new instance.
     const newConfig: CardConfig = JSON.parse(JSON.stringify(config));
@@ -512,28 +691,23 @@ export class Card extends LitElement {
     }
     newConfig.customImageUrls = customImageUrlsTemp;
 
+    // ensure at least one section is selected; default to PLAYER if none selected.
+    if ((newConfig.sections || []).length == 0) {
+      //console.log("setConfig (card) - config change event\n- no sections configured, adding PLAYER section");
+      newConfig.sections = [PLAYER];
+    }
+
     // store configuration so other card sections can access them.
     this.config = newConfig;
 
-    //console.log("STPC - card.setConfig():\n%s", JSON.stringify(this.config, null, 2));  // prettyprint
+    //console.log("setConfig (card) - configuration changes applied\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
 
-    // is this the first time executing setConfig method?
-    if (this._isFirstTimeSetup) {
-
-      // if there are things that you only want to happen one time when the configuration
-      // is initially loaded, then do them here.
-
-      // set the initial section reference; if none defined, then default;
-      if ((!newConfig.sections) || (newConfig.sections.length == 0)) {
-        newConfig.sections = [PRESETS, RECENTS];
-        this.section = PRESETS;
-      } else {
-        this.section = newConfig.sections[0] as Section;
-      }
-
-      // indicate first time setup has completed.
-      this._isFirstTimeSetup = false;
-    }
+    //  console.log("setConfig (card) - updated configuration:\n%s",
+    //    JSON.stringify(this.config,null,2),
+    //  );
   }
 
 
@@ -553,16 +727,13 @@ export class Card extends LitElement {
    * 
    * Home Assistant will display this element in the card editor in the dashboard, along with 
    * the rendered card (to the right) of the editor.
-   * 
-   * The `parentElement?.tagName` will be 'HUI-CARD-PREVIEW' if the card is being shown in the
-   * card editor.  You can check for this if you want to display the card differently while
-   * the card is being actively edited.
-   * 
-   * The `parentElement?.tagName` will be 'HUI-CARD-OPTIONS' if the card is being shown while
-   * editing a dashboard (but not editing the card).  You can check for this if you want to display 
-   * the card differently while the dashboard is being actively edited.
   */
   public static getConfigElement() {
+
+    // initialize what configarea to display on entry - always GENERAL, since this is a static method.
+    Store.selectedConfigArea = ConfigArea.GENERAL;
+
+    // get the card configuration editor, and return for display.
     return document.createElement('stpc-editor');
   }
 
@@ -628,10 +799,15 @@ export class Card extends LitElement {
     let editTabHeight = '0px';
     let editBottomToolbarHeight = '0px';
 
+    //console.log("styleCard (card) - styling card\n- isCardInEditPreview=%s\n- isCardInDashboardEditor=%s",
+    //  JSON.stringify(isCardInEditPreview(this)),
+    //  JSON.stringify(isCardInDashboardEditor()),
+    //);
+
     // are we previewing the card in the card editor?
     // if so, then we will ignore the configuration dimensions and use constants.
-    if (this.store.isInCardEditPreview()) {
-      //console.log("card.styleCard() - card is in edit preview");
+    if (isCardInEditPreview(this)) {
+      //console.log("styleCard (card) - card is in edit preview");
       cardHeight = CARD_EDIT_PREVIEW_HEIGHT;
       cardWidth = CARD_EDIT_PREVIEW_WIDTH;
       return styleMap({
@@ -645,8 +821,8 @@ export class Card extends LitElement {
     // set card editor options.
     // we have to account for various editor toolbars in the height calculations when using 'fill' mode.
     // we do not have to worry about width calculations, as the width is the same with or without edit mode.
-    if (this.store.isInDashboardEditor()) {
-      //console.log("card.styleCard() width - dashboard is in edit mode");
+    if (isCardInDashboardEditor()) {
+      //console.log("styleCard (card) - width - dashboard is in edit mode");
       editTabHeight = EDIT_TAB_HEIGHT;
       editBottomToolbarHeight = EDIT_BOTTOM_TOOLBAR_HEIGHT;
     }
@@ -675,7 +851,12 @@ export class Card extends LitElement {
       cardHeight = CARD_DEFAULT_HEIGHT;
     }
 
-    //console.log("card.styleCard() - calculated dimensions:\ncardWidth=%s\ncardHeight=%s\neditTabHeight=%s\neditBottomToolbarHeight=%s", cardWidth, cardHeight, editTabHeight, editBottomToolbarHeight);
+    //console.log("styleCard (card) - calculated dimensions:\ncardWidth=%s\ncardHeight=%s\neditTabHeight=%s\neditBottomToolbarHeight=%s",
+    //  cardWidth,
+    //  cardHeight,
+    //  editTabHeight,
+    //  editBottomToolbarHeight,
+    //);
 
     return styleMap({
       '--stpc-card-edit-tab-height': `${editTabHeight}`,

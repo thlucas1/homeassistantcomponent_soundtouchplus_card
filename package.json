@@ -42,6 +42,9 @@
     "deploy-prod": "npm run build && cp dist/soundtouchplus-card.js ~/homeassistant/www/community/soundtouchplus-card/soundtouchplus-card.js",
     "deploy-vm": "xcopy \"dist\\soundtouchplus-card.*\" \"\\\\homeassistantvm\\config\\www\" /Y /-I",
     "lint": "eslint src/*.ts",
-    "rollup": "rollup -c"
+    "rollup": "rollup -c",
+    "clean": "npm run clean_delfiles && npm run clean_deldirs",
+    "clean_delfiles": "del /S /Q \"node_modules\\.cache\\rollup-plugin-typescript2\\*.*\"",
+    "clean_deldirs": "for /d %G in (\"node_modules\\.cache\\rollup-plugin-typescript2\\rpt2_*\") do rd /s /q \"%~G\""
   }
 }

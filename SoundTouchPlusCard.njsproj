@@ -115,6 +115,9 @@
     <TypeScriptCompile Include="src\types\cardconfig.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\configarea.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\types\customimageurls.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
