@@ -164,6 +164,14 @@ export class SoundTouchPlusService {
 
     try {
 
+      //console.log("%c MusicServiceStationList (soundtouchplus-service)\n- entityId = %s\n- source = %s\n- sourceAccount = %s\n- sortType = %s",
+      //  "color: orange;",
+      //  JSON.stringify(entityId),
+      //  JSON.stringify(source),
+      //  JSON.stringify(sourceAccount),
+      //  JSON.stringify(sortType),
+      //);
+
       // create service request.
       const serviceRequest: ServiceCallRequest = {
         domain: DOMAIN_SOUNDTOUCHPLUS,
@@ -204,6 +212,12 @@ export class SoundTouchPlusService {
       if (!contentItem)
         throw new Error("STPC0005 contentItem argument was not supplied to the PlayContentItem service.")
 
+      //console.log("%c PlayContentItem (soundtouchplus-service)\n- entityId = %s\n- contentItem:\n%s",
+      //  "color: orange;",
+      //  JSON.stringify(entityId),
+      //  JSON.stringify(contentItem,null,2),
+      //);
+
       // create service request.
       const serviceRequest: ServiceCallRequest = {
         domain: DOMAIN_SOUNDTOUCHPLUS,
@@ -239,6 +253,12 @@ export class SoundTouchPlusService {
 
     try {
 
+      //console.log("%c PresetList (soundtouchplus-service)\n- entityId = %s\n- includeEmptySlots = %s",
+      //  "color: orange;",
+      //  JSON.stringify(entityId),
+      //  JSON.stringify(includeEmptySlots),
+      //);
+
       // create service request.
       const serviceRequest: ServiceCallRequest = {
         domain: DOMAIN_SOUNDTOUCHPLUS,
@@ -269,6 +289,11 @@ export class SoundTouchPlusService {
 
     try {
 
+      //console.log("%c RecentList (soundtouchplus-service)\n- entityId = %s",
+      //  "color: orange;",
+      //  JSON.stringify(entityId),
+      //);
+
       // create service request.
       const serviceRequest: ServiceCallRequest = {
         domain: DOMAIN_SOUNDTOUCHPLUS,
@@ -297,6 +322,11 @@ export class SoundTouchPlusService {
   public async RecentListCache(entityId: string): Promise<RecentList> {
 
     try {
+
+      //console.log("%c RecentListCache (soundtouchplus-service)\n- entityId = %s",
+      //  "color: orange;",
+      //  JSON.stringify(entityId),
+      //);
 
       // create service request.
       const serviceRequest: ServiceCallRequest = {
@@ -327,6 +357,13 @@ export class SoundTouchPlusService {
   public async RemoteKeyPress(entityId: string, keyId: string, keyState: string): Promise<void> {
 
     try {
+
+      //console.log("%c RemoteKeyPress (soundtouchplus-service)\n- entityId = %s\n- keyId = %s\n- keyState = %s",
+      //  "color: orange;",
+      //  JSON.stringify(entityId),
+      //  JSON.stringify(keyId),
+      //  JSON.stringify(keyState),
+      //);
 
       // create service request.
       const serviceRequest: ServiceCallRequest = {

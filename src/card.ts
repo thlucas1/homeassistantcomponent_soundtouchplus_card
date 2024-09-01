@@ -71,6 +71,9 @@ export class Card extends LitElement {
   @state() cancelLoader!: boolean;
   @state() playerId!: string;
 
+  // card editor medialist cache items.
+  static mediaListCache: { [key: string]: object } = {};
+
   /** Indicates if createStore method is executing for the first time (true) or not (false). */
   private _isFirstTimeSetup: boolean = true;
 
@@ -80,7 +83,10 @@ export class Card extends LitElement {
    */
   constructor() {
 
+    // invoke base class method.
     super();
+
+    // initialize storage.
     this.showLoader = false;
     this.cancelLoader = false;
     this.loaderTimestamp = 0;
@@ -347,10 +353,22 @@ export class Card extends LitElement {
     // invoke base class method.
     super.connectedCallback();
 
+    // TODO - while in card edit mode, may be able to prevent loaders from showing
+    // by removing the PROGRESS_STARTED / PROGRESS_DONE event listeners for all card
+    // instances besides the editor card.  see utils.isCardInEditPreview for code
+    // that determines how to check for the card in edit mode.
+    // this will remove all of the duplicate progress loading indicators when
+    // data is being refreshed in the card editor.
+
     // add event listeners for this control.
     window.addEventListener(PROGRESS_DONE, this.OnProgressDone);
     window.addEventListener(PROGRESS_STARTED, this.OnProgressStarted);
-    window.addEventListener(SECTION_SELECTED, this.OnSectionSelected);
+
+    // only add the following events if card configuration is being edited.
+    if (isCardInEditPreview(this)) {
+      window.addEventListener(SECTION_SELECTED, this.OnSectionSelected);
+    }
+
   }
 
 
@@ -372,43 +390,11 @@ export class Card extends LitElement {
     // remove event listeners for this control.
     window.removeEventListener(PROGRESS_DONE, this.OnProgressDone);
     window.removeEventListener(PROGRESS_STARTED, this.OnProgressStarted);
+
+    // always remove the following events, as isCardInEditPreview() can sometimes
+    // return a different value than when the event was added in connectedCallback!
     window.removeEventListener(SECTION_SELECTED, this.OnSectionSelected);
-  }
 
-
-  /**
-   * Called when an update was triggered, before rendering. Receives a Map of changed
-   * properties, and their previous values. This can be used for modifying or setting
-   * new properties before a render occurs.
-   */
-  protected update(changedProperties: PropertyValues) {
-
-    // invoke base class method.
-    super.update(changedProperties);
-
-    //  console.log("update (card) - update event (pre-render)\n- this.section=%s\n- Store.selectedConfigArea=%s\nChanged Property Keys:\n%s",
-    //    JSON.stringify(this.section || '*undefined*'),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //    JSON.stringify(changedProperties.keys()),
-    //  );
-  }
-
-
-  /**
-   * Called when an update was triggered, after rendering. Receives a Map of changed
-   * properties, and their previous values. This can be used for observing and acting
-   * on property changes.
-   */
-  protected updated(changedProperties: PropertyValues) {
-
-    // invoke base class method.
-    super.updated(changedProperties);
-
-    //  console.log("updated (card) - update event (post-render)\n- this.section=%s\n- Store.selectedConfigArea=%s\nChanged Property Keys:\n%s",
-    //    JSON.stringify(this.section || '*undefined*'),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //    JSON.stringify(changedProperties.keys()),
-    //  );
   }
 
 
@@ -417,10 +403,10 @@ export class Card extends LitElement {
    * lifetime of an element. Useful for one-time setup work that requires access to
    * the DOM.
    */
-  protected firstUpdated(_changedProperties: PropertyValues): void {
+  protected firstUpdated(changedProperties: PropertyValues): void {
 
     // invoke base class method.
-    super.firstUpdated(_changedProperties);
+    super.firstUpdated(changedProperties);
 
     // if there are things that you only want to happen one time when the configuration
     // is initially loaded, then do them here.
@@ -477,10 +463,10 @@ export class Card extends LitElement {
       this.requestUpdate();
     }
 
-    //  console.log("firstUpdated (card) - first render complete\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //    JSON.stringify(this.section || '*undefined*'),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //  );
+    //console.log("firstUpdated (card) - first render complete\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section || '*undefined*'),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
   }
 
 
@@ -495,7 +481,12 @@ export class Card extends LitElement {
     this.cancelLoader = true;
     const duration = Date.now() - this.loaderTimestamp;
 
-    //console.log("card.OnProgressDone()\nHiding progress indicator - duration=%s, this.showLoader=%s", JSON.stringify(duration), JSON.stringify(this.showLoader));
+    //console.log("OnProgressDone (card) - Hiding progress indicator\n- duration=%s\n- this.showLoader=%s\n- isCardInEditPreview=%s",
+    //  JSON.stringify(duration),
+    //  JSON.stringify(this.showLoader),
+    //  JSON.stringify(isCardInEditPreview(this)),
+    //);
+
     if (this.showLoader) {
       if (duration < 1000) {
         setTimeout(() => (this.showLoader = false), 1000 - duration);
@@ -520,7 +511,15 @@ export class Card extends LitElement {
   protected OnProgressStarted = (args: Event) => {
 
     //console.log("OnProgressStarted() - Event Args:\n%s", JSON.stringify(args,null,2));
-    //console.log("progress - this.showLoader=%s\n this.config.sections=%s\n args section=%s\n this.section=%s", JSON.stringify(this.showLoader), JSON.stringify(this.config.sections), JSON.stringify((event as CustomEvent).detail.section), JSON.stringify(this.section));
+
+    //console.log("OnProgressStarted (card) - this.showLoader=%s\n- this.config.sections=%s\n- args section=%s\n- this.section=%s\n- isCardInEditPreview=%s",
+    //  JSON.stringify(this.showLoader),
+    //  JSON.stringify(this.config.sections),
+    //  JSON.stringify((args as CustomEvent).detail.section),
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(isCardInEditPreview(this)),
+    //);
+
     if (!this.showLoader && (!this.config.sections || (args as CustomEvent).detail.section === this.section)) {
       this.cancelLoader = false;
       //console.log("progress is about to show");
@@ -531,9 +530,9 @@ export class Card extends LitElement {
         if (!this.cancelLoader) {
           this.showLoader = true;
           this.loaderTimestamp = Date.now();
-          //  console.log("OnProgressStarted (card) - progress is showing - loaderTimestamp=%s",
-          //    JSON.stringify(this.loaderTimestamp),
-          //  );
+          //console.log("OnProgressStarted (card) - progress is showing - loaderTimestamp=%s",
+          //  JSON.stringify(this.loaderTimestamp),
+          //);
         }
       }, 250);
     }
@@ -541,9 +540,10 @@ export class Card extends LitElement {
 
 
   /**
-   * Handles the `SECTION_SELECTED` event.
+   * Handles the card configuration editor `SECTION_SELECTED` event.
    * 
    * This will select a section for display / rendering.
+   * This event should only be fired from the configuration editor instance.
    * 
    * @param args Event arguments that contain the section that was selected.
   */
@@ -553,15 +553,22 @@ export class Card extends LitElement {
 
     // is section activated?  if so, then select it.
     if (this.config.sections?.includes(sectionToSelect)) {
-      //console.log("OnSectionSelected (card) - SECTION_SELECTED event\n- OLD section=%s\n- NEW section=%s",
+
+      //console.log("OnSectionSelected (card) - SECTION_SELECTED event\n- OLD section=%s\n- NEW section=%s\n- store.section=%s",
       //  JSON.stringify(this.section),
-      //  JSON.stringify(sectionToSelect));
+      //  JSON.stringify(sectionToSelect),
+      //  JSON.stringify(this.store.section),
+      //);
+
       this.section = sectionToSelect;
       this.store.section = this.section;
+
     } else {
-      //  console.log("OnSectionSelected (card) - SECTION_SELECTED event\n- Section is not active: %s",
-      //    JSON.stringify(sectionToSelect)
-      //  );
+
+      //console.log("OnSectionSelected (card) - SECTION_SELECTED event\n- Section is not active: %s",
+      //  JSON.stringify(sectionToSelect)
+      //);
+
     }
   }
 
@@ -578,17 +585,22 @@ export class Card extends LitElement {
 
     const section = args.detail;
     if (!this.config.sections || this.config.sections.indexOf(section) > -1) {
+
       //console.log("OnShowSection (card) - SHOW_SECTION event\n- OLD section=%s\n- NEW section=%s",
       //  JSON.stringify(this.section),
       //  JSON.stringify(section)
       //);
+
       this.section = section;
       this.store.section = this.section;
       this.requestUpdate();
+
     } else {
-      //  console.log("OnShowSection (card) - SHOW_SECTION event\n- section is not active: %s",
-      //    JSON.stringify(section)
-      //  );
+
+      //console.log("OnShowSection (card) - SHOW_SECTION event\n- section is not active: %s",
+      //  JSON.stringify(section)
+      //);
+
     }
   }
 
@@ -705,9 +717,9 @@ export class Card extends LitElement {
     //  JSON.stringify(Store.selectedConfigArea),
     //);
 
-    //  console.log("setConfig (card) - updated configuration:\n%s",
-    //    JSON.stringify(this.config,null,2),
-    //  );
+    //console.log("setConfig (card) - updated configuration:\n%s",
+    //  JSON.stringify(this.config,null,2),
+    //);
   }
 
 
@@ -732,6 +744,9 @@ export class Card extends LitElement {
 
     // initialize what configarea to display on entry - always GENERAL, since this is a static method.
     Store.selectedConfigArea = ConfigArea.GENERAL;
+
+    // clear medialist cache items.
+    Card.mediaListCache = {};
 
     // get the card configuration editor, and return for display.
     return document.createElement('stpc-editor');

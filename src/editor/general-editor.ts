@@ -15,6 +15,7 @@ const CONFIG_SETTINGS_SCHEMA = [
     required: false,
     type: 'multi_select',
     options: {
+      /* the following must match defined names in `secion.ts` */
       player: 'Player',
       sources: 'Sources',
       presets: 'Device Presets',

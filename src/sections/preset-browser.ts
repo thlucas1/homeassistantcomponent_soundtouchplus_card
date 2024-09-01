@@ -6,8 +6,9 @@ import { HomeAssistant } from 'custom-card-helpers';
 // our imports.
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
+import { Card } from '../card';
 import { Store } from '../model/store';
-import { customEvent } from '../utils/utils';
+import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
 import { MediaPlayer } from '../model/media-player';
 import { ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD, SECTION_SELECTED } from '../constants';
@@ -40,7 +41,7 @@ export class PresetBrowser extends LitElement {
   private mediaListLastUpdatedOn!: number;
 
   /** SoundTouchPlus device preset list. */
-  private mediaList!: PresetList;
+  private mediaList!: PresetList | undefined;
 
   /** SoundTouchPlus services instance. */
   private soundTouchPlusService!: SoundTouchPlusService;
@@ -51,10 +52,10 @@ export class PresetBrowser extends LitElement {
    */
   constructor() {
 
-    // initialize storage.
+    // invoke base class method.
     super();
 
-    // force refresh first time.
+    // initialize storage.
     this.isUpdateInProgress = false;
     this.mediaListLastUpdatedOn = -1;  
   }
@@ -70,7 +71,9 @@ export class PresetBrowser extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    //console.log(LOGPFX + "render()\n Rendering preset browser html");
+    //console.log("render (preset-browser) - rendering control\n- mediaListLastUpdatedOn=%s",
+    //  JSON.stringify(this.mediaListLastUpdatedOn)
+    //);
 
     // set common references from application common storage area.
     this.hass = this.store.hass
@@ -82,14 +85,8 @@ export class PresetBrowser extends LitElement {
     if (!this.player)
       throw new Error("SoundTouchPlus media player entity id not configured");
 
-    // was the media player preset list updated?
+    // does the medialist need refreshing?
     const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
-    //console.log("%c preset-browser - updateMediaList info BEFORE update:\n player id=%s\n %s=player.stp_presets_lastupdated\n %s=playerLastUpdatedOn\n %s=mediaListLastUpdatedOn",
-    //  "color: green;",
-    //  this.player.id,
-    //  this.player.attributes.soundtouchplus_presets_lastupdated,
-    //  playerLastUpdatedOn,
-    //  this.mediaListLastUpdatedOn);
     if ((this.mediaListLastUpdatedOn == -1) || (playerLastUpdatedOn > this.mediaListLastUpdatedOn)) {
       if (!this.isUpdateInProgress) {
         this.isUpdateInProgress = true;
@@ -99,9 +96,6 @@ export class PresetBrowser extends LitElement {
       }
     }
       
-    //console.log(LOGPFX + "render()\n PresetList.LastUpdatedOn=%s", this.mediaList ? this.mediaList.LastUpdatedOn : "unknown");
-    //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
-
     // format title and sub-title details.
     const title = formatTitleInfo(this.config.presetBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Presets);
     const subtitle = formatTitleInfo(this.config.presetBrowserSubTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Presets);
@@ -212,9 +206,15 @@ export class PresetBrowser extends LitElement {
    * @param args Event arguments that contain the media item that was clicked on.
    */
   protected OnItemSelected = (args: CustomEvent) => {
+
+    //console.log("OnItemSelected (preset-browser) - media item selected:\n%s",
+    //  JSON.stringify(args.detail, null, 2),
+    //);
+
     const mediaItem = args.detail;
     this.SelectPreset(mediaItem);
     this.dispatchEvent(customEvent(ITEM_SELECTED, mediaItem));
+
   };
 
 
@@ -226,9 +226,15 @@ export class PresetBrowser extends LitElement {
    * @param args Event arguments that contain the media item that was clicked on.
    */
   protected OnItemSelectedWithHold = (args: CustomEvent) => {
+
+    //console.log("OnItemSelectedWithHold (preset-browser) - media item selected:\n%s",
+    //  JSON.stringify(args.detail, null, 2),
+    //);
+
     const mediaItem = args.detail;
     this.StorePreset(mediaItem);
     this.dispatchEvent(customEvent(ITEM_SELECTED_WITH_HOLD, mediaItem));
+
   };
 
 
@@ -238,6 +244,10 @@ export class PresetBrowser extends LitElement {
    * @param mediaItem The Preset item that was selected.
    */
   private async SelectPreset(mediaItem: Preset) {
+
+    //console.log("SelectPreset (pandora-browser) - media item:\n%s",
+    //  JSON.stringify(mediaItem, null, 2),
+    //);
 
     if (mediaItem.PresetId) {
 
@@ -257,9 +267,15 @@ export class PresetBrowser extends LitElement {
    * @param mediaItem The Preset item that was selected.
    */
   private async StorePreset(mediaItem: Preset) {
+
+    //console.log("StorePreset (pandora-browser) - media item:\n%s",
+    //  JSON.stringify(mediaItem, null, 2),
+    //);
+
     if (mediaItem.PresetId) {
       await this.soundTouchPlusService.RemoteKeyPress(this.player.id, "PRESET_" + JSON.stringify(mediaItem.PresetId), "press");
     }
+
   }
 
 
@@ -279,20 +295,52 @@ export class PresetBrowser extends LitElement {
     // refresh is only triggered once on the attribute change (or initial request).
     this.mediaListLastUpdatedOn = player.attributes.soundtouchplus_presets_lastupdated || (Date.now() / 1000);
 
+    // if card is being edited, then we will use the cached media list as the data source;
+    // otherwise, we will refresh the media list from the real-time source.
+    const cacheKey = 'preset-browser';
+    this.mediaList = undefined;
+    const isCardEditMode = isCardInEditPreview(this.store.card);
+    if ((isCardEditMode) && (cacheKey in Card.mediaListCache)) {
+
+      //console.log("%c updateMediaList (preset-browser) - medialist loaded from cache",
+      //  "color: orange;",
+      //);
+
+      this.mediaList = Card.mediaListCache[cacheKey] as PresetList;
+      this.isUpdateInProgress = false;
+      this.requestUpdate();
+      return;
+    }
+
+    //console.log("%c updateMediaList (preset-browser) - updating medialist",
+    //  "color: orange;",
+    //);
+
     // call the service to retrieve the media list.
     this.soundTouchPlusService.PresetList(player.id, true)
       .then(result => {
+
         this.mediaList = result;
         this.mediaListLastUpdatedOn = result.LastUpdatedOn || (Date.now() / 1000);
         this.isUpdateInProgress = false;
+        this.requestUpdate();
+
         //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
-        //console.log("%c preset-browser - updateMediaList info AFTER update:\n player id=%s\n %s=player.stp_presets_lastupdated\n %s=playerLastUpdatedOn\n %s=mediaListLastUpdatedOn",
+        //console.log("%c preset-browser - updateMediaList info AFTER update:\n- player id = %s\n- %s = player.soundtouchplus_presets_lastupdated\n- %s = playerLastUpdatedOn\n- %s = mediaListLastUpdatedOn",
         //  "color: green;",
         //  this.player.id,
         //  this.player.attributes.soundtouchplus_presets_lastupdated,
         //  playerLastUpdatedOn,
         //  this.mediaListLastUpdatedOn);
-        this.requestUpdate();
+
+        // if editing the card then store the list in the cache for next time.
+        if ((isCardEditMode) && !(cacheKey in Card.mediaListCache)) {
+          Card.mediaListCache[cacheKey] = this.mediaList;
+        //console.log("%c updateMediaList (preset-browser) - medialist stored to cache",
+        //  "color: orange;",
+        //);
+        }
+
       });
   }
 }

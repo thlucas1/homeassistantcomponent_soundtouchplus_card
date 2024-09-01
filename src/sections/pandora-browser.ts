@@ -6,10 +6,11 @@ import { HomeAssistant } from 'custom-card-helpers';
 // our imports.
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
+import { Card } from '../card';
 import { Store } from '../model/store';
-import { MediaPlayer } from '../model/media-player';
-import { customEvent } from '../utils/utils';
+import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
+import { MediaPlayer } from '../model/media-player';
 import { ITEM_SELECTED, PANDORA_BROWSER_REFRESH, SECTION_SELECTED } from '../constants';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { CardConfig } from '../types/cardconfig'
@@ -38,7 +39,7 @@ export class PandoraBrowser extends LitElement {
   private mediaListLastUpdatedOn!: number;
 
   /** SoundTouchPlus device navigate response list. */
-  private mediaList!: NavigateResponse;
+  private mediaList!: NavigateResponse | undefined;
 
   /** SoundTouchPlus services instance. */
   private soundTouchPlusService!: SoundTouchPlusService;
@@ -49,10 +50,10 @@ export class PandoraBrowser extends LitElement {
    */
   constructor() {
 
-    // initialize storage.
+    // invoke base class method.
     super();
 
-    // force refresh first time.
+    // initialize storage.
     this.isUpdateInProgress = false;
     this.mediaListLastUpdatedOn = -1;  
   }
@@ -66,7 +67,9 @@ export class PandoraBrowser extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    //console.log("pandora-browser.render()\n Rendering pandora browser html");
+    //console.log("render (pandora-browser) - rendering control\n- mediaListLastUpdatedOn=%s",
+    //  JSON.stringify(this.mediaListLastUpdatedOn)
+    //);
 
     // set common references from application common storage area.
     this.hass = this.store.hass
@@ -78,7 +81,7 @@ export class PandoraBrowser extends LitElement {
     if (!this.player)
       throw new Error("SoundTouchPlus media player entity id not configured");
 
-    // is this the first render?  if so, then refresh the list.
+    // does the medialist need refreshing?
     if (this.mediaListLastUpdatedOn == -1) {
       if (!this.isUpdateInProgress) {
         this.isUpdateInProgress = true;
@@ -87,9 +90,6 @@ export class PandoraBrowser extends LitElement {
         //console.log("%c pandora-browser - update already in progress!", "color: orange;");
       }
     }
-
-    //console.log(LOGPFX + "render()\n NavigateResponse.LastUpdatedOn=%s", this.mediaList ? this.mediaList.LastUpdatedOn : "unknown");
-    //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
 
     // format title and sub-title details.
     const title = formatTitleInfo(this.config.pandoraBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Items);
@@ -256,10 +256,15 @@ export class PandoraBrowser extends LitElement {
    * @param args Event arguments that contain the media item that was clicked on.
    */
   protected OnItemSelected = (args: CustomEvent) => {
-    //console.log("pandora-browser.OnItemSelected - args:\n%s", JSON.stringify(args));
+
+    //console.log("OnItemSelected (pandora-browser) - media item selected:\n%s",
+    //  JSON.stringify(args.detail, null, 2),
+    //);
+
     const mediaItem = args.detail;
     this.PlayItem(mediaItem);
     this.dispatchEvent(customEvent(ITEM_SELECTED, mediaItem));
+
   };
 
 
@@ -269,6 +274,10 @@ export class PandoraBrowser extends LitElement {
    * @param mediaItem The NavigateItem item that was selected.
    */
   private async PlayItem(mediaItem: NavigateItem) {
+
+    //console.log("PlayItem (pandora-browser) - media item:\n%s",
+    //  JSON.stringify(mediaItem, null, 2),
+    //);
 
     if (mediaItem.ContentItem) {
 
@@ -300,14 +309,49 @@ export class PandoraBrowser extends LitElement {
       return;
     }
 
+    // if card is being edited, then we will use the cached media list as the data source;
+    // otherwise, we will refresh the media list from the real-time source.
+    const cacheKey = 'pandora-browser';
+    this.mediaList = undefined;
+    const isCardEditMode = isCardInEditPreview(this.store.card);
+    if ((isCardEditMode) && (cacheKey in Card.mediaListCache)) {
+
+      //console.log("%c updateMediaList (pandora-browser) - medialist loaded from cache",
+      //  "color: orange;",
+      //);
+
+      this.mediaList = Card.mediaListCache[cacheKey] as NavigateResponse;
+      this.isUpdateInProgress = false;
+      this.requestUpdate();
+      return;
+    }
+
+    //console.log("%c updateMediaList (pandora-browser) - updating medialist",
+    //  "color: orange;",
+    //);
+
     // call the service to retrieve the media list.
     this.soundTouchPlusService.MusicServiceStationList(player.id, "PANDORA", this.config.pandoraSourceAccount, "stationName")
       .then(result => {
+
         this.mediaList = result;
         this.mediaListLastUpdatedOn = result.LastUpdatedOn || (Date.now() / 1000);
         this.isUpdateInProgress = false;
-        //console.log("%c pandora-browser render - updateMediaList check info AFTER update:\n %s=mediaListLastUpdatedOn", "color: green;", JSON.stringify(this.mediaListLastUpdatedOn));
         this.requestUpdate();
+
+        //console.log("%c pandora-browser - updateMediaList info AFTER update:\n- player id = %s\n- %s = mediaListLastUpdatedOn",
+        //  "color: green;",
+        //  this.player.id,
+        //  this.mediaListLastUpdatedOn);
+
+        // if editing the card then store the list in the cache for next time.
+        if ((isCardEditMode) && !(cacheKey in Card.mediaListCache)) {
+          Card.mediaListCache[cacheKey] = this.mediaList;
+        //console.log("%c updateMediaList (pandora-browser) - medialist stored to cache",
+        //  "color: orange;",
+        //);
+        }
+
       });
   }
 }

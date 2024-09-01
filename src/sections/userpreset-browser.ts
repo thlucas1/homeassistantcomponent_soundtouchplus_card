@@ -9,8 +9,9 @@ import { HomeAssistant } from 'custom-card-helpers';
 // our imports.
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
+import { Card } from '../card';
 import { Store } from '../model/store';
-import { customEvent } from '../utils/utils';
+import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
 import { MediaPlayer } from '../model/media-player';
 import { ITEM_SELECTED, PROGRESS_DONE, PROGRESS_STARTED, SECTION_SELECTED } from '../constants';
@@ -40,7 +41,7 @@ export class UserPresetBrowser extends LitElement {
   private mediaListLastUpdatedOn!: number;
 
   /** User preset list. */
-  private mediaList!: ContentItemParent[];
+  private mediaList!: ContentItemParent[] | undefined;
 
   /** SoundTouchPlus services instance. */
   private soundTouchPlusService!: SoundTouchPlusService;
@@ -51,10 +52,10 @@ export class UserPresetBrowser extends LitElement {
    */
   constructor() {
 
-    // initialize storage.
+    // invoke base class method.
     super();
 
-    // force refresh first time.
+    // initialize storage.
     this.isUpdateInProgress = false;
     this.mediaListLastUpdatedOn = -1;  
   }
@@ -96,13 +97,6 @@ export class UserPresetBrowser extends LitElement {
     if (!this.mediaList) {
       alertText = 'No User Presets found';
     }
-
-    //console.log("userpreset-browser() - config.userPresets:\n%s", JSON.stringify(this.config.userPresets, null, 2));
-    //for (const item of (this.config.userPresets || [])) {
-    //  const cip = item as ContentItemParent;
-    //  console.log("userPresets.ContentItem:\n%s", JSON.stringify(cip.ContentItem, null, 2));
-    //  console.log("userPresets.Name = %s", JSON.stringify(cip.ContentItem?.Name));
-    //}
 
     // render html.
     return html`
@@ -202,6 +196,11 @@ export class UserPresetBrowser extends LitElement {
    * @param args Event arguments that contain the media item that was clicked on.
    */
   protected OnItemSelected = (args: CustomEvent) => {
+
+    //console.log("OnItemSelected (userpreset-browser) - media item selected:\n%s",
+    //  JSON.stringify(args.detail, null, 2),
+    //);
+
     const mediaItem = args.detail;
     this.PlayItem(mediaItem);
     this.dispatchEvent(customEvent(ITEM_SELECTED, mediaItem));
@@ -214,6 +213,10 @@ export class UserPresetBrowser extends LitElement {
    * @param mediaItem The Recent item that was selected.
    */
   private async PlayItem(mediaItem: ContentItemParent) {
+
+    //console.log("PlayItem (userpreset-browser) - media item:\n%s",
+    //  JSON.stringify(mediaItem, null, 2),
+    //);
 
     if (mediaItem.ContentItem) {
 
@@ -240,65 +243,65 @@ export class UserPresetBrowser extends LitElement {
     // we also copy the array (do not use `this.mediaList = this.config.userPresets`, as it
     // maintains object references and causes objects to keep appending!).
     this.mediaListLastUpdatedOn = (Date.now() / 1000);
-    this.mediaList = JSON.parse(JSON.stringify(this.config.userPresets || []));
 
-    //console.log('mediaList[0].ContentItem:\n%s', JSON.stringify(this.mediaList[0].ContentItem, null, 2));
-    //console.log('mediaList[0].ContentItem.Name:\n%s', JSON.stringify(this.mediaList[0].ContentItem?.Name));
+    // if card is being edited, then we will use the cached media list as the data source;
+    // otherwise, we will refresh the media list from the real-time source.
+    const cacheKey = 'userpreset-browser';
+    this.mediaList = undefined;
+    const isCardEditMode = isCardInEditPreview(this.store.card);
+    if ((isCardEditMode) && (cacheKey in Card.mediaListCache)) {
+
+      //console.log("%c updateMediaList (userpreset-browser) - medialist loaded from cache",
+      //  "color: orange;",
+      //);
+
+      this.mediaList = Card.mediaListCache[cacheKey] as ContentItemParent[];
+      this.isUpdateInProgress = false;
+      this.requestUpdate();
+      return;
+    }
+
+    //console.log("%c updateMediaList (userpreset-browser) - updating medialist",
+    //  "color: orange;",
+    //);
+
+    this.mediaList = JSON.parse(JSON.stringify(this.config.userPresets || []));
+    if (!this.mediaList) {
+      this.mediaList = new Array<ContentItemParent>();
+    }
+
+    //console.log("%c updateMediaList (userpreset-browser) - medialist before url load:\n%s",
+    //  "color: orange;",
+    //  JSON.stringify(this.mediaList,null,2),
+    //);
 
     // was a user presets url specified?
     if (this.config.userPresetsFile || '' != '') {
-
-      //// fetch the user presets from the url, and combine them with the config entries.
-      ////console.log('userpreset-browser.updateMediaList - userPresetsFile specified - loading content');
-      //const url = this.config.userPresetsFile + '?nocache=' + Date.now()  // force refresh if cached
-      //fetch(url)
-      //  .then(response => response.json())
-      //  .then(result => {
-      //    //console.log('mediaList BEFORE push:\n%s', JSON.stringify(this.mediaList, null, 2));
-      //    this.mediaList.push(...result);
-      //    //console.log('mediaList AFTER push:\n%s', JSON.stringify(this.mediaList, null, 2));
-      //    this.mediaListLastUpdatedOn = (Date.now() / 1000);
-      //    this.isUpdateInProgress = false;
-      //    this.requestUpdate();
-      //    //console.log('userpreset-browser.updateMediaList - userPresetsFile specified - loading content COMPLETE 1');
-      //    //console.log('mediaList[1].ContentItem:\n%s', JSON.stringify(this.mediaList[1].ContentItem, null, 2));
-      //    //console.log('mediaList[1].ContentItem.Name:\n%s', JSON.stringify(this.mediaList[1].ContentItem?.Name));
-      //  });
-
-      //// fetch the user presets from the url, and combine them with the config entries.
-      //const url = this.config.userPresetsFile + '?nocache=' + Date.now()  // force refresh if cached
-      //fetch(url)
-      //  .then(response => {
-      //    if (!response.ok) {
-      //      throw new Error('Network response was not ok');
-      //    }
-      //    return response.json();
-      //  })
-      //  .then(result => {
-      //    this.mediaList.push(...result as ContentItemParent[]);
-      //    this.mediaListLastUpdatedOn = (Date.now() / 1000);
-      //    this.isUpdateInProgress = false;
-      //    this.requestUpdate();
-      //  })
-      //  .catch(error => {
-      //    console.error(`Could not fetch user presets url:`, error);
-      //  });
 
       // call the service to retrieve the media list.
       const url = this.config.userPresetsFile + '?nocache=' + Date.now()  // force refresh if cached
       this.UserPresetList(url)
         .then(result => {
-          //console.log('mediaList BEFORE push:\n%s', JSON.stringify(this.mediaList, null, 2));
-          this.mediaList.push(...result);
-          //console.log('mediaList AFTER push:\n%s', JSON.stringify(this.mediaList, null, 2));
+
+          (this.mediaList || []).push(...result);
           this.mediaListLastUpdatedOn = (Date.now() / 1000);
           this.isUpdateInProgress = false;
-          //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
-          //console.log("%c userpreset-browser - updateMediaList info AFTER update:\n player id=%s\n %s=mediaListLastUpdatedOn",
-          //  "color: green;",
-          //  this.player.id,
-          //  this.mediaListLastUpdatedOn);
           this.requestUpdate();
+
+          //console.log("%c userpreset-browser - updateMediaList info AFTER update:\n- mediaListLastUpdatedOn=%s\n- player id=%s",
+          //  "color: green;",
+          //  JSON.stringify(this.mediaListLastUpdatedOn),
+          //  JSON.stringify(this.player.id),
+          //);
+
+          // if editing the card then store the list in the cache for next time.
+          if ((isCardEditMode) && !(cacheKey in Card.mediaListCache)) {
+            Card.mediaListCache[cacheKey] = this.mediaList || [];
+          //console.log("%c updateMediaList (userpreset-browser) - medialist stored to cache",
+          //  "color: orange;",
+          //);
+          }
+
         });
 
     } else {
@@ -318,13 +321,15 @@ export class UserPresetBrowser extends LitElement {
 
     try {
 
-      //console.log("%cuserpreset-browser.UserPresetList()\n Retrieving url '%s'", "color: orange;", url);
+      //console.log("%c UserPresetList (userpreset-browser) - Retrieving url:\n%s",
+      //  "color: orange;",
+      //  JSON.stringify(url),
+      //);
 
       // show the progress indicator on the main card.
       this.soundTouchPlusService.card.dispatchEvent(customEvent(PROGRESS_STARTED, { section: Section.USERPRESETS }));
 
       const responseObj = await fetch(url)
-        //.then(response => response.json())
         .then(response => {
           if (!response.ok) {
             throw new Error('STPC - Could not fetch userpresets url (' + url + ')');
@@ -339,6 +344,11 @@ export class UserPresetBrowser extends LitElement {
           console.error('STPC - Could not fetch userpresets url (' + url + '): ', err);
           return [];
         });
+
+      //console.log("%c updateMediaList (userpreset-browser) - medialist url response:\n%s",
+      //  "color: orange;",
+      //  JSON.stringify(responseObj, null, 2),
+      //);
 
       return responseObj as ContentItemParent[];
 

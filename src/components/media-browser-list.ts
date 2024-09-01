@@ -32,7 +32,10 @@ export class MediaBrowserList extends LitElement {
    */
   constructor() {
 
+    // invoke base class method.
     super();
+
+    // initialize storage.
     this.mousedownTimestamp = 0;
   }
 

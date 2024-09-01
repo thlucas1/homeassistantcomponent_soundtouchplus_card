@@ -18,14 +18,15 @@ import {
 // our imports.
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
+import { Card } from '../card';
 import { Store } from '../model/store';
-import { MediaPlayer } from '../model/media-player';
-import { customEvent } from '../utils/utils';
+import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo, getMdiIconImageUrl } from '../utils/media-browser-utils';
+import { MediaPlayer } from '../model/media-player';
 import { ITEM_SELECTED, SECTION_SELECTED } from '../constants';
 import { CardConfig } from '../types/cardconfig'
-import { Section } from '../types/section'
 import { ContentItemParent, ContentItem } from '../types/soundtouchplus/contentitem';
+import { Section } from '../types/section'
 
 
 export class SourceBrowser extends LitElement {
@@ -49,7 +50,7 @@ export class SourceBrowser extends LitElement {
   private mediaListLastUpdatedOn!: number;
 
   /** Media player source list. */
-  private mediaList!: ContentItemParent[];
+  private mediaList!: ContentItemParent[] | undefined;
 
 
   /**
@@ -57,10 +58,10 @@ export class SourceBrowser extends LitElement {
    */
   constructor() {
 
-    // initialize storage.
+    // invoke base class method.
     super();
 
-    // force refresh first time.
+    // initialize storage.
     this.isUpdateInProgress = false;
     this.mediaListLastUpdatedOn = -1;  
   }
@@ -74,6 +75,10 @@ export class SourceBrowser extends LitElement {
   */
   protected render(): TemplateResult | void {
 
+    //console.log("render (source-browser) - rendering control\n- mediaListLastUpdatedOn=%s",
+    //  JSON.stringify(this.mediaListLastUpdatedOn)
+    //);
+
     // set common references from application common storage area.
     this.hass = this.store.hass
     this.config = this.store.config;
@@ -83,7 +88,7 @@ export class SourceBrowser extends LitElement {
     if (!this.player)
       throw new Error("SoundTouchPlus media player entity id not configured");
 
-    // is this the first render?  if so, then refresh the list.
+    // does the medialist need refreshing?
     if (this.mediaListLastUpdatedOn == -1) {
       if (!this.isUpdateInProgress) {
         this.isUpdateInProgress = true;
@@ -201,10 +206,15 @@ export class SourceBrowser extends LitElement {
    * @param args Event arguments that contain the media item that was clicked on.
    */
   protected OnItemSelected = (args: CustomEvent) => {
-    //console.log("source-browser.OnItemSelected - args:\n%s \nargs.detail:\n%s", JSON.stringify(args), JSON.stringify(args.detail));
+
+    //console.log("OnItemSelected (source-browser) - media item selected:\n%s",
+    //  JSON.stringify(args.detail, null, 2),
+    //);
+
     const mediaItem = args.detail;  // a ContentItemParent object
     this.SelectSource(mediaItem);
     this.dispatchEvent(customEvent(ITEM_SELECTED, mediaItem));
+
   };
 
 
@@ -215,7 +225,9 @@ export class SourceBrowser extends LitElement {
    */
   private async SelectSource(mediaItem: ContentItemParent) {
 
-    //console.log("source-browser.SelectSource - mediaItem:\n%s", JSON.stringify(mediaItem));
+    //console.log("SelectSource (source-browser) - select source\n- mediaItem:\n%s",
+    //  JSON.stringify(mediaItem, null, 2),
+    //);
 
     // call service to select the source.
     await this.store.mediaControlService.sourceSelect(this.player, mediaItem.ContentItem?.Name || '');
@@ -238,8 +250,30 @@ export class SourceBrowser extends LitElement {
     // with the current epoch date (in seconds) so that the refresh is only triggered once.
     this.mediaListLastUpdatedOn = (Date.now() / 1000);
 
+    // if card is being edited, then we will use the cached media list as the data source;
+    // otherwise, we will refresh the media list from the real-time source.
+    const cacheKey = 'source-browser';
+    this.mediaList = undefined;
+    const isCardEditMode = isCardInEditPreview(this.store.card);
+    if ((isCardEditMode) && (cacheKey in Card.mediaListCache)) {
+
+      //console.log("%c updateMediaList (source-browser) - medialist loaded from cache",
+      //  "color: orange;",
+      //);
+
+      this.mediaList = Card.mediaListCache[cacheKey] as Array<ContentItemParent>;
+      this.isUpdateInProgress = false;
+      this.requestUpdate();
+      return;
+    }
+
     // no need to call a service - just use the source_list attribute for the list.
     // we could have simplified this, but wanted to keep the structure like the other sections.
+
+    //console.log("%c updateMediaList (source-browser) - updating medialist\n-source_list:\n%s",
+    //  "color: orange;",
+    //  JSON.stringify(player.attributes.source_list,null,2)
+    //);
 
     // build an array of ContentItemParent objects that can be used in the media browser.
     this.mediaList = new Array<ContentItemParent>();
@@ -277,12 +311,22 @@ export class SourceBrowser extends LitElement {
 
     this.mediaListLastUpdatedOn = (Date.now() / 1000);
     this.isUpdateInProgress = false;
+    this.requestUpdate();
+
     //console.log("%c source-browser - updateMediaList info AFTER update:\n player id=%s\n %s=mediaListLastUpdatedOn\n source_list:\n%s\n mediaList:\n%s",
     //  "color: green;",
     //  this.player.id,
     //  this.mediaListLastUpdatedOn,
     //  this.player.attributes.source_list,
-    //  JSON.stringify(this.mediaList));
-    this.requestUpdate();
+    //  JSON.stringify(this.mediaList)
+    //);
+
+    // if editing the card then store the list in the cache for next time.
+    if ((isCardEditMode) && !(cacheKey in Card.mediaListCache)) {
+      Card.mediaListCache[cacheKey] = this.mediaList;
+    //console.log("%c updateMediaList (source-browser) - medialist stored to cache",
+    //  "color: orange;",
+    //);
+    }
   }
 }

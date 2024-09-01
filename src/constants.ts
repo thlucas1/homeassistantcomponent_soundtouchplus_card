@@ -1,7 +1,7 @@
 import { css } from 'lit';
 
 /** current version of the card. */
-export const CARD_VERSION = '1.0.5';
+export const CARD_VERSION = '1.0.6';
 
 /** SoundTouchPlus integration domain identifier. */
 export const DOMAIN_SOUNDTOUCHPLUS = 'soundtouchplus';
@@ -20,6 +20,9 @@ export const PROGRESS_DONE = dispatchPrefix + 'progress-done';
 
 /** uniquely identifies the section selected event. */
 export const SECTION_SELECTED = dispatchPrefix + 'section-selected';
+
+/** uniquely identifies the configuration updated event. */
+export const CONFIG_UPDATED = dispatchPrefix + 'config-updated';
 
 /** uniquely identifies the section selected event. */
 export const PANDORA_BROWSER_REFRESH = dispatchPrefix + 'pandora-browser-refresh';

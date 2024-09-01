@@ -6,8 +6,9 @@ import { HomeAssistant } from 'custom-card-helpers';
 // our imports.
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
+import { Card } from '../card';
 import { Store } from '../model/store';
-import { customEvent } from '../utils/utils';
+import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
 import { MediaPlayer } from '../model/media-player';
 import { ITEM_SELECTED, SECTION_SELECTED } from '../constants';
@@ -40,7 +41,7 @@ export class RecentBrowser extends LitElement {
   private mediaListLastUpdatedOn!: number;
 
   /** SoundTouchPlus device recent list. */
-  private mediaList!: RecentList;
+  private mediaList!: RecentList | undefined;
 
   /** SoundTouchPlus services instance. */
   private soundTouchPlusService!: SoundTouchPlusService;
@@ -51,10 +52,10 @@ export class RecentBrowser extends LitElement {
    */
   constructor() {
 
-    // initialize storage.
+    // invoke base class method.
     super();
 
-    // force refresh first time.
+    // initialize storage.
     this.isUpdateInProgress = false;
     this.mediaListLastUpdatedOn = -1;  
   }
@@ -67,7 +68,9 @@ export class RecentBrowser extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    //console.log(LOGPFX + "render()\n Rendering recent browser html");
+    //console.log("render (recent-browser) - rendering control\n- mediaListLastUpdatedOn=%s",
+    //  JSON.stringify(this.mediaListLastUpdatedOn)
+    //);
 
     // set common references from application common storage area.
     this.hass = this.store.hass
@@ -81,12 +84,6 @@ export class RecentBrowser extends LitElement {
 
     // was the media player recent list cache updated?
     const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_recents_cache_lastupdated || 0);
-    //console.log("%c recent-browser - updateMediaList info BEFORE update:\n player id=%s\n %s=player.stp_recents_cache_lastupdated\n %s=playerLastUpdatedOn\n %s=mediaListLastUpdatedOn",
-    //  "color: green;",
-    //  this.player.id,
-    //  this.player.attributes.soundtouchplus_recents_cache_lastupdated,
-    //  playerLastUpdatedOn,
-    //  this.mediaListLastUpdatedOn);
     if ((this.mediaListLastUpdatedOn == -1) || (playerLastUpdatedOn > this.mediaListLastUpdatedOn)) {
       if (!this.isUpdateInProgress) {
         this.isUpdateInProgress = true;
@@ -95,9 +92,6 @@ export class RecentBrowser extends LitElement {
         //console.log("%c recent-browser - update already in progress!", "color: orange;");
       }
     }
-
-    //console.log(LOGPFX + "render()\n RecentList.LastUpdatedOn=%s", this.mediaList ? this.mediaList.LastUpdatedOn : "unknown");
-    //console.log(LOGPFX + "render()\n this.mediaList='%s'", JSON.stringify(this.mediaList));
 
     // format title and sub-title details.
     const title = formatTitleInfo(this.config.recentBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Recents);
@@ -200,9 +194,15 @@ export class RecentBrowser extends LitElement {
    * @param args Event arguments that contain the media item that was clicked on.
    */
   protected OnItemSelected = (args: CustomEvent) => {
+
+    //console.log("OnItemSelected (recent-browser) - media item selected:\n%s",
+    //  JSON.stringify(args.detail, null, 2),
+    //);
+
     const mediaItem = args.detail;
     this.PlayItem(mediaItem);
     this.dispatchEvent(customEvent(ITEM_SELECTED, mediaItem));
+
   };
 
 
@@ -212,6 +212,10 @@ export class RecentBrowser extends LitElement {
    * @param mediaItem The Recent item that was selected.
    */
   private async PlayItem(mediaItem: Recent) {
+
+    //console.log("PlayItem (recent-browser) - media item:\n%s",
+    //  JSON.stringify(mediaItem, null, 2),
+    //);
 
     if (mediaItem.ContentItem) {
 
@@ -239,20 +243,52 @@ export class RecentBrowser extends LitElement {
     // refresh is only triggered once on the attribute change (or initial request).
     this.mediaListLastUpdatedOn = player.attributes.soundtouchplus_recents_cache_lastupdated || (Date.now() / 1000);
 
+    // if card is being edited, then we will use the cached media list as the data source;
+    // otherwise, we will refresh the media list from the real-time source.
+    const cacheKey = 'recent-browser';
+    this.mediaList = undefined;
+    const isCardEditMode = isCardInEditPreview(this.store.card);
+    if ((isCardEditMode) && (cacheKey in Card.mediaListCache)) {
+
+      //console.log("%c updateMediaList (recent-browser) - medialist loaded from cache",
+      //  "color: orange;",
+      //);
+
+      this.mediaList = Card.mediaListCache[cacheKey] as RecentList;
+      this.isUpdateInProgress = false;
+      this.requestUpdate();
+      return;
+    }
+
+    //console.log("%c updateMediaList (recent-browser) - updating medialist",
+    //  "color: orange;",
+    //);
+
     // call the service to retrieve the media list.
     this.soundTouchPlusService.RecentListCache(player.id)
       .then(result => {
+
         this.mediaList = result;
         this.mediaListLastUpdatedOn = result.LastUpdatedOn || (Date.now() / 1000);
         this.isUpdateInProgress = false;
+        this.requestUpdate();
+
         //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_recents_cache_lastupdated || 0);
-        //console.log("%c recent-browser - updateMediaList info AFTER update:\n player id=%s\n %s=player.stp_recents_cache_lastupdated\n %s=playerLastUpdatedOn\n %s=mediaListLastUpdatedOn",
+        //console.log("%c recent-browser - updateMediaList info AFTER update:\n- player id = %s\n- %s = player.soundtouchplus_recents_cache_lastupdated\n- %s = playerLastUpdatedOn\n- %s = mediaListLastUpdatedOn",
         //  "color: green;",
         //  this.player.id,
         //  this.player.attributes.soundtouchplus_recents_cache_lastupdated,
         //  playerLastUpdatedOn,
         //  this.mediaListLastUpdatedOn);
-        this.requestUpdate();
+
+        // if editing the card then store the list in the cache for next time.
+        if ((isCardEditMode) && !(cacheKey in Card.mediaListCache)) {
+          Card.mediaListCache[cacheKey] = this.mediaList;
+        //console.log("%c updateMediaList (recent-browser) - medialist stored to cache",
+        //  "color: orange;",
+        //);
+        }
+
       });
   }
 }

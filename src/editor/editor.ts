@@ -23,20 +23,10 @@ import {
   getSectionForConfigArea,
 } from '../utils/utils';
 
-/** Configuration area editor section keys array. */
-const {
-  GENERAL,
-  PLAYER,
-  SOURCE_BROWSER,
-  RECENT_BROWSER,
-  USERPRESET_BROWSER,
-  PRESET_BROWSER,
-  PANDORA_BROWSER
-} = ConfigArea;
 
 class CardEditor extends BaseEditor {
 
-  @state() private configArea = GENERAL;
+  @state() private configArea = ConfigArea.GENERAL;
 
   /**
    * Invoked on each update to perform rendering tasks. 
@@ -61,7 +51,7 @@ class CardEditor extends BaseEditor {
 
     return html`
       <ha-control-button-group>
-        ${[GENERAL, PLAYER, SOURCE_BROWSER, PANDORA_BROWSER].map(
+        ${[ConfigArea.GENERAL, ConfigArea.PLAYER, ConfigArea.SOURCE_BROWSER, ConfigArea.PANDORA_BROWSER].map(
           (configArea) => html`
             <ha-control-button
               selected=${this.configArea === configArea || nothing}
@@ -73,7 +63,7 @@ class CardEditor extends BaseEditor {
         )}
       </ha-control-button-group>
       <ha-control-button-group>
-        ${[PRESET_BROWSER, USERPRESET_BROWSER, RECENT_BROWSER].map(
+        ${[ConfigArea.PRESET_BROWSER, ConfigArea.USERPRESET_BROWSER, ConfigArea.RECENT_BROWSER].map(
           (configArea) => html`
             <ha-control-button
               selected=${this.configArea === configArea || nothing}
@@ -114,31 +104,31 @@ class CardEditor extends BaseEditor {
     // show the desired section editor.
     return choose(this.configArea, [
       [
-        GENERAL,
+        ConfigArea.GENERAL,
         () => html`<stpc-general-editor .config=${this.config} .hass=${this.hass}></stpc-general-editor>`,
       ],
       [
-        PANDORA_BROWSER,
+        ConfigArea.PANDORA_BROWSER,
         () => html`<stpc-pandora-browser-editor .config=${this.config} .hass=${this.hass}></stpc-pandora-browser-editor>`,
       ],
       [
-        PLAYER,
+        ConfigArea.PLAYER,
         () => html`<stpc-player-editor .config=${this.config} .hass=${this.hass}></stpc-player-editor>`,
       ],
       [
-        PRESET_BROWSER,
+        ConfigArea.PRESET_BROWSER,
         () => html`<stpc-preset-browser-editor .config=${this.config} .hass=${this.hass}></stpc-preset-browser-editor>`,
       ],
       [
-        RECENT_BROWSER,
+        ConfigArea.RECENT_BROWSER,
         () => html`<stpc-recent-browser-editor .config=${this.config} .hass=${this.hass}></stpc-recent-browser-editor>`,
       ],
       [
-        SOURCE_BROWSER,
+        ConfigArea.SOURCE_BROWSER,
         () => html`<stpc-source-browser-editor .config=${this.config} .hass=${this.hass}></stpc-source-browser-editor>`,
       ],
       [
-        USERPRESET_BROWSER,
+        ConfigArea.USERPRESET_BROWSER,
         () => html`<stpc-userpreset-browser-editor .config=${this.config} .hass=${this.hass}></stpc-userpreset-browser-editor>`,
       ],
     ]);
@@ -157,11 +147,12 @@ class CardEditor extends BaseEditor {
     // show the section that we are editing.
     const sectionNew = getSectionForConfigArea(configArea);
 
-    //console.log("OnConfigSectionClick (editor)\n- OLD configArea=%s\n- NEW configArea=%s\n- OLD section=%s\n- NEW section=%s",
+    //console.log("OnConfigSectionClick (editor)\n- OLD configArea=%s\n- NEW configArea=%s\n- OLD section=%s\n- NEW section=%s\n- Store.selectedConfigArea=%s",
     //  JSON.stringify(this.configArea),
     //  JSON.stringify(configArea),
     //  JSON.stringify(this.section),
-    //  JSON.stringify(sectionNew)
+    //  JSON.stringify(sectionNew),
+    //  JSON.stringify(Store.selectedConfigArea),
     //);
 
     // store selected ConfigArea.
@@ -219,50 +210,14 @@ class CardEditor extends BaseEditor {
 
 
   /**
-   * Called when an update was triggered, before rendering. Receives a Map of changed
-   * properties, and their previous values. This can be used for modifying or setting
-   * new properties before a render occurs.
-   */
-  protected update(changedProperties: PropertyValues) {
-
-    // invoke base class method.
-    super.update(changedProperties);
-
-    //  console.log("update (editor) - update event (pre-render)\n- this.section=%s\n- Store.selectedConfigArea=%s\nChanged Property Keys:\n%s",
-    //    JSON.stringify(this.section || '*undefined*'),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //    JSON.stringify(changedProperties.keys()),
-    //  );
-  }
-
-
-  /**
-   * Called when an update was triggered, after rendering. Receives a Map of changed
-   * properties, and their previous values. This can be used for observing and acting
-   * on property changes.
-   */
-  protected updated(changedProperties: PropertyValues) {
-
-    // invoke base class method.
-    super.updated(changedProperties);
-
-    //  console.log("updated (editor) - update event (post-render)\n- this.section=%s\n- Store.selectedConfigArea=%s\nChanged Property Keys:\n%s",
-    //    JSON.stringify(this.section || '*undefined*'),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //    JSON.stringify(changedProperties.keys()),
-    //  );
-  }
-
-
-  /**
    * Called when your element has rendered for the first time. Called once in the
    * lifetime of an element. Useful for one-time setup work that requires access to
    * the DOM.
    */
-  protected firstUpdated(_changedProperties: PropertyValues): void {
+  protected firstUpdated(changedProperties: PropertyValues): void {
 
     // invoke base class method.
-    super.firstUpdated(_changedProperties);
+    super.firstUpdated(changedProperties);
 
     // if there are things that you only want to happen one time when the configuration
     // is initially loaded, then do them here.
@@ -278,10 +233,10 @@ class CardEditor extends BaseEditor {
     Store.selectedConfigArea = this.configArea;
     this.requestUpdate();
 
-    //  console.log("firstUpdated (editor) - first render complete\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //    JSON.stringify(this.section || '*undefined*'),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //  );
+    //console.log("firstUpdated (editor) - first render complete\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section || '*undefined*'),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
   }
 
 

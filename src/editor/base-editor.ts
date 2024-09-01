@@ -1,5 +1,5 @@
 // lovelace card imports.
-import { css, LitElement, PropertyValues } from 'lit';
+import { css, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import { fireEvent, HomeAssistant } from 'custom-card-helpers';
 
@@ -10,8 +10,8 @@ import { MediaPlayer } from '../model/media-player';
 import { Section } from '../types/section';
 import { SourceList } from '../types/soundtouchplus/sourcelist'
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
-import { dispatch, getSectionForConfigArea } from '../utils/utils';
-import { SECTION_SELECTED } from '../constants';
+import { dispatch, getObjectDifferences, getSectionForConfigArea } from '../utils/utils';
+import { CONFIG_UPDATED, SECTION_SELECTED } from '../constants';
 
 
 export abstract class BaseEditor extends LitElement {
@@ -36,6 +36,7 @@ export abstract class BaseEditor extends LitElement {
    */
   constructor() {
 
+    // invoke base class method.
     super();
 
   }
@@ -59,61 +60,6 @@ export abstract class BaseEditor extends LitElement {
         margin-top: 20px;
       }
     `;
-  }
-
-
-  /**
-   * Called when an update was triggered, before rendering. Receives a Map of changed
-   * properties, and their previous values. This can be used for modifying or setting
-   * new properties before a render occurs.
-   */
-  protected update(changedProperties: PropertyValues) {
-
-    // invoke base class method.
-    super.update(changedProperties);
-
-    //  console.log("update (base-editor) - update event (pre-render)\n- this.section=%s\n- Store.selectedConfigArea=%s\nChanged Property Keys:\n%s",
-    //    JSON.stringify(this.section || '*undefined*'),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //    JSON.stringify(changedProperties.keys()),
-    //  );
-  }
-
-
-  /**
-   * Called when an update was triggered, after rendering. Receives a Map of changed
-   * properties, and their previous values. This can be used for observing and acting
-   * on property changes.
-   */
-  protected updated(changedProperties: PropertyValues) {
-
-    // invoke base class method.
-    super.updated(changedProperties);
-
-    //  console.log("updated (base-editor) - update event (post-render)\n- this.section=%s\n- Store.selectedConfigArea=%s\nChanged Property Keys:\n%s",
-    //    JSON.stringify(this.section || '*undefined*'),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //    JSON.stringify(changedProperties.keys()),
-    //  );
-  }
-
-
-  /**
-   * Called when your element has rendered for the first time. Called once in the
-   * lifetime of an element. Useful for one-time setup work that requires access to
-   * the DOM.
-   */
-  protected firstUpdated(_changedProperties: PropertyValues): void {
-
-    // invoke base class method.
-    super.firstUpdated(_changedProperties);
-
-    // note that this will method will fire multiple times, once for each 
-
-    //  console.log("firstUpdated (base-editor) - first render complete\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //    JSON.stringify(this.section || '*undefined*'),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //  );
   }
 
 
@@ -162,10 +108,10 @@ export abstract class BaseEditor extends LitElement {
     //  JSON.stringify(this.config, null, 2), // prettyprint
     //);
 
-    //  console.log("setConfig (base-editor) exit\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //    JSON.stringify(this.section),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //  );
+    //console.log("setConfig (base-editor) exit\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
   }
 
 
@@ -214,13 +160,25 @@ export abstract class BaseEditor extends LitElement {
    */
   protected configChanged(changedConfig: CardConfig | undefined = undefined) {
 
-    //console.log("configChanged (base-editor) - configuration editor value changed\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //console.log("configChanged (base-editor) - configuration settings changed\n- this.section=%s\n- Store.selectedConfigArea=%s",
     //  JSON.stringify(this.section),
     //  JSON.stringify(Store.selectedConfigArea),
     //);
 
-    // update the existing configuration if configuration changes were supplied.
+    //console.log("configChanged (base-editor) - configuration settings changed\n- this.section=%s\n- Store.selectedConfigArea=%s\n- Values changed:\n%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //  JSON.stringify(getObjectDifferences(this.config, changedConfig), null, 2),
+    //);
+
+    // were configuration changes supplied?
+    let changedValues = {}
     if (changedConfig) {
+
+      // get configuration changes.
+      changedValues = getObjectDifferences(this.config, changedConfig);
+
+      // update the existing configuration with supplied changes.
       this.config = {
         ...this.config,
         ...changedConfig,
@@ -240,22 +198,27 @@ export abstract class BaseEditor extends LitElement {
       dispatch(SECTION_SELECTED, this.section);
     }
 
-    //console.log("configChanged (base-editor) - configuration editor value changed\n- changedConfig:\n%s",
+    //console.log("configChanged (base-editor) - configuration settings changed\n- changedConfig:\n%s",
     //  JSON.stringify(changedConfig,null,2)
     //);
 
-    // fire an event indicating that the configuration has changed.
+    // inform Home assistant dashboard that our configuration has changed.
     fireEvent(this, 'config-changed', { config: this.config });
 
     // request an update, which will force the card editor to re-render.
     this.requestUpdate();
 
-    //  configAreaSection = getSectionForConfigArea(Store.selectedConfigArea);
-    //  console.log("configChanged (base-editor) - after requestUpdate\n- this.section=%s\n- configAreaSection=%s\n- Store.selectedConfigArea=%s",
-    //    JSON.stringify(this.section),
-    //    JSON.stringify(configAreaSection),
-    //    JSON.stringify(Store.selectedConfigArea),
-    //  );
+    // inform configured component of the changes; we will let them decide whether to
+    // re-render the component, refresh media lists, etc.
+    dispatch(CONFIG_UPDATED, changedValues);
+
+    //const configAreaSection2 = getSectionForConfigArea(Store.selectedConfigArea);
+    //console.log("configChanged (base-editor) - after requestUpdate\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(configAreaSection2),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
+
   }
 
 
@@ -301,7 +264,7 @@ export abstract class BaseEditor extends LitElement {
         }
       }
     } else {
-    //  console.log("getSourceAccountsList (base-editor) - player reference not set!");
+      //console.log("getSourceAccountsList (base-editor) - player reference not set!");
     }
 
     // if no sources found, then add a dummy entry.

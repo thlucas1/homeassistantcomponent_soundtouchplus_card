@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.6 ] - 2024/09/01
+
+  * Changed medialist to use a cached list when card is displayed in configuration editor.  The medialist will be retrieved once while the card is being edited, and stored in a cache until the card editor is closed.
+
 ###### [ 1.0.5 ] - 2024/08/29
 
   * Fixed various card configuration issues, which will make the card easier to configure via the HA UI.

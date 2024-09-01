@@ -3,10 +3,10 @@
  */
 export enum ConfigArea {
   GENERAL = 'General',
-  PLAYER = 'Player',
-  SOURCE_BROWSER = 'Sources',
-  RECENT_BROWSER = 'Recently Played',
-  PRESET_BROWSER = 'Device Presets',
-  USERPRESET_BROWSER = 'User Presets',
   PANDORA_BROWSER = 'Pandora',
+  PLAYER = 'Player',
+  PRESET_BROWSER = 'Device Presets',
+  RECENT_BROWSER = 'Recently Played',
+  SOURCE_BROWSER = 'Sources',
+  USERPRESET_BROWSER = 'User Presets',
 }
