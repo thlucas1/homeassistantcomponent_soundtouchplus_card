@@ -2,7 +2,7 @@
 import { LovelaceCardConfig } from 'custom-card-helpers';
 
 // our imports.
-import { Section } from './Section';
+import { Section } from './section';
 import { CustomImageUrls } from './custom-image-urls';
 import { ContentItemParent } from './soundtouchplus/content-item';
 
