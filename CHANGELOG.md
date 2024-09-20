@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.8 ] - 2024/09/19
+
+  * Updated `README.MD` with image updates.
+
 ###### [ 1.0.7 ] - 2024/09/19
 
   * Gave the player UI a little bit of a facelift to make it easier to see the player control icons and header information.  Also styles the footer bar to match colors in the artwork image.
