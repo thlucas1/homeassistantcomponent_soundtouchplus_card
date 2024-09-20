@@ -2,9 +2,9 @@
 import { LovelaceCardConfig } from 'custom-card-helpers';
 
 // our imports.
-import { Section } from './section'
-import { CustomImageUrls } from './customimageurls'
-import { ContentItemParent } from './soundtouchplus/contentitem';
+import { Section } from './Section';
+import { CustomImageUrls } from './CustomImageUrls';
+import { ContentItemParent } from './soundtouchplus/ContentItem';
 
 /**
  * Card configuration settings.
@@ -116,10 +116,11 @@ export interface CardConfig extends LovelaceCardConfig {
   playerHeaderHideProgressBar?: boolean;
 
   /**
-   * Opacity value for the header area background of the Player section form.
-   * Default is 0.4.
+   * Color value (e.g. "#hhrrggbb") for the Player header area background gradient.
+   * Specify 'transparent' to hide the background area.
+   * Default is '#000000bb'.
    */
-  playerHeaderBackgroundOpacity?: number;
+  playerHeaderBackgroundColor?: string;
 
   /** 
    * Hide header area of the Player section form.
@@ -164,10 +165,11 @@ export interface CardConfig extends LovelaceCardConfig {
   playerControlsHide?: boolean;
 
   /**
-   * Opacity value for the controls area background of the Player section form.
-   * Default is 0.4.
+   * Color value (e.g. "#hhrrggbb") for the Player controls area background gradient.
+   * Specify 'transparent' to hide the background area.
+   * Default is '#000000bb'.
    */
-  playerControlsBackgroundOpacity?: number;
+  playerControlsBackgroundColor?: string;
 
   /**
    * Hide mute button in the volume controls area of the Player section form.

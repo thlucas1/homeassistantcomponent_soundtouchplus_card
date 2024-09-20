@@ -4,14 +4,16 @@ import { property } from 'lit/decorators.js';
 import { fireEvent, HomeAssistant } from 'custom-card-helpers';
 
 // our imports.
-import { CardConfig } from '../types/cardconfig'
-import { Store } from '../model/store'
-import { MediaPlayer } from '../model/media-player';
-import { Section } from '../types/section';
-import { SourceList } from '../types/soundtouchplus/sourcelist'
-import { SoundTouchPlusService } from '../services/soundtouchplus-service';
+import { CardConfig } from '../types/CardConfig';
+import { Store } from '../model/Store';
+import { ConfigArea } from '../types/ConfigArea';
+import { Section } from '../types/Section';
+import { MediaPlayer } from '../model/MediaPlayer';
+import { SoundTouchPlusService } from '../services/SoundTouchPlusService';
 import { dispatch, getObjectDifferences, getSectionForConfigArea } from '../utils/utils';
-import { CONFIG_UPDATED, SECTION_SELECTED } from '../constants';
+import { CONFIG_UPDATED } from '../constants';
+import { SourceList } from '../types/soundtouchplus/SourceList';
+import { EditorConfigAreaSelectedEvent } from '../events/editor-config-area-selected';
 
 
 export abstract class BaseEditor extends LitElement {
@@ -20,6 +22,7 @@ export abstract class BaseEditor extends LitElement {
   @property({ attribute: false }) config!: CardConfig;
   @property({ attribute: false }) store!: Store;
   @property({ attribute: true }) section!: Section;
+  @property({ attribute: false }) footerBackgroundColor?: string;
 
   /** MediaPlayer instance created from the configuration entity id. */
   public player!: MediaPlayer;
@@ -69,7 +72,8 @@ export abstract class BaseEditor extends LitElement {
    * can also occur if YAML changes are made (for cards without UI config editor).
    * 
    * If you throw an exception in this method (e.g. invalid configuration, etc), then
-   * Home Assistant will render an error card to notify the user.
+   * Home Assistant will render an error card to notify the user.  Note that by doing
+   * so will also disable the Card Editor UI, and the card must be configured manually!
    * 
    * The config argument object contains the configuration specified by the user for
    * the card.  It will minimally contain:
@@ -87,7 +91,7 @@ export abstract class BaseEditor extends LitElement {
    * 
    * @param config Contains the configuration specified by the user for the card.
    */
-  setConfig(config: CardConfig) {
+  public setConfig(config: CardConfig): void {
 
     //console.log("setConfig (base-editor) enter\n- this.section=%s\n- Store.selectedConfigArea=%s",
     //  JSON.stringify(this.section),
@@ -97,9 +101,12 @@ export abstract class BaseEditor extends LitElement {
     // copy the passed configuration object to create a new instance.
     const newConfig: CardConfig = JSON.parse(JSON.stringify(config));
 
-    // if entity value not set then render an error card.
-    if (!newConfig.entity)
-      throw new Error("SoundTouchPlus media player entity id not configured");
+    // if no sections are configured then configure the default.
+    if (!newConfig.sections || newConfig.sections.length === 0) {
+      //console.log("setConfig (base-editor) - sections not configured, adding PLAYER selection")
+      newConfig.sections = [Section.PLAYER];
+      Store.selectedConfigArea = ConfigArea.GENERAL;
+    }
 
     // store configuration so other card sections can access them.
     this.config = newConfig;
@@ -112,44 +119,6 @@ export abstract class BaseEditor extends LitElement {
     //  JSON.stringify(this.section),
     //  JSON.stringify(Store.selectedConfigArea),
     //);
-  }
-
-
-  /**
-   * Creates the common services and data areas that are used by the various card editors.
-   * 
-   * Note that this method cannot be called from `setConfig` method, as the `hass` property 
-   * has not been set set!
-  */
-  public createStore() {
-
-    // have we already created the store? if so, then don't do it again.
-    // we check this here, as most of the `x-editor` inherit from BaseEditor and call this method.
-    if (this.store) {
-      //console.log("createStore (base-editor) - store already created; nothing to do");
-      return;
-    }
-
-    // is a player entity configured?  if not, then don't bother.
-    if (!this.config.entity) {
-      return;
-    }
-
-    // get section to display based upon selected configarea.
-    const configAreaSection = getSectionForConfigArea(Store.selectedConfigArea);
-
-    // create the store.
-    this.store = new Store(this.hass, this.config, this, configAreaSection, this.config.entity);
-
-    // set other references obtained from the store.
-    this.player = this.store.player;
-    this.section = this.store.section;
-
-    //console.log("createStore (base-editor) - store created\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
-
   }
 
 
@@ -189,13 +158,20 @@ export abstract class BaseEditor extends LitElement {
     // section area is displayed.
     const configAreaSection = getSectionForConfigArea(Store.selectedConfigArea);
     if (this.section != configAreaSection) {
-      //console.log("configChanged (base-editor) - forcing selected section to match selected ConfigArea\n- this.section=%s\n- configAreaSection=%s",
+
+      //console.log("configChanged (base-editor) - forcing selected section to match selected ConfigArea\n- this.section=%s\n- configAreaSection=%s\n- config.sections=%s",
       //  JSON.stringify(this.section),
       //  JSON.stringify(configAreaSection),
+      //  JSON.stringify(this.config.sections),
       //);
+
+      // show the config area and set the section references.
       this.section = configAreaSection;
       this.store.section = this.section;
-      dispatch(SECTION_SELECTED, this.section);
+
+      // inform the card that it needs to show the section for the selected ConfigArea
+      // by dispatching the EDITOR_CONFIG_AREA_SELECTED event.
+      document.dispatchEvent(EditorConfigAreaSelectedEvent(this.section));
     }
 
     //console.log("configChanged (base-editor) - configuration settings changed\n- changedConfig:\n%s",
@@ -206,7 +182,7 @@ export abstract class BaseEditor extends LitElement {
     fireEvent(this, 'config-changed', { config: this.config });
 
     // request an update, which will force the card editor to re-render.
-    this.requestUpdate();
+    super.requestUpdate();
 
     // inform configured component of the changes; we will let them decide whether to
     // re-render the component, refresh media lists, etc.
@@ -223,7 +199,77 @@ export abstract class BaseEditor extends LitElement {
 
 
   protected dispatchClose() {
+    //console.log("dispatchClose (base-editor) - method called - close form?");
     return this.dispatchEvent(new CustomEvent('closed'));
+  }
+
+
+  /**
+   * Creates the common services and data areas that are used by the various card editors.
+   * 
+   * Note that this method cannot be called from `setConfig` method, as the `hass` property 
+   * has not been set set!
+  */
+  public createStore(): void {
+
+    // have we already created the store? if so, then don't do it again.
+    // we check this here, as most of the `x-editor` inherit from BaseEditor and call this method.
+    if (this.store) {
+      //console.log("createStore (base-editor) - store already created; nothing to do");
+      return;
+    }
+
+    // get section to display based upon selected configarea.
+    const configAreaSection = getSectionForConfigArea(Store.selectedConfigArea);
+
+    // if no sections are configured then configure the default.
+    if (!this.config.sections || this.config.sections.length === 0) {
+      //console.log("createStore (base-editor) - sections not configured, adding PLAYER to config.sections")
+      this.config.sections = [Section.PLAYER];
+      Store.selectedConfigArea = ConfigArea.GENERAL;
+    }
+
+    // create the store.
+    this.store = new Store(this.hass, this.config, this, configAreaSection, this.config.entity);
+
+    // set other references obtained from the store.
+    this.player = this.store.player;
+    this.section = this.store.section;
+
+    //console.log("createStore (base-editor) - store created\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //  JSON.stringify(this.section),
+    //  JSON.stringify(Store.selectedConfigArea),
+    //);
+
+  }
+
+
+  /**
+   * Sets the section value and requests an update to show the section.
+   * 
+   * @param section Section to show.
+  */
+  public SetSection(section: Section): void {
+
+    // is the session configured for display?
+    if (!this.config.sections || this.config.sections.indexOf(section) > -1) {
+
+      //console.log("SetSection (base-editor) - set section reference and display the section\n- OLD section=%s\n- NEW section=%s",
+      //  JSON.stringify(this.section),
+      //  JSON.stringify(section)
+      //);
+
+      this.section = section;
+      this.store.section = this.section;
+      super.requestUpdate();
+
+    } else {
+
+      //console.log("SetSection (base-editor) - section is not active: %s",
+      //  JSON.stringify(section)
+      //);
+
+    }
   }
 
 
@@ -243,7 +289,7 @@ export abstract class BaseEditor extends LitElement {
    */
   public getSourceAccountsList(sourcePrefix: string): any {
 
-    const result = [];
+    const result = new Array<string>();
 
     if (this.player) {
 
@@ -256,7 +302,7 @@ export abstract class BaseEditor extends LitElement {
 
       for (const source of (this.player.attributes.source_list || [])) {
         if (source.startsWith(sourcePrefix)) {
-          let value = source.replace(sourcePrefix, '');
+          let value: string = source.replace(sourcePrefix, '');
           value = value.replace('(', '');
           value = value.replace(')', '');
           value = value.trim();

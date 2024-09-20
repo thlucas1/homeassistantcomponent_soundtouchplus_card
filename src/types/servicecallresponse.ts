@@ -5,7 +5,22 @@
  * service call response.
  */
 
-export interface Context {
+export interface ServiceCallResponse {
+
+  /**
+   * Context in which the service was called.
+   */
+  context: ServiceCallResponseContext;
+
+  /**
+   * Response data returned by the called service (optional).
+   * This is usually a dictionary, but could also be basic types (string, number, etc).
+   */
+  response?: Record<string, any>;
+}
+
+
+export interface ServiceCallResponseContext {
 
   /**
    * Context identifier (e.g. "01HW87T1D7C78YEQS2WZ5HNN2X").
@@ -22,18 +37,3 @@ export interface Context {
    */
   user_id?: string | null;
 }
-
-export interface ServiceCallResponse {
-
-  /**
-   * Context in which the service was called.
-   */
-  context: Context;
-
-  /**
-   * Response data returned by the called service (optional).
-   * This is usually a dictionary, but could also be basic types (string, number, etc).
-   */
-  response?: Record<string, any>;
-}
-

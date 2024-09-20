@@ -3,13 +3,14 @@ import { html, LitElement, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 
 // our imports.
-import { Store } from '../model/store';
-import { MediaPlayerEntityFeature } from '../types/mediaplayer-entityfeature';
+import { Store } from '../model/Store';
+import { MediaPlayerEntityFeature } from '../types/MediaPlayerEntityFeature';
 
 class HaPlayer extends LitElement {
 
   @property({ attribute: false }) store!: Store;
   @property({ attribute: false }) features!: MediaPlayerEntityFeature[];
+  @property({ attribute: false }) color?: boolean;
 
   /** 
    * Invoked on each update to perform rendering tasks. 
@@ -32,11 +33,30 @@ class HaPlayer extends LitElement {
 
     // render content.
     return html` 
-      <more-info-content
+      <more-info-content style=${this.styleIcon()}
         .stateObj=${playerState} 
         .hass=${this.store.hass}>
-      </more-info-content> `;
+      </more-info-content>`;
+  }
+
+
+  /**
+   * Returns an element style for the player control button.
+   */
+  private styleIcon(): string | undefined {
+
+    //console.log("styleIcon (ha-player) - styling button icon for feature:\n%s",
+    //  JSON.stringify(this.features,null,2)
+    //);
+
+    // color the button if desired.
+    if (this.color) {
+      return `color: var(--dark-primary-color);`;
+    }
+
+    return;
   }
 }
+
 
 customElements.define('stpc-ha-player', HaPlayer);

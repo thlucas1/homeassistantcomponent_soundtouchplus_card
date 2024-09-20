@@ -3,7 +3,7 @@ import { css, html, TemplateResult } from 'lit';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { Section } from '../types/section'
+import { Section } from '../types/Section';
 
 const CONFIG_SETTINGS_SCHEMA = [
   {
@@ -67,9 +67,10 @@ class PresetSettingsEditor extends BaseEditor {
     // render html.
     return html`
       <div class="schema-title">
-        Settings that control the Device Preset Browser section look and feel
+        Settings that control the <a href="https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#device-preset-section-options" target="_blank">
+        Device Preset Section</a> look and feel
       </div>
-      <stpc-editor-form
+      <stpc-editor-form class="stpc-editor-form"
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PRESETS}
         .store=${this.store}
@@ -82,17 +83,29 @@ class PresetSettingsEditor extends BaseEditor {
 
   /**
    * Style definitions used by this TemplateResult.
+   * 
+   * Use the "stpc-editor-form" class to apply styling to the elements that are dynamically defined by 
+   * the HA-FORM element.  This gives you the ability to generate a more compact look and feel to the
+   * element, which can save quite a bit of screen real-estate in the process!
+   * See the static "styles()" function in the "editor.ts" module for more details.
    */
   static get styles() {
     return css`
+
       .schema-title {
         margin: 0.4rem 0;
         text-align: left;
         font-size: 1rem;
         color: var(--secondary-text-color);
       }
+
+      /* control the look and feel of the HA-FORM element. */
+      .stpc-editor-form {
+      }
+
       `;
   }
+
 }
 
 customElements.define('stpc-preset-browser-editor', PresetSettingsEditor);

@@ -1,4 +1,4 @@
-import { NavigateItem } from './navigateitem';
+import { NavigateItem } from './NavigateItem';
 
 /**
  * SoundTouch device NavigateResponse configuration object.

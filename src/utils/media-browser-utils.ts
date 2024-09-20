@@ -1,22 +1,14 @@
 // lovelace card imports.
 import { css, html } from 'lit';
-import {
-  mdiNumeric1BoxOutline,
-  mdiNumeric2BoxOutline,
-  mdiNumeric3BoxOutline,
-  mdiNumeric4BoxOutline,
-  mdiNumeric5BoxOutline,
-  mdiNumeric6BoxOutline,
-} from '@mdi/js';
 
 // our imports.
-import { MediaPlayer } from '../model/media-player';
-import { CustomImageUrls } from '../types/customimageurls'
-import { CardConfig } from '../types/cardconfig'
-import { Section } from '../types/section';
-import { ContentItem, ContentItemParent } from '../types/soundtouchplus/contentitem';
-import { Preset } from '../types/soundtouchplus/preset';
+import { MediaPlayer } from '../model/MediaPlayer';
+import { CustomImageUrls } from '../types/CustomImageUrls';
+import { CardConfig } from '../types/CardConfig';
+import { Section } from '../types/Section';
 import { formatDateEpochSecondsToLocaleString, formatStringProperCase } from './utils';
+import { ContentItem, ContentItemParent } from '../types/soundtouchplus/ContentItem';
+import { IMediaBrowserItem } from '../types/IMediaBrowserItem';
 
 const DEFAULT_MEDIA_IMAGEURL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAYAAACAvzbMAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw1AUhU9TS0UqDnYQcchQnexiRXQrVSyChdJWaNXB5KV/0KQhSXFxFFwLDv4sVh1cnHV1cBUEwR8QZwcnRRcp8b6k0CLGC4/3cd49h/fuA4RWjalmXxxQNcvIJBNivrAqBl8RgA8hxDAnMVNPZRdz8Kyve+qluovyLO++P2tQKZoM8InEcaYbFvEG8cympXPeJw6ziqQQnxNPGnRB4keuyy6/cS47LPDMsJHLzBOHicVyD8s9zCqGSjxNHFFUjfKFvMsK5y3Oaq3BOvfkLwwVtZUs12mNIYklpJCGCBkNVFGDhSjtGikmMnSe8PCPOv40uWRyVcHIsYA6VEiOH/wPfs/WLMWm3KRQAgi82PbHOBDcBdpN2/4+tu32CeB/Bq60rr/eAmY/SW92tcgRMLQNXFx3NXkPuNwBRp50yZAcyU9LKJWA9zP6pgIwfAsMrLlz65zj9AHI0ayWb4CDQ2CiTNnrHu/u753bvz2d+f0A+AZy3KgprtwAAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfoBQEMNhNCJ/KVAAACg0lEQVR42u3BgQAAAADDoPlTX+EAVQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwG/GFwABsN92WwAAAABJRU5ErkJggg==';
@@ -38,7 +30,7 @@ export function removeSpecialChars(str: string) {
 
 
 function hasItemsWithImage(items: ContentItemParent[]) {
-  return items.some((item) => item.ContentItem?.ContainerArt);
+  return items.some((item) => item.ContentItem?.ContainerArt || false);
 }
 
 
@@ -72,20 +64,24 @@ export function getCustomImageUrl(collection: CustomImageUrls | undefined, title
 
 /**
  * Gets the image url that will be displayed in the media browser for items that contain a 
- * ContentItem attribute.
+ * ContainerArt attribute.
  * 
  * The image to display is resolved in the following sequence:
- * - configuration `customImageUrls` `title` for matching contentItem name (if one exists).
- * - contentItem ContainerArt value (if one exists).
+ * - configuration `customImageUrls` `title` for matching item name (if one exists).
+ * - item ContainerArt value (if one exists).
  * - configuration `customImageUrls` `default` value (if one exists).
  * - hard-coded `default image` data if all else fails.
  * 
  * If the image url is a Home Assistant brands logo, then the brand icon.png image is used instead.
  */
-export function getContentItemImageUrl(contentItem: ContentItem | undefined, config: CardConfig, itemsWithImage: boolean, imageUrlDefault: string) {
+export function getContentItemImageUrl(item: ContentItem | undefined, config: CardConfig, itemsWithImage: boolean, imageUrlDefault: string) {
+
+  //console.log("getContentItemImageUrl - input\n- image_url = %s",
+  //  JSON.stringify(item.image_url),
+  //);
 
   // check for a custom imageUrl; if not found, then use the content item image (if supplied).
-  let imageUrl = getCustomImageUrl(config.customImageUrls, contentItem?.Name || '') ?? contentItem?.ContainerArt;
+  let imageUrl = getCustomImageUrl(config.customImageUrls, item?.Name || '') ?? item?.ContainerArt;
 
   // do we have a custom imageUrl?
   if (!imageUrl) {
@@ -120,47 +116,54 @@ export function getMdiIconImageUrl(mdi_icon: string): string {
 }
 
 
-export function itemsWithFallbacks(collection: ContentItemParent[], config: CardConfig, section: Section) {
+/**
+ * Appends IMediaBrowserItem properties to each item in a collection of items
+ * that are destined to be displayed in the media browser.
+ * 
+ * @items Collection of items to display in the media browser.
+ * @config CardConfig object that contains card configuration details.
+ * @section Current section that is active.
+ * @returns The collection of items, with each item containing IMediaListItem arguments that will be used by the media browser.
+ */
+export function buildMediaBrowserItems(items: ContentItemParent[], config: CardConfig, section: Section) {
 
-  const itemsWithImage = hasItemsWithImage(collection);
+  // do ANY of the items have images?
+  const itemsWithImage = hasItemsWithImage(items);
 
-  return collection.map((item) => {
+  // process all items in the collection.
+  return items.map((item) => {
 
-    // assign default image in case one cannot be resolved.
-    // for presets, we will use no image as the default and resolve a default image later.
-    let imageUrlDefault = DEFAULT_MEDIA_IMAGEURL;
+    //console.log("%c buildMediaBrowserItems - media list item:\n%s",
+    //  "color: orange;",
+    //  JSON.stringify(item),
+    //);
+
+    // get image to use as a thumbnail for the item;
+    // if no image can be obtained, then use the default.
+    const media_browser_thumbnail = getContentItemImageUrl(item.ContentItem, config, itemsWithImage, DEFAULT_MEDIA_IMAGEURL);
+    const media_browser_title = item.ContentItem?.Name;
+    const media_browser_subtitle = item.ContentItem?.Source;
+
+    // just to keep the compiler happy ...
     if (section == Section.PRESETS) {
-      imageUrlDefault = ''
     }
 
-    // get image to use as a thumbnail for the item.
-    let thumbnail = getContentItemImageUrl(item.ContentItem, config, itemsWithImage, imageUrlDefault);
-    //console.log("getContentItemImageUrl result:\nname=%s\nthumbnail:%s", item.ContentItem?.Name, thumbnail);
+    //console.log("%c buildMediaBrowserItems - media browser item:\n%s",
+    //  "color: orange;",
+    //  JSON.stringify({
+    //    ...item,
+    //    media_browser_thumbnail,
+    //    media_browser_title,
+    //    media_browser_subtitle,
+    //  }),
+    //);
 
-    // for presets, we will use mdiNumericBox icons.
-    if ((section == Section.PRESETS) && (thumbnail == '')) {
-      //console.log("STPC - itemsWithFallbacks():\nitem is a preset with no default image; using an mdi icon image for default image!");
-      const preset = item as Preset
-      const presetId = preset.PresetId
-      if (presetId == 1) {
-        thumbnail = getMdiIconImageUrl(mdiNumeric1BoxOutline);
-      } else if (presetId == 2) {
-        thumbnail = getMdiIconImageUrl(mdiNumeric2BoxOutline);
-      } else if (presetId == 3) {
-        thumbnail = getMdiIconImageUrl(mdiNumeric3BoxOutline);
-      } else if (presetId == 4) {
-        thumbnail = getMdiIconImageUrl(mdiNumeric4BoxOutline);
-      } else if (presetId == 5) {
-        thumbnail = getMdiIconImageUrl(mdiNumeric5BoxOutline);
-      } else if (presetId == 6) {
-        thumbnail = getMdiIconImageUrl(mdiNumeric6BoxOutline);
-      }
-      //console.log("STPC - itemsWithFallbacks():\npreset imageurl = %s", JSON.stringify(thumbnail));
-    }
-
+    // append media browser arguments to the item.
     return {
       ...item,
-      thumbnail,
+      media_browser_thumbnail,
+      media_browser_title,
+      media_browser_subtitle,
     };
   });
 }
@@ -180,7 +183,7 @@ export function itemsWithFallbacks(collection: ContentItemParent[], config: Card
 export function formatTitleInfo(
   text: string | undefined,
   config: CardConfig,
-  player: MediaPlayer,
+  player: MediaPlayer | undefined = undefined,
   mediaListLastUpdatedOn: number | undefined = undefined,
   mediaList: Array<any> | undefined = undefined,
 ): string | undefined {
@@ -237,7 +240,7 @@ export function formatMediaListInfo(
  */
 export function formatPlayerInfo(
   text: string | undefined,
-  player: MediaPlayer,
+  player: MediaPlayer | undefined,
   ): string | undefined {
 
   // if player instance not set then don't bother.
@@ -371,18 +374,22 @@ export const styleMediaBrowserItemTitle = css`
 `;
 
 
-export function renderMediaBrowserContentItem(contentItem: ContentItem | undefined, showTitle = true, showSource = true) {
+export function renderMediaBrowserItem(
+  item: IMediaBrowserItem | any,
+  showTitle: boolean = true,
+  showSubTitle: boolean = true
+) {
 
-  //console.log("%c renderMediaBrowserContentItem\n- contentItem:\n%s",
+  //console.log("%c renderMediaBrowserItem\n- IMediaBrowserItem:\n%s",
   //  "color: orange;",
-  //  JSON.stringify(contentItem, null, 2)
+  //  JSON.stringify(item, null, 2)
   //);
 
   return html`
     <div class="thumbnail"></div>
     <div class="title" ?hidden=${!showTitle}>
-      ${contentItem?.Name}
-      <div class="title-source" ?hidden=${!showSource}>${formatStringProperCase(contentItem?.Source || '')}</div>
+      ${item.media_browser_title}
+      <div class="title-source" ?hidden=${!showSubTitle}>${formatStringProperCase(item.media_browser_subtitle || '')}</div>
     </div>
   `;
 }

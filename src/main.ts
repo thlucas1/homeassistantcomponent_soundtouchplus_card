@@ -1,18 +1,9 @@
 // our imports.
 import { CARD_VERSION } from './constants';
-import { Card } from './card';
-import { PandoraBrowser } from './sections/pandora-browser';
-import { Player } from './sections/player';
-import { PresetBrowser } from './sections/preset-browser';
-import { RecentBrowser } from './sections/recent-browser';
-import { SourceBrowser } from './sections/source-browser';
-import { UserPresetBrowser } from './sections/userpreset-browser';
-import './components/ha-player';
-
+import './card';
 
 // Good source of help documentation on HA custom cards:
 // https://gist.github.com/thomasloven/1de8c62d691e754f95b023105fe4b74b
-
 
 // Display card version details in console, as well as a link to help docs.
 console.groupCollapsed(
@@ -25,7 +16,6 @@ console.log(
 );
 console.groupEnd();
 
-
 // Register our card for the card picker dialog in the HA UI dashboard
 // by adding it to the "window.customCards" array with attributes that
 // describe the card and what it provides ("type" and "name" are required).
@@ -36,12 +26,3 @@ window.customCards.push({
   //documentationURL: 'https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options',
   preview: true,
 });
-
-// add our card sections to the HA UI card picker dialog.
-customElements.define('soundtouchplus-card', Card);
-customElements.define('stpc-pandora-browser', PandoraBrowser);
-customElements.define('stpc-player', Player);
-customElements.define('stpc-preset-browser', PresetBrowser);
-customElements.define('stpc-recent-browser', RecentBrowser);
-customElements.define('stpc-source-browser', SourceBrowser);
-customElements.define('stpc-userpreset-browser', UserPresetBrowser);

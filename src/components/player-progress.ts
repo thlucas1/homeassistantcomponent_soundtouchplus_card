@@ -4,8 +4,8 @@ import { property, query, state } from 'lit/decorators.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 
 // our imports.
-import { Store } from '../model/store';
-import { MediaPlayer } from '../model/media-player';
+import { Store } from '../model/Store';
+import { MediaPlayer } from '../model/MediaPlayer';
 
 class Progress extends LitElement {
 
@@ -158,7 +158,7 @@ class Progress extends LitElement {
         width: 100%;
         font-size: x-small;
         display: flex;
-        --paper-progress-active-color: lightgray;
+        color: var(--stpc-player-controls-color);
       }
 
       .bar {

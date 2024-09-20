@@ -4,11 +4,11 @@ import { property } from 'lit/decorators.js';
 import { mdiVolumeHigh, mdiVolumeMute } from '@mdi/js';
 
 // our imports.
-import { CardConfig } from '../types/cardconfig';
-import { Store } from '../model/store';
-import { MediaPlayer } from '../model/media-player';
-import { MediaPlayerEntityFeature } from '../types/mediaplayer-entityfeature'
-import { MediaControlService } from '../services/media-control-service';
+import { CardConfig } from '../types/CardConfig';
+import { Store } from '../model/Store';
+import { MediaPlayer } from '../model/MediaPlayer';
+import { MediaPlayerEntityFeature } from '../types/MediaPlayerEntityFeature'
+import { MediaControlService } from '../services/MediaControlService';
 
 const { TURN_OFF, TURN_ON } = MediaPlayerEntityFeature;
 
@@ -144,6 +144,8 @@ class Volume extends LitElement {
         flex: 1;
         justify-content: space-between;
         mix-blend-mode: screen;
+        color: var(--stpc-player-controls-color);
+        /*border: 1px solid blue;  /*  FOR TESTING CONTROL LAYOUT CHANGES */
       }
 
       .volume-slider {
@@ -159,8 +161,12 @@ class Volume extends LitElement {
 
       .volume-percentage {
         flex: 2;
+        padding-left: 2px;
+        padding-right: 2px;
         font-weight: bold;
-        font-size: 12px;
+        font-size: 10px;
+        /*text-shadow: 0 0 2px var(--dark-primary-color); */
+        color: var(--dark-primary-color);
       }
 
       *[slim] * {

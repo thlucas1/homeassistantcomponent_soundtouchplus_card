@@ -9,8 +9,17 @@
   "license": "MIT",
   "dependencies": {
     "@mdi/js": "^7.4.47",
+    "@vibrant/color": "^3.2.1-alpha.1",
+    "@vibrant/core": "^3.2.1-alpha.1",
+    "@vibrant/generator-default": "^3.2.1-alpha.1",
+    "@vibrant/image": "^3.2.1-alpha.1",
+    "@vibrant/image-browser": "^3.2.1-alpha.1",
+    "@vibrant/image-node": "^3.2.1-alpha.1",
+    "@vibrant/quantizer-mmcq": "^3.2.1-alpha.1",
     "custom-card-helpers": "^1.9.0",
-    "lit": "^3.1.2"
+    "lit": "^2.8.0",
+    "node-vibrant": "^3.2.1-alpha.1",
+    "url": "^0.11.4"
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",

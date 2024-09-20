@@ -49,7 +49,7 @@
     <Content Include="package-lock.json" />
     <Content Include="package.json" />
     <Content Include="rollup.config.js" />
-    <Content Include="src\types\hassentityattributes-soundtouchplus.ts">
+    <Content Include="src\types\SoundTouchPlusHassEntityAttributes.ts">
       <SubType>Code</SubType>
     </Content>
     <None Include="tsconfig.json" />
@@ -65,11 +65,11 @@
     <None Include="src\editor\editor.ts" />
     <None Include="src\editor\editor-form.ts" />
     <None Include="src\editor\general-editor.ts" />
-    <None Include="src\model\media-player.ts" />
-    <None Include="src\model\store.ts" />
+    <None Include="src\model\MediaPlayer.ts" />
+    <None Include="src\model\Store.ts" />
     <None Include="src\sections\player.ts" />
     <None Include="src\sections\preset-browser.ts" />
-    <None Include="src\services\hass-service.ts" />
+    <None Include="src\services\HassService.ts" />
     <None Include="src\utils\utils.ts" />
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +82,7 @@
     <Folder Include="src" />
     <Folder Include="src\components" />
     <Folder Include="src\editor" />
+    <Folder Include="src\events\" />
     <Folder Include="src\model" />
     <Folder Include="src\types\" />
     <Folder Include="src\sections" />
@@ -106,44 +107,56 @@
     <TypeScriptCompile Include="src\editor\player-header-editor.ts" />
     <TypeScriptCompile Include="src\editor\pandora-browser-editor.ts" />
     <TypeScriptCompile Include="src\editor\recent-browser-editor.ts" />
+    <TypeScriptCompile Include="src\events\editor-config-area-selected.ts" />
+    <TypeScriptCompile Include="src\events\editor-pandora-account-changed.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\events\progress-ended.ts" />
+    <TypeScriptCompile Include="src\events\progress-started.ts" />
     <TypeScriptCompile Include="src\sections\source-browser.ts" />
     <TypeScriptCompile Include="src\sections\pandora-browser.ts" />
     <TypeScriptCompile Include="src\sections\recent-browser.ts" />
     <TypeScriptCompile Include="src\sections\userpreset-browser.ts" />
-    <TypeScriptCompile Include="src\services\media-control-service.ts" />
-    <TypeScriptCompile Include="src\services\soundtouchplus-service.ts" />
-    <TypeScriptCompile Include="src\types\cardconfig.ts">
+    <TypeScriptCompile Include="src\services\MediaControlService.ts" />
+    <TypeScriptCompile Include="src\services\SoundTouchPlusService.ts" />
+    <TypeScriptCompile Include="src\types\CardConfig.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\configarea.ts">
+    <TypeScriptCompile Include="src\types\ConfigArea.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\customimageurls.ts">
+    <TypeScriptCompile Include="src\types\CustomImageUrls.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\hassentityattributes-mediaplayer.ts" />
-    <TypeScriptCompile Include="src\types\hassentity-soundtouchplus.ts" />
-    <TypeScriptCompile Include="src\types\mediaplayer-entityfeature.ts">
+    <TypeScriptCompile Include="src\types\HassEntityAttributesMediaPlayer.ts" />
+    <TypeScriptCompile Include="src\types\HomeAssistantEx.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\soundtouchplus\navigateresponse.ts" />
-    <TypeScriptCompile Include="src\types\soundtouchplus\navigateitem.ts">
+    <TypeScriptCompile Include="src\types\SoundTouchPlusHassEntity.ts" />
+    <TypeScriptCompile Include="src\types\IMediaBrowserItem.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\soundtouchplus\sourceitem.ts" />
-    <TypeScriptCompile Include="src\types\soundtouchplus\recent.ts" />
-    <TypeScriptCompile Include="src\types\soundtouchplus\sourcelist.ts" />
-    <TypeScriptCompile Include="src\types\soundtouchplus\recentlist.ts" />
-    <TypeScriptCompile Include="src\types\section.ts">
+    <TypeScriptCompile Include="src\types\MediaPlayerEntityFeature.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\servicecallrequest.ts">
+    <TypeScriptCompile Include="src\types\soundtouchplus\NavigateResponse.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\NavigateItem.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\servicecallresponse.ts" />
-    <TypeScriptCompile Include="src\types\soundtouchplus\presetlist.ts" />
-    <TypeScriptCompile Include="src\types\soundtouchplus\preset.ts" />
-    <TypeScriptCompile Include="src\types\soundtouchplus\contentitem.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\SourceItem.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\Recent.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\SourceList.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\RecentList.ts" />
+    <TypeScriptCompile Include="src\types\Section.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\ServiceCallRequest.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\ServiceCallResponse.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\PresetList.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\Preset.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\ContentItem.ts" />
     <TypeScriptCompile Include="src\utils\media-browser-utils.ts" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />

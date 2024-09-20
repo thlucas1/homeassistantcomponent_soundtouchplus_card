@@ -4,11 +4,6 @@ import { state } from 'lit/decorators.js';
 import { choose } from 'lit/directives/choose.js';
 
 // our imports.
-import { BaseEditor } from './base-editor';
-import { ConfigArea } from '../types/configarea';
-import { Section } from '../types/section'
-import { Store } from '../model/store'
-import { SECTION_SELECTED, SHOW_SECTION } from '../constants';
 import './editor-form';
 import './general-editor';
 import './pandora-browser-editor';
@@ -17,8 +12,13 @@ import './preset-browser-editor';
 import './recent-browser-editor';
 import './source-browser-editor';
 import './userpreset-browser-editor';
+import { BaseEditor } from './base-editor';
+import { ConfigArea } from '../types/ConfigArea';
+import { Section } from '../types/Section';
+import { Store } from '../model/Store';
+import { SHOW_SECTION } from '../constants';
+import { EditorConfigAreaSelectedEvent } from '../events/editor-config-area-selected';
 import {
-  dispatch,
   getConfigAreaForSection,
   getSectionForConfigArea,
 } from '../utils/utils';
@@ -75,25 +75,45 @@ class CardEditor extends BaseEditor {
         )}
       </ha-control-button-group>
 
-      ${this.subEditor()}
+      <div class="stpc-card-editor">
+        ${this.subEditor()}
+      </div>
     `;
   }
 
 
+  /**
+   * Style definitions used by this TemplateResult.
+   * 
+   * Use the following styles to control the HA-FORM look and feel; the values
+   * listed in the style below give the dynamically generated content a more
+   * compact look and feel, which is nice when a LOT of editor settings are defined.
+   * They are applied to the shadowDOM via the _styleRenderRootElements function in editor.form.ts.
+   * 
+   * --ha-form-style-integer-margin-bottom: 0.5rem;
+   * --ha-form-style-multiselect-margin-bottom: 0.5rem;
+   * --ha-form-style-selector-margin-bottom: 0.5rem;
+   * --ha-form-style-selector-boolean-min-height: 28px;
+   * --ha-form-style-string-margin-bottom: 0.5rem;
+   */
   static get styles() {
     return css`
+
+      .stpc-card-editor {
+        /* control the look and feel of the HA-FORM element. */
+        --ha-form-style-integer-margin-bottom: 0.5rem;
+        --ha-form-style-multiselect-margin-bottom: 0.5rem;
+        --ha-form-style-selector-margin-bottom: 0.5rem;
+        --ha-form-style-selector-boolean-min-height: 28px;
+        --ha-form-style-string-margin-bottom: 0.5rem;
+      }
+
       ha-control-button-group {
         margin-bottom: 8px;
       }
 
       ha-control-button[selected] {
         --control-button-background-color: var(--primary-color);
-      }
-
-      /* TODO TEST - hide CONFIG VISIBILITY tab bar */
-      paper-tabs {
-        display: none !important;
-        border: 1px solid red !important;
       }
     `;
   }
@@ -158,13 +178,14 @@ class CardEditor extends BaseEditor {
     // store selected ConfigArea.
     Store.selectedConfigArea = configArea;
 
-    // show the section editor form.
+    // show the config area and set the section references.
     this.configArea = configArea;
-
-    // show the rendered section.
     this.section = sectionNew;
     this.store.section = sectionNew;
-    dispatch(SECTION_SELECTED, this.section);
+
+    // inform the card that it needs to show the section for the selected ConfigArea
+    // by dispatching the EDITOR_CONFIG_AREA_SELECTED event.
+    document.dispatchEvent(EditorConfigAreaSelectedEvent(this.section));
   }
 
 
@@ -201,11 +222,11 @@ class CardEditor extends BaseEditor {
    */
   disconnectedCallback() {
 
-    // invoke base class method.
-    super.disconnectedCallback();
-
     // remove event listeners for this control.
     window.removeEventListener(SHOW_SECTION, this.OnFooterShowSection);
+
+    // invoke base class method.
+    super.disconnectedCallback();
   }
 
 
@@ -219,6 +240,10 @@ class CardEditor extends BaseEditor {
     // invoke base class method.
     super.firstUpdated(changedProperties);
 
+    //console.log("firstUpdated (editor) - 1st render complete - changedProperties keys:\n- %s",
+    //  JSON.stringify(Array.from(changedProperties.keys())),
+    //);
+
     // if there are things that you only want to happen one time when the configuration
     // is initially loaded, then do them here.
 
@@ -227,11 +252,17 @@ class CardEditor extends BaseEditor {
     //);
 
     // at this point, the first render has occurred.
-    // select the configarea for the section so that its settings are automatically displayed.
-    const configArea = getConfigAreaForSection(this.section);
+    // select the configarea for the first section that has been configured so that its settings 
+    // are automatically displayed when the card editor dialog opens.
+    // if the media player entity has not been configured then display the GENERAL configArea.
+    let configArea = getConfigAreaForSection(this.section);
+    if (!this.config.entity) {
+      configArea = ConfigArea.GENERAL;
+      //console.log("firstUpdated (editor) - entity not configured; showing GENERAL");
+    }
     this.configArea = configArea;
     Store.selectedConfigArea = this.configArea;
-    this.requestUpdate();
+    super.requestUpdate();
 
     //console.log("firstUpdated (editor) - first render complete\n- this.section=%s\n- Store.selectedConfigArea=%s",
     //  JSON.stringify(this.section || '*undefined*'),

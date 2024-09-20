@@ -42,14 +42,15 @@ class PlayerSettingsEditor extends BaseEditor {
 
     return html`
       <div class="schema-title">
-        Settings that control the Player section look and feel
+        Settings that control the <a href="https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#player-section-options" target="_blank">
+        Player Section</a> look and feel
       </div>
       <ha-control-button-group>
         ${[HEADER, CONTROLS, VOLUME].map(
           (configArea) => html`
             <ha-control-button
               selected=${this.configArea === configArea || nothing}
-              @click=${() => this.OnSectionButtonClick(configArea)}
+              @click=${() => this.OnConfigPlayerSectionClick(configArea)}
             >
               ${configArea}
             </ha-control-button>
@@ -91,13 +92,22 @@ class PlayerSettingsEditor extends BaseEditor {
    * 
    * @param args Event arguments that contain the configArea that was clicked on.
    */
-  private OnSectionButtonClick(configArea: ConfigArea) {
+  private OnConfigPlayerSectionClick(configArea: ConfigArea) {
+
+    //console.log("OnConfigPlayerSectionClick (player-editor)\n- OLD configArea=%s\n- NEW configArea=%s\n- section=%s",
+    //  JSON.stringify(this.configArea),
+    //  JSON.stringify(configArea),
+    //  JSON.stringify(this.section)
+    //);
 
     // show the section editor form.
     this.configArea = configArea;
   }
 
 
+  /**
+   * Style definitions used by this TemplateResult.
+   */
   static get styles() {
     return css`
       .schema-title {

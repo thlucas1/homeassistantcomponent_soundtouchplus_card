@@ -1,11 +1,10 @@
 // our imports.
-import { SoundTouchPlusHassEntity } from '../types/hassentity-soundtouchplus'
-import { SoundTouchPlusHassEntityAttributes } from '../types/hassentityattributes-soundtouchplus'
-import { MediaPlayerEntityFeature } from '../types/mediaplayer-entityfeature'
+import { SoundTouchPlusHassEntity } from '../types/SoundTouchPlusHassEntity';
+import { SoundTouchPlusHassEntityAttributes } from '../types/SoundTouchPlusHassEntityAttributes';
+import { MediaPlayerEntityFeature } from '../types/MediaPlayerEntityFeature';
 
 const { TURN_ON } = MediaPlayerEntityFeature;
 
-//const LOGPFX = "STPC - model/media-player."
 
 /**
  * SoundTouchPlus MediaPlayer class.
@@ -102,5 +101,11 @@ export class MediaPlayer {
     return ((this.attributes.supported_features || 0) & TURN_ON) == TURN_ON;
   }
 
-
 }
+
+
+export const REPEAT_STATE = {
+  OFF: 'off',
+  ALL: 'all',
+  ONE: 'one',
+};

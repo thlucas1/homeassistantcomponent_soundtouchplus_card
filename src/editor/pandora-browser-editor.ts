@@ -3,10 +3,9 @@ import { css, html, TemplateResult } from 'lit';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { Section } from '../types/section'
-import { CardConfig } from '../types/cardconfig';
-import { PANDORA_BROWSER_REFRESH } from '../constants';
-import { dispatch } from '../utils/utils';
+import { Section } from '../types/Section';
+import { CardConfig } from '../types/CardConfig';
+import { EditorPandoraAccountChangedEvent } from '../events/editor-pandora-account-changed';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
@@ -90,9 +89,10 @@ class PandoraSettingsEditor extends BaseEditor {
     // render html.
     return html`
       <div class="schema-title">
-        Settings that control the Pandora section look and feel
+        Settings that control the <a href="https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#pandora-section-options" target="_blank">
+        Pandora Section</a> look and feel
       </div>
-      <stpc-editor-form
+      <stpc-editor-form class="stpc-editor-form"
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PANDORA_STATIONS}
         .store=${this.store}
@@ -106,15 +106,26 @@ class PandoraSettingsEditor extends BaseEditor {
 
   /**
    * Style definitions used by this TemplateResult.
+   * 
+   * Use the "stpc-editor-form" class to apply styling to the elements that are dynamically defined by 
+   * the HA-FORM element.  This gives you the ability to generate a more compact look and feel to the
+   * element, which can save quite a bit of screen real-estate in the process!
+   * See the static "styles()" function in the "editor.ts" module for more details.
    */
   static get styles() {
     return css`
+
       .schema-title {
         margin: 0.4rem 0;
         text-align: left;
         font-size: 1rem;
         color: var(--secondary-text-color);
       }
+
+      /* control the look and feel of the HA-FORM element. */
+      .stpc-editor-form {
+      }
+
       `;
   }
 
@@ -137,7 +148,10 @@ class PandoraSettingsEditor extends BaseEditor {
     // did the pandora user account value change?  
     // if so, then dispatch the pandora browser refresh event to refresh the media list.
     if (this.config.pandoraSourceAccount != changedConfig.pandoraSourceAccount) {
-      dispatch(PANDORA_BROWSER_REFRESH);
+
+      // inform the card that it needs to refresh the Pandora media list by dispatching
+      // the EDITOR_PANDORA_ACCOUNT_CHANGED event.
+      document.dispatchEvent(EditorPandoraAccountChangedEvent());
     }
 
     // note that we do not need to call`this.configChanged()`, as that has already happened

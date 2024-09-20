@@ -12,19 +12,10 @@ import {
 
 // our imports.
 import { SHOW_SECTION } from '../constants';
-import { CardConfig } from '../types/cardconfig'
-import { Section } from '../types/section'
+import { CardConfig } from '../types/CardConfig'
+import { Section } from '../types/Section'
 import { customEvent } from '../utils/utils';
 
-
-const {
-  PANDORA_STATIONS,
-  PLAYER,
-  PRESETS,
-  RECENTS,
-  SOURCES,
-  USERPRESETS,
-} = Section;
 
 class Footer extends LitElement {
 
@@ -42,46 +33,46 @@ class Footer extends LitElement {
       <ha-icon-button
         .path=${mdiPlayCircle}
         .label="Player"
-        @click=${() => this.OnSectionClick(PLAYER)}
-        selected=${this.getSectionSelected(PLAYER)}
-        hide=${this.getSectionEnabled(PLAYER)}
+        @click=${() => this.OnSectionClick(Section.PLAYER)}
+        selected=${this.getSectionSelected(Section.PLAYER)}
+        hide=${this.getSectionEnabled(Section.PLAYER)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiAudioInputRca}
         .label="Sources"
-        @click=${() => this.OnSectionClick(SOURCES)}
-        selected=${this.getSectionSelected(SOURCES)}
-        hide=${this.getSectionEnabled(SOURCES)}
+        @click=${() => this.OnSectionClick(Section.SOURCES)}
+        selected=${this.getSectionSelected(Section.SOURCES)}
+        hide=${this.getSectionEnabled(Section.SOURCES)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiStarOutline}
         .label="Presets"
-        @click=${() => this.OnSectionClick(PRESETS)}
-        selected=${this.getSectionSelected(PRESETS)}
-        hide=${this.getSectionEnabled(PRESETS)}
+        @click=${() => this.OnSectionClick(Section.PRESETS)}
+        selected=${this.getSectionSelected(Section.PRESETS)}
+        hide=${this.getSectionEnabled(Section.PRESETS)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiBookmarkMusicOutline}
         .label="Presets"
-        @click=${() => this.OnSectionClick(USERPRESETS)}
-        selected=${this.getSectionSelected(USERPRESETS)}
-        hide=${this.getSectionEnabled(USERPRESETS)}
+        @click=${() => this.OnSectionClick(Section.USERPRESETS)}
+        selected=${this.getSectionSelected(Section.USERPRESETS)}
+        hide=${this.getSectionEnabled(Section.USERPRESETS)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiHistory}
         .label="Recently Played"
-        @click=${() => this.OnSectionClick(RECENTS)}
-        selected=${this.getSectionSelected(RECENTS)}
-        hide=${this.getSectionEnabled(RECENTS)}
+        @click=${() => this.OnSectionClick(Section.RECENTS)}
+        selected=${this.getSectionSelected(Section.RECENTS)}
+        hide=${this.getSectionEnabled(Section.RECENTS)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiPandora}
         .label='Pandora Stations'
         .hideTitle=false
         .ariaHasPopup=true
-        @click=${() => this.OnSectionClick(PANDORA_STATIONS)}
-        selected=${this.getSectionSelected(PANDORA_STATIONS)}
-        hide=${this.getSectionEnabled(PANDORA_STATIONS)}
+        @click=${() => this.OnSectionClick(Section.PANDORA_STATIONS)}
+        selected=${this.getSectionSelected(Section.PANDORA_STATIONS)}
+        hide=${this.getSectionEnabled(Section.PANDORA_STATIONS)}
       ></ha-icon-button>
     `;
   }

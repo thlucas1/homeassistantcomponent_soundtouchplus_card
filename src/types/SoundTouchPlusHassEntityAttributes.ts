@@ -1,4 +1,4 @@
-import { HassEntityAttributesMediaPlayer } from '../types/hassentityattributes-mediaplayer';
+import { HassEntityAttributesMediaPlayer } from '../types/HassEntityAttributesMediaPlayer';
 
 /**
  * SoundTouchPlus MediaPlayer Hass Entity Attributes type.
@@ -19,4 +19,5 @@ export declare type SoundTouchPlusHassEntityAttributes = HassEntityAttributesMed
   soundtouchplus_sound_mode?: string;
   soundtouchplus_tone_bass_level?: string;
   soundtouchplus_tone_treble_level?: string;
+  stp_nowplaying_image_url?: string;
 };

@@ -9,6 +9,7 @@ export declare type HassEntityAttributesMediaPlayer = HassEntityAttributeBase & 
   app_id?: string;
   app_name?: string;
   device_class?: string;
+  entity_picture_local?: string;
   group_members?: [string];
   is_volume_muted?: boolean;
   media_album_artist?: string;

@@ -3,7 +3,7 @@ import { css, html, TemplateResult } from 'lit';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { Section } from '../types/section'
+import { Section } from '../types/Section';
 import { DOMAIN_MEDIA_PLAYER, DOMAIN_SOUNDTOUCHPLUS } from '../constants';
 
 
@@ -26,7 +26,7 @@ const CONFIG_SETTINGS_SCHEMA = [
   },
   {
     name: 'entity',
-    label: 'SoundTouch device to retrieve data from',
+    label: 'SoundTouch media player entity to retrieve data from',
     help: 'required',
     required: true,
     selector: {
@@ -92,9 +92,10 @@ class GeneralEditor extends BaseEditor {
     // render html.
     return html`
       <div class="schema-title">
-        Settings that control the overall look and feel of the card
+        Settings that control the <a href="https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#general-options" target="_blank">
+        General setup</a> of the card
       </div>
-      <stpc-editor-form
+      <stpc-editor-form class="stpc-editor-form"
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PLAYER}
         .store=${this.store}
@@ -107,9 +108,15 @@ class GeneralEditor extends BaseEditor {
 
   /**
    * Style definitions used by this TemplateResult.
+   * 
+   * Use the "stpc-editor-form" class to apply styling to the elements that are dynamically defined by 
+   * the HA-FORM element.  This gives you the ability to generate a more compact look and feel to the
+   * element, which can save quite a bit of screen real-estate in the process!
+   * See the static "styles()" function in the "editor.ts" module for more details.
    */
   static get styles() {
     return css`
+
       .schema-title {
         margin: 0.4rem 0;
         text-align: left;
@@ -117,28 +124,13 @@ class GeneralEditor extends BaseEditor {
         color: var(--secondary-text-color);
       }
 
-      ha-formfield {
-        height: 26px;
+      /* control the look and feel of the HA-FORM element. */
+      .stpc-editor-form {
       }
 
-      /* TODO TEST - reduce margin between editor controls */
-      .root > * {
-        display: block;
-        margin-bottom: 0px;
-        // border: 4px solid red !important;
-      }
-      /* TODO TEST - reduce margin between editor controls */
-      .root > *:not([own-margin]):not(:last-child) {
-        margin-bottom: 0px;
-        // border: 4px solid yellow !important;
-      }
-      /* TODO TEST - reduce margin between editor controls */
-      :host > *:not([own-margin]):not(:last-child) {
-        margin-bottom: 0px;
-        // border: 4px solid yellow !important;
-      }
       `;
   }
+
 }
 
 customElements.define('stpc-general-editor', GeneralEditor);

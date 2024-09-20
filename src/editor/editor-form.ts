@@ -1,16 +1,23 @@
 // lovelace card imports.
-import { css, html, TemplateResult } from 'lit';
-import { property } from 'lit/decorators.js';
+import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
+import { property, query } from 'lit/decorators.js';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { CardConfig } from '../types/cardconfig';
+import { CardConfig } from '../types/CardConfig';
+
 
 class Form extends BaseEditor {
 
   @property({ attribute: false }) schema!: unknown;
   @property({ attribute: false }) data!: unknown;
   @property() changed!: (ev: CustomEvent) => void;
+
+  /** Indicates if the renderRoot styles have been updated yet (true) or not (false|undefined). */
+  @property({ attribute: true }) isRenderRootStylesUpdated!: boolean;
+
+  /** query selector for the currently selected <ha-form> element. */
+  @query("#elmHaForm") private _elmHaForm!: LitElement;
 
 
   /**
@@ -21,13 +28,16 @@ class Form extends BaseEditor {
   */
   protected render(): TemplateResult {
 
-    //console.log("render (editor-form) - rendering editor form\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
+    //console.log("render (editor-form) - rendering editor form - section=%s",
+    //  JSON.stringify(super.section),
     //);
 
+    // style renderRoot elements.
+    this._styleRenderRootElements();
+
+    // render the control.
     return html`
-      <ha-form
+      <ha-form id="elmHaForm"
         .data=${this.data || this.config}
         .schema=${this.schema}
         .computeLabel=${formatLabel}
@@ -38,19 +48,40 @@ class Form extends BaseEditor {
   }
 
 
+  /**
+   * Style definitions used by this TemplateResult.
+   */
   static get styles() {
     return css`
-      /* TODO TEST - reduce margin between editor controls */
-      :host > *:not([own-margin]):not(:last-child) {
-        margin-bottom: 0px;
-        // border: 2px solid yellow !important;
-      }
-      /* TODO TEST - reduce margin between editor controls */
-      :host > * {
-        margin-bottom: 0px;
-        // border: 2px solid yellow !important;
-      }
+
+  //    #elmHaForm::part(root) {
+  //      border: 1px solid gold !important;
+  //    }
+
     `;
+  }
+
+
+  /**
+   * Called when the element has rendered for the first time. Called once in the
+   * lifetime of an element. Useful for one-time setup work that requires access to
+   * the DOM.
+   */
+  protected firstUpdated(changedProperties: PropertyValues): void {
+
+    // invoke base class method.
+    super.firstUpdated(changedProperties);
+
+    //console.log("firstUpdated (editor-form) - 1st render complete - changedProperties keys:\n- %s",
+    //  JSON.stringify(Array.from(changedProperties.keys())),
+    //);
+
+    // if renderRoot elements were not styled, then request another update.
+    if (!this.isRenderRootStylesUpdated) {
+      //console.log("firstUpdated (editor-form) - isRenderRootStylesUpdated = false, requesting another update");
+      this.requestUpdate();
+    }
+
   }
 
 
@@ -74,6 +105,116 @@ class Form extends BaseEditor {
     // fire an event that something has changed, and re-render the card preview.
     this.configChanged(changedConfig);
   }
+
+
+  /**
+   * Styles all renderRoot elements under the <ha-form> element to make them
+   * more compact and remove wasted space.
+   */
+  private _styleRenderRootElements() {
+
+    // have we already updated the renderRoot styles?
+    if (this.isRenderRootStylesUpdated) {
+      //console.log("_styleRenderRootElements (editor-form) - <ha-form> elements have already been styled");
+      return;
+    }
+
+    // <ha-form> element may not be present when the configuration editor is initially displayed.
+    // we have to wait for a section to be displayed first.
+    if (!this._elmHaForm) {
+      //console.log("_styleRenderRootElements (editor-form) - <ha-form> element was null; can't style yet");
+      this.requestUpdate();
+      return;
+    }
+
+    // if shadowRoot has not updated yet then we can't do anything.
+    if (!this._elmHaForm.shadowRoot) {
+      //console.log("_styleRenderRootElements (editor-form) - <ha-form> shadowRoot was null; can't style yet");
+      this.requestUpdate();
+      return;
+    }
+
+    // if <ha-form> has not completely updated yet then we can't do anything.
+    if (!this._elmHaForm?.updateComplete) {
+      //console.log("_styleRenderRootElements (editor-form) - <ha-form> element has not completed updating; can't style yet");
+      this.requestUpdate();
+      return;
+    }
+
+    // if <ha-form> has not completely updated yet then we can't do anything.
+    // has renderRoot happened yet?  if not, then don't bother!
+    if (!this.hasUpdated) {
+      //console.log("_styleRenderRootElements (editor-form) - editor-form.hasUpdated is false, and renderRoot is not available; can't style yet");
+      this.requestUpdate();
+      return;
+    }
+
+    //console.log("_styleRenderRootElements (editor-form) - adding styles to renderRoot elements");
+
+    // get all controls defined to the root <div> element.
+    const root = this._elmHaForm.renderRoot.querySelector(".root");
+    if (!root) {
+      //console.log("_styleRenderRootElements (editor-form) - this._elmHaForm.renderRoot.querySelector('.root') is undefined");
+    } else {
+
+      // process all child elements of the root.
+      for (let idx = 0; idx < root.children.length; idx++) {
+
+        const child = root.children[idx];
+
+        // only need to process specified tagNames.
+        // other tagnames may need to be added, as we only use a small set of the allowed controls.
+        if (child.tagName == "HA-FORM-STRING") {
+          child.setAttribute("style", "margin-bottom: var(--ha-form-style-string-margin-bottom, 24px);");
+
+        } else if (child.tagName == "HA-SELECTOR") {
+          child.setAttribute("style", "margin-bottom: var(--ha-form-style-selector-margin-bottom, 24px);");
+
+          // HA-SELECTOR elements can have different underlying types (HA-SELECTOR-BOOLEAN, etc).
+          // we will style the underlying type based on its tagName.
+          const grandChild = root.children[idx].shadowRoot?.firstElementChild;
+          if (grandChild) {
+
+            //console.log("HA-SELECTOR child shadowRoot firstElementChild tagName = %s", JSON.stringify(grandChild.tagName));
+            if (grandChild.tagName == "HA-SELECTOR-BOOLEAN") {
+              const haFormField = grandChild.shadowRoot?.firstElementChild;
+              //const haFormField = root.children[idx].shadowRoot?.firstElementChild?.shadowRoot?.firstElementChild;
+              //console.log("HA-SELECTOR-BOOLEAN first element = %s", JSON.stringify(haFormField?.tagName));
+              if (haFormField?.tagName == "HA-FORMFIELD") {
+                haFormField.setAttribute("style", "min-height: var(--ha-form-style-selector-boolean-min-height, 56px);");
+              } else {
+                console.log("%c HA-SELECTOR underlying type was not styled: %s", "color:orange", child.tagName);
+              }
+            }
+
+          } else {
+            //console.log("_styleRenderRootElements (editor-form) - HA-SELECTOR firstElementChild has no shadowRoot!");
+          }
+
+        } else if (child.tagName == "HA-FORM-MULTI_SELECT") {
+          child.setAttribute("style", "margin-bottom: var(--ha-form-style-multiselect-margin-bottom, 24px);");
+
+        } else if (child.tagName == "HA-FORM-INTEGER") {
+          child.setAttribute("style", "margin-bottom: var(--ha-form-style-integer-margin-bottom, 24px);");
+
+        } else {
+          console.log("%c _styleRenderRootElements (editor-form) - did not style %s element", "color:orange", child.tagName);
+        }
+      }
+
+      // set a timeout to re-apply styles in a few milliseconds, as some of the shadowRoot
+      // elements may not have completed updating when the first render was ran.
+      // we will also indicate that styles have been updated, so we don't do it again.
+      setTimeout(() => {
+        this._styleRenderRootElements();
+        this.isRenderRootStylesUpdated = true;
+      }, 50);
+
+      // request an update to render the changes.
+      this._elmHaForm.requestUpdate();
+    }
+  }
+
 }
 
 

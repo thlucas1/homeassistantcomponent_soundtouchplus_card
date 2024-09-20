@@ -4,11 +4,10 @@ import { property } from 'lit/decorators.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 
 // our imports.
-import { CardConfig } from '../types/cardconfig';
-import { Store } from '../model/store';
-import { MediaPlayer } from '../model/media-player';
-import { MediaPlayerEntityFeature } from '../types/mediaplayer-entityfeature'
-import { PLAYER_CONTROLS_BACKGROUND_OPACITY_DEFAULT } from '../constants'
+import { CardConfig } from '../types/CardConfig';
+import { Store } from '../model/Store';
+import { MediaPlayer, REPEAT_STATE } from '../model/MediaPlayer';
+import { MediaPlayerEntityFeature } from '../types/MediaPlayerEntityFeature'
 
 const { NEXT_TRACK, PAUSE, PLAY, PREVIOUS_TRACK, REPEAT_SET, SHUFFLE_SET } = MediaPlayerEntityFeature;
 
@@ -36,7 +35,15 @@ class PlayerControls extends LitElement {
 
     //const stopped = ['paused', 'playing'].includes(this.player.state) && nothing;
     const stopped = ['on', 'idle', 'playing', 'paused', 'buffering'].includes(this.player.state) && nothing;
+    const paused = ['paused'].includes(this.player.state);
+
+    // set repeat button color based on selected option.
+    const coloredRepeat = [REPEAT_STATE.ONE, REPEAT_STATE.ALL].includes(this.player.attributes.repeat || REPEAT_STATE.OFF);
     
+    //console.log("render (player-controls) - coloredRepeat = %s",
+    //  JSON.stringify(coloredRepeat)
+    //);
+
     // render html.
     // note that the "showPower" feature will only be displayed if the player is off AND if
     // the device supports the TURN_ON feature.
@@ -44,13 +51,13 @@ class PlayerControls extends LitElement {
       <div class="player-controls-container" style=${this.styleContainer()}>
           <div class="icons" hide=${stopped}>
               <div class="flex-1"></div>
-              <stpc-ha-player .store=${this.store} .features=${this.showShuffle()}></stpc-ha-player>
+              <stpc-ha-player .store=${this.store} .features=${this.showShuffle()} .color=${this.player.attributes.shuffle}></stpc-ha-player>
               <stpc-ha-player .store=${this.store} .features=${this.showPrev()}></stpc-ha-player>
-              <stpc-ha-player .store=${this.store} .features=${this.showPlayPause()}></stpc-ha-player>
+              <stpc-ha-player .store=${this.store} .features=${this.showPlayPause()} .color=${paused}></stpc-ha-player>
               <stpc-ha-player .store=${this.store} .features=${this.showNext()}></stpc-ha-player>
-              <stpc-ha-player .store=${this.store} .features=${this.showRepeat()}></stpc-ha-player>
+              <stpc-ha-player .store=${this.store} .features=${this.showRepeat()} .color=${coloredRepeat}></stpc-ha-player>
           </div>
-          <stpc-player-volume hide=${stopped} .store=${this.store} .player=${this.player}></stpc-player-volume>
+          <stpc-player-volume hide=${stopped} .store=${this.store} .player=${this.player} class="player-volume-container"></stpc-player-volume>
           <div class="icons">
               <stpc-ha-player .store=${this.store} .features=${this.store.showMainPower()}></stpc-ha-player>
           </div">
@@ -104,7 +111,7 @@ class PlayerControls extends LitElement {
    */
   private styleContainer() {
     return styleMap({
-      '--stpc-player-controls-container-background-opacity': `${this.config.playerControlsBackgroundOpacity || PLAYER_CONTROLS_BACKGROUND_OPACITY_DEFAULT}`
+      'margin-bottom': '0px;',  // cannot place this in class (player-controls-container), must be placed here!
     });
   }
 
@@ -121,11 +128,12 @@ class PlayerControls extends LitElement {
         max-width: 40rem;
         text-align: center;
         overflow: hidden auto;
-        border-radius: 10px;
-        background-color: rgba(var(--rgb-card-background-color), var(--stpc-player-controls-container-background-opacity));
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: contain;
+        /*border: 1px solid red;  /*  FOR TESTING CONTROL LAYOUT CHANGES */
+      }
+
+      .player-volume-container {
+        display: block;
+        height: 2.5rem;
       }
 
       .icons {
@@ -136,6 +144,8 @@ class PlayerControls extends LitElement {
         --mdc-icon-size: 1.5rem !important;
         mix-blend-mode: screen;
         overflow: hidden;
+        text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
+        color: white;
       }
 
       *[hide] {

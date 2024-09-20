@@ -6,6 +6,15 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.7 ] - 2024/09/19
+
+  * Gave the player UI a little bit of a facelift to make it easier to see the player control icons and header information.  Also styles the footer bar to match colors in the artwork image.
+  * Updated event processing in various parts of the card; corrected duplicate refresh updates, removed the double progress rings that were displayed in the card editor when refreshing media lists, etc.
+  * Removed card configuration `playerHeaderBackgroundOpacity` property (replaced by new `playerHeaderBackgroundColor` property).
+  * Added card configuration property `playerHeaderBackgroundColor`: Color value (e.g. "#hhrrggbb") for header area background gradient.  Specify 'transparent' to hide the background area.  Default is '#000000bb'.
+  * Removed card configuration `playerControlsBackgroundOpacity` property (replaced by new `playerControlsBackgroundColor` property).
+  * Added card configuration property `playerControlsBackgroundColor`: Color value (e.g. "#hhrrggbb") for Player controls area background gradient.  Specify 'transparent' to hide the background area.  Default is '#000000bb'.
+
 ###### [ 1.0.6 ] - 2024/09/01
 
   * Changed medialist to use a cached list when card is displayed in configuration editor.  The medialist will be retrieved once while the card is being edited, and stored in a cache until the card editor is closed.

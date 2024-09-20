@@ -3,7 +3,7 @@ import { css, html, TemplateResult } from 'lit';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { Section } from '../types/section'
+import { Section } from '../types/Section';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
@@ -59,7 +59,7 @@ class PlayerControlsSettingsEditor extends BaseEditor {
     // ensure store is created.
     super.createStore();
 
-    //console.log("render (player-editor) - rendering player control settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //console.log("render (player-controls-editor) - rendering player controls settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
     //  JSON.stringify(this.section),
     //  JSON.stringify(Store.selectedConfigArea),
     //);
@@ -69,7 +69,7 @@ class PlayerControlsSettingsEditor extends BaseEditor {
       <div class="schema-title">
         Player Media Control area settings
       </div>
-      <stpc-editor-form
+      <stpc-editor-form class="stpc-editor-form"
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PLAYER}
         .store=${this.store}

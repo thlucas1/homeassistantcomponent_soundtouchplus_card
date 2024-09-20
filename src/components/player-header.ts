@@ -5,11 +5,10 @@ import { styleMap } from 'lit-html/directives/style-map.js';
 
 // our imports.
 import '../components/player-progress';
-import { CardConfig } from '../types/cardconfig';
-import { Store } from '../model/store';
-import { MediaPlayer } from '../model/media-player';
+import { CardConfig } from '../types/CardConfig';
+import { Store } from '../model/Store';
+import { MediaPlayer } from '../model/MediaPlayer';
 import { formatTitleInfo } from '../utils/media-browser-utils';
-import { PLAYER_CONTROLS_BACKGROUND_OPACITY_DEFAULT } from '../constants';
 
 class PlayerHeader extends LitElement {
 
@@ -61,7 +60,7 @@ class PlayerHeader extends LitElement {
     return html` 
       <div class="player-header-container" style=${this.styleContainer()}>
         ${!hideProgress ? html`<stpc-player-progress .store=${this.store}></stpc-player-progress>` : html``}
-        ${title ? html`<div class="header-title">${title}</div>` : html``}
+        <div class="header-title">${title}</div>
         ${artistTrack ? html`<div class="header-artist-track">${artistTrack}</div>` : html``}
         ${album ? html`<div class="header-artist-album">${album}</div>` : html``}
       </div>`;
@@ -72,7 +71,6 @@ class PlayerHeader extends LitElement {
    */
   private styleContainer() {
     return styleMap({
-      '--stpc-player-header-container-background-opacity': `${this.config.playerHeaderBackgroundOpacity || PLAYER_CONTROLS_BACKGROUND_OPACITY_DEFAULT}`
     });
   }
 
@@ -85,14 +83,15 @@ static get styles() {
 
       .player-header-container {
         margin: 0.75rem 3.25rem;
+        margin-top: 0rem;
         padding: 0.5rem;
+        padding-top: 0rem;
         max-width: 40rem;
         text-align: center;
-        border-radius: 10px;
-        background-color: rgba(var(--rgb-card-background-color), var(--stpc-player-header-container-background-opacity));
         background-position: center;
         background-repeat: no-repeat;
         background-size: contain;
+        /*border: 1px solid red;  /*  FOR TESTING CONTROL LAYOUT CHANGES */
       }
 
       .header-title {
@@ -100,9 +99,13 @@ static get styles() {
         text-overflow: ellipsis;
         font-size: 1rem;
         font-weight: 500;
-        color: var(--secondary-text-color);
+        text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
+        //color: var(--secondary-text-color);
+        //color: var(--stpc-player-palette-vibrant);
+        color: var(--stpc-player-header-color);
         white-space: nowrap;
         mix-blend-mode: screen;
+        min-height: 0.5rem;
       }
 
       .header-artist-track {
@@ -110,7 +113,10 @@ static get styles() {
         text-overflow: ellipsis;
         font-size: 1.15rem;
         font-weight: 400;
-        color: var(--dark-primary-color);
+        text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
+        //color: var(--dark-primary-color);
+        //color: var(--stpc-player-palette-vibrant);
+        color: var(--stpc-player-header-color);
         mix-blend-mode: screen;
       }
 
@@ -119,7 +125,10 @@ static get styles() {
         text-overflow: ellipsis;
         font-size: 1rem;
         font-weight: 300;
-        color: var(--secondary-text-color);
+        text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
+        //color: var(--secondary-text-color);
+        //color: var(--stpc-player-palette-vibrant);
+        color: var(--stpc-player-header-color);
         mix-blend-mode: screen;
       }
     `;

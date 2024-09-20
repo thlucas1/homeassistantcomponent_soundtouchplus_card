@@ -1,7 +1,7 @@
 // our imports.
-import { CardConfig } from '../types/cardconfig'
-import { ConfigArea } from '../types/configarea';
-import { Section } from '../types/section'
+import { CardConfig } from '../types/CardConfig';
+import { ConfigArea } from '../types/ConfigArea';
+import { Section } from '../types/Section';
 
 export function cardDoesNotContainAllSections(config: CardConfig) {
   return config.sections && config.sections.length < Object.keys(Section).length;
@@ -22,7 +22,7 @@ export function customEvent(type: string, detail?: unknown) {
 
 export function dispatch(type: string, detail?: unknown) {
   const event = customEvent(type, detail);
-  window.dispatchEvent(event);
+  document.dispatchEvent(event);
 }
 
 
@@ -198,8 +198,8 @@ export function isCardInEditPreview(cardElement: Element) {
 
   //console.log("isCardInEditPreview - processing parentElement data");
 
-  let parent1Cls = undefined;
-  let parent2Cls = undefined;
+  let parent1Cls: string | undefined = undefined;
+  let parent2Cls: string | undefined = undefined;
 
   // get parent element data.
   if (cardElement) {
@@ -226,10 +226,12 @@ export function isCardInEditPreview(cardElement: Element) {
 
     const parent1Elm = cardElement.parentElement;
     if (parent1Elm) {
-      parent1Cls = parent1Elm.className || undefined;
+      parent1Cls = (parent1Elm.className || '').trim();
+      //console.log("isCardInEditPreview - parent1Cls = %s", JSON.stringify(parent1Cls));
       const parent2Elm = parent1Elm.parentElement;
       if (parent2Elm) {
-        parent2Cls = parent2Elm.className || undefined;
+        parent2Cls = (parent2Elm.className || '').trim();
+        //console.log("isCardInEditPreview - parent2Cls = %s", JSON.stringify(parent1Cls));
       }
     }
   } else {
@@ -238,15 +240,93 @@ export function isCardInEditPreview(cardElement: Element) {
 
   // check if the main or editor cards are in the configuration editor preview pane.
   let result = false;
-  if (parent2Cls == 'element-preview') {
+  if (parent2Cls === 'element-preview') {
     // MAIN card is in the configuration editor preview pane.
     result = true;
-  } else if (parent1Cls == 'gui-editor') {
+  } else if (parent1Cls === 'gui-editor') {
     // EDITOR card is in the configuration editor preview pane.
     result = true;
   }
 
   //console.log("isCardInEditPreview - result=%s",
+  //  JSON.stringify(result)
+  //);
+
+  return result;
+}
+
+
+/**
+  * Returns true if the card is currently being previewed in the card picker
+  * dialog, which is used when adding a card to a UI dashboard;
+  * otherwise, false.
+  * 
+  * The parentElement structure will look like the following when the MAIN card
+  * is in card picker preview mode (in the card picker preview pane):
+  * 
+  * (HA 2024.08.1 release):
+  * - parentElement1.tagName='DIV',   className='preview   '
+  * - parentElement2.tagName='DIV',   className='card'
+  * - parentElement3.tagName='DIV',   className='cards-container'
+  * - parentElement4.tagName='DIV',   className=undefined
+  */
+export function isCardInPickerPreview(cardElement: Element) {
+
+  //console.log("isCardInPickerPreview - processing parentElement data");
+
+  let parent1Cls: string | undefined = undefined;
+  let parent2Cls: string | undefined = undefined;
+  let parent3Cls: string | undefined = undefined;
+
+  // get parent element data.
+  if (cardElement) {
+
+    //console.log("isCardInPickerPreview - ParentElement tagName info:\n parentElement1=%s\n parentElement2=%s\n parentElement3=%s\n parentElement4=%s\n parentElement5=%s\n parentElement6=%s\n parentElement7=%s",
+    //  cardElement.parentElement?.tagName,
+    //  cardElement.parentElement?.parentElement?.tagName,
+    //  cardElement.parentElement?.parentElement?.parentElement?.tagName,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
+    //);
+
+    //console.log("isCardInPickerPreview - ParentElement className info:\n parentElement1=%s\n parentElement2=%s\n parentElement3=%s\n parentElement4=%s\n parentElement5=%s\n parentElement6=%s\n parentElement7=%s",
+    //  cardElement.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //);
+
+    const parent1Elm = cardElement.parentElement;
+    if (parent1Elm) {
+      parent1Cls = (parent1Elm.className || '').trim();
+      //console.log("isCardInPickerPreview - parent1Cls = %s", JSON.stringify(parent1Cls));
+      const parent2Elm = parent1Elm.parentElement;
+      if (parent2Elm) {
+        parent2Cls = (parent2Elm.className || '').trim();
+        //console.log("isCardInPickerPreview - parent2Cls = %s", JSON.stringify(parent2Cls));
+        const parent3Elm = parent2Elm.parentElement;
+        if (parent3Elm) {
+          parent3Cls = (parent3Elm.className || '').trim();
+          //console.log("isCardInPickerPreview - parent3Cls = %s", JSON.stringify(parent3Cls));
+        }
+      }
+    }
+  } else {
+    //console.log("isCardInPickerPreview - cardElement was undefined");
+  }
+
+  // check if the card is in the card picker preview pane.
+  let result = false;
+  if ((parent1Cls === 'preview') && (parent2Cls === 'card') && (parent3Cls === 'cards-container')) {
+    result = true;
+  }
+
+  //console.log("isCardInPickerPreview - result=%s",
   //  JSON.stringify(result)
   //);
 

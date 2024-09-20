@@ -3,11 +3,19 @@ import { css, html, TemplateResult } from 'lit';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { Section } from '../types/section'
-import { PLAYER_CONTROLS_BACKGROUND_OPACITY_DEFAULT } from '../constants'
+import { Section } from '../types/Section';
+import { PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT } from '../sections/player';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
+  {
+    name: 'playerControlsBackgroundColor',
+    label: 'Color value (e.g. "#hhrrggbb") for controls area background gradient',
+    help: "'transparent' to disable",
+    required: false,
+    type: 'string',
+    default: PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT,
+  },
   {
     name: 'playerVolumeControlsHideMute',
     label: 'Hide mute button in the volume controls area',
@@ -26,14 +34,6 @@ const CONFIG_SETTINGS_SCHEMA = [
     required: false,
     selector: { boolean: {} },
   },
-  {
-    name: 'playerControlsBackgroundOpacity',
-    label: 'Opacity value for the header area background',
-    help: "-1 to 1.0",
-    required: false,
-    type: 'float',
-    default: PLAYER_CONTROLS_BACKGROUND_OPACITY_DEFAULT,
-  },
 ];
 
 
@@ -50,7 +50,7 @@ class PlayerVolumeSettingsEditor extends BaseEditor {
     // ensure store is created.
     super.createStore();
 
-    //console.log("render (player-editor) - rendering player volume settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //console.log("render (player-volume-editor) - rendering player volume settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
     //  JSON.stringify(this.section),
     //  JSON.stringify(Store.selectedConfigArea),
     //);
@@ -60,7 +60,7 @@ class PlayerVolumeSettingsEditor extends BaseEditor {
       <div class="schema-title">
         Player Volume Control area settings
       </div>
-      <stpc-editor-form
+      <stpc-editor-form class="stpc-editor-form"
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PLAYER}
         .store=${this.store}

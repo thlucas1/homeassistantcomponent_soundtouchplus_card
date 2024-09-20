@@ -1,32 +1,34 @@
 // lovelace card imports.
-import { css, html, LitElement, TemplateResult } from 'lit';
-import { property } from 'lit/decorators.js';
+import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistant } from 'custom-card-helpers';
 
 // our imports.
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
 import { Card } from '../card';
-import { Store } from '../model/store';
+import { CardConfig } from '../types/CardConfig';
+import { Section } from '../types/Section';
+import { Store } from '../model/Store';
+import { MediaPlayer } from '../model/MediaPlayer';
 import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
-import { MediaPlayer } from '../model/media-player';
-import { ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD, SECTION_SELECTED } from '../constants';
-import { SoundTouchPlusService } from '../services/soundtouchplus-service';
-import { CardConfig } from '../types/cardconfig'
-import { Preset } from '../types/soundtouchplus/preset';
-import { PresetList } from '../types/soundtouchplus/presetlist';
-import { Section } from '../types/section';
+import { SoundTouchPlusService } from '../services/SoundTouchPlusService';
+import { ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD } from '../constants';
+import { Preset } from '../types/soundtouchplus/Preset';
+import { PresetList } from '../types/soundtouchplus/PresetList';
 
-//const LOGPFX = "STPC - sections/preset-browser."
 
+@customElement("stpc-preset-browser")
 export class PresetBrowser extends LitElement {
 
-  /** Home Assistant hass instance. */
+  // public state properties.
   @property({ attribute: false }) public hass!: HomeAssistant;
-
-  /** Application common storage area. */
   @property({ attribute: false }) store!: Store;
+
+  // private state properties.
+  @state() private _alertError?: string;
+  @state() private _alertInfo?: string;
 
   /** Card configuration data. */
   private config!: CardConfig;
@@ -81,30 +83,9 @@ export class PresetBrowser extends LitElement {
     this.player = this.store.player;
     this.soundTouchPlusService = this.store.soundTouchPlusService;
 
-    // if entity value not set then render an error card.
-    if (!this.player)
-      throw new Error("SoundTouchPlus media player entity id not configured");
-
-    // does the medialist need refreshing?
-    const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
-    if ((this.mediaListLastUpdatedOn == -1) || (playerLastUpdatedOn > this.mediaListLastUpdatedOn)) {
-      if (!this.isUpdateInProgress) {
-        this.isUpdateInProgress = true;
-        this.updateMediaList(this.player);
-      } else {
-        //console.log("%c preset-browser - update already in progress!", "color: orange;");
-      }
-    }
-      
     // format title and sub-title details.
     const title = formatTitleInfo(this.config.presetBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Presets);
     const subtitle = formatTitleInfo(this.config.presetBrowserSubTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList?.Presets);
-
-    // check for conditions that prevent the content from showing.
-    let alertText = undefined
-    if (!this.mediaList) {
-      alertText = 'No SoundTouch Presets found';
-    }
 
     // render html.
     return html`
@@ -112,13 +93,10 @@ export class PresetBrowser extends LitElement {
         ${title ? html`<div class="preset-browser-title">${title}</div>` : html``}
         ${subtitle ? html`<div class="preset-browser-subtitle">${subtitle}</div>` : html``}
         <div class="preset-browser-content">
-          ${
-          (() => {
-            if (alertText) {
-              return (
-                html`<div class="no-items">${alertText}</div>`
-              )
-            } else if (this.config.presetBrowserItemsPerRow === 1) {
+          ${this._alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this._alertErrorClear}>${this._alertError}</ha-alert>` : ""}
+          ${this._alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this._alertInfoClear}>${this._alertInfo}</ha-alert>` : ""}
+          ${(() => {
+            if (this.config.presetBrowserItemsPerRow === 1) {
               return (
                 html`<stpc-media-browser-list
                     .items=${this.mediaList?.Presets}
@@ -139,8 +117,7 @@ export class PresetBrowser extends LitElement {
                     `
               )
             }
-          })()  
-          }  
+          })()}
         </div>
       </div>
     `;
@@ -192,11 +169,111 @@ export class PresetBrowser extends LitElement {
         overflow-y: auto;
       }
 
-      .no-items {
-        text-align: center;
-        margin-top: 2rem;
+      ha-alert {
+        display: block;
+        margin-bottom: 0.25rem;
       }
     `;
+  }
+
+
+  /**
+   * Invoked before `update()` to compute values needed during the update.
+   * 
+   * We will check for changes in the media player preset last updated date.  
+   * If a change is being made, then it denotes the user changed a preset
+   * setting on the physical device (or via the SoundTouch app).  In this case,
+   * we will refresh the media list with the changes.
+   */
+  protected willUpdate(changedProperties: PropertyValues): void {
+
+    // invoke base class method.
+    super.willUpdate(changedProperties);
+
+    // get list of changed property keys.
+    const changedPropKeys = Array.from(changedProperties.keys())
+
+    //console.log("%c willUpdate (player) - changed property keys:\n",
+    //  "color: gold;",
+    //  JSON.stringify(changedPropKeys),
+    //);
+
+    // we only care about "store" property changes at this time, as it contains a
+    // reference to the "hass" property.  we are looking for background image changes.
+    if (!changedPropKeys.includes('store')) {
+      return;
+    }
+
+    // did the user change a preset via device hardware buttons?
+    // if so, then refresh the media list to reflect it.
+    if (!this.isUpdateInProgress) {
+      if ((this.mediaList) && ((this.mediaList.LastUpdatedOn || 0) > 0)) {
+        if ((this.player.attributes.soundtouchplus_presets_lastupdated || 0) > (this.mediaList.LastUpdatedOn || 0)) {
+
+          //console.log("render (preset-browser) - soundtouchplus_presets_lastupdated changed, refreshing media list\n- %s = mediaListLastUpdatedOn\n- %s = soundtouchplus_presets_lastupdated",
+          //  JSON.stringify(this.mediaListLastUpdatedOn),
+          //  JSON.stringify(this.player.attributes.soundtouchplus_presets_lastupdated),
+          //);
+
+          this.updateMediaList(this.player);
+          this.requestUpdate();
+
+        }
+      }
+    }
+  }
+
+
+  /**
+   * Called when the element has rendered for the first time. Called once in the
+   * lifetime of an element. Useful for one-time setup work that requires access to
+   * the DOM.
+   */
+  protected firstUpdated(changedProperties: PropertyValues): void {
+
+    // invoke base class method.
+    super.firstUpdated(changedProperties);
+
+    //console.log("firstUpdated (userpreset-browser) - changedProperties keys:\n- %s",
+    //  JSON.stringify(Array.from(changedProperties.keys())),
+    //);
+
+    // refresh the medialist.
+    this.updateMediaList(this.player);
+  }
+
+
+  /**
+   * Clears the error and informational alert text.
+   */
+  private _alertClear() {
+    this._alertInfo = undefined;
+    this._alertError = undefined;
+  }
+
+
+  /**
+   * Clears the error alert text.
+   */
+  private _alertErrorClear() {
+    this._alertError = undefined;
+  }
+
+
+  /**
+   * Sets the alert error message, and clears the informational alert message.
+   */
+  private _alertErrorSet(message: string): void {
+    this._alertError = message;
+    this._alertInfoClear();
+  }
+
+
+  /**
+   * Clears the informational alert text.
+   */
+  private _alertInfoClear() {
+    this._alertInfo = undefined;
   }
 
 
@@ -245,18 +322,23 @@ export class PresetBrowser extends LitElement {
    */
   private async SelectPreset(mediaItem: Preset) {
 
-    //console.log("SelectPreset (pandora-browser) - media item:\n%s",
-    //  JSON.stringify(mediaItem, null, 2),
-    //);
+    try {
 
-    if (mediaItem.PresetId) {
+      if (mediaItem.PresetId) {
 
-      // play the content.
-      await this.soundTouchPlusService.RemoteKeyPress(this.player.id, "PRESET_" + JSON.stringify(mediaItem.PresetId), "release");
+        // play content item.
+        await this.soundTouchPlusService.RemoteKeyPress(this.player.id, "PRESET_" + JSON.stringify(mediaItem.PresetId), "release");
 
-      // show the player section (only shown if it's active).
-      const event = customEvent(SECTION_SELECTED, Section.PLAYER);
-      window.dispatchEvent(event);
+        // show player section.
+        this.store.card.SetSection(Section.PLAYER);
+
+      }
+
+    }
+    catch (error) {
+
+      this._alertErrorSet((error as Error).message);
+
     }
   }
 
@@ -268,12 +350,26 @@ export class PresetBrowser extends LitElement {
    */
   private async StorePreset(mediaItem: Preset) {
 
-    //console.log("StorePreset (pandora-browser) - media item:\n%s",
-    //  JSON.stringify(mediaItem, null, 2),
-    //);
+    try {
 
-    if (mediaItem.PresetId) {
-      await this.soundTouchPlusService.RemoteKeyPress(this.player.id, "PRESET_" + JSON.stringify(mediaItem.PresetId), "press");
+      //console.log("StorePreset (preset-browser) - media item:\n%s",
+      //  JSON.stringify(mediaItem, null, 2),
+      //);
+
+      if (mediaItem.PresetId) {
+
+        // store the preset.
+        await this.soundTouchPlusService.RemoteKeyPress(this.player.id, "PRESET_" + JSON.stringify(mediaItem.PresetId), "press");
+
+        // don't show the player here, as the user is storing a preset.
+
+      }
+
+    }
+    catch (error) {
+
+      this._alertErrorSet((error as Error).message);
+
     }
 
   }
@@ -282,65 +378,96 @@ export class PresetBrowser extends LitElement {
   /**
    * Updates the `mediaList` attribute with the most current list of presets from
    * the SoundTouch device.  
-   * 
-   * This method is called when the section is initially displayed, as well as when
-   * a preset updated event occurs for the media player.  This can be driven from
-   * the SoundTouch App (e.g. when a preset is stored in the app), as well as when
-   * a physical preset is stored on the device (e.g. press and hold a preset button).
    */
   private updateMediaList(player: MediaPlayer): void {
 
-    // update our media list; we will force the `mediaListLastUpdatedOn` attribute to
-    // match the device `soundtouchplus_presets_lastupdated` attribute so that the
-    // refresh is only triggered once on the attribute change (or initial request).
-    this.mediaListLastUpdatedOn = player.attributes.soundtouchplus_presets_lastupdated || (Date.now() / 1000);
-
-    // if card is being edited, then we will use the cached media list as the data source;
-    // otherwise, we will refresh the media list from the real-time source.
-    const cacheKey = 'preset-browser';
-    this.mediaList = undefined;
-    const isCardEditMode = isCardInEditPreview(this.store.card);
-    if ((isCardEditMode) && (cacheKey in Card.mediaListCache)) {
-
-      //console.log("%c updateMediaList (preset-browser) - medialist loaded from cache",
-      //  "color: orange;",
-      //);
-
-      this.mediaList = Card.mediaListCache[cacheKey] as PresetList;
-      this.isUpdateInProgress = false;
-      this.requestUpdate();
+    // check if update is already in progress.
+    if (!this.isUpdateInProgress) {
+      this.isUpdateInProgress = true;
+    } else {
+      this._alertErrorSet("Previous refresh is still in progress - please wait");
       return;
     }
 
-    //console.log("%c updateMediaList (preset-browser) - updating medialist",
-    //  "color: orange;",
-    //);
+    try {
 
-    // call the service to retrieve the media list.
-    this.soundTouchPlusService.PresetList(player.id, true)
-      .then(result => {
+      // clear alerts.
+      this._alertClear();
 
-        this.mediaList = result;
-        this.mediaListLastUpdatedOn = result.LastUpdatedOn || (Date.now() / 1000);
+      // update our media list; we will force the `mediaListLastUpdatedOn` attribute to
+      // match the device `soundtouchplus_presets_lastupdated` attribute so that the
+      // refresh is only triggered once on the attribute change (or initial request).
+      this.mediaListLastUpdatedOn = player.attributes.soundtouchplus_presets_lastupdated || (Date.now() / 1000);
+
+      // if card is being edited, then we will use the cached media list as the data source;
+      // otherwise, we will refresh the media list from the real-time source.
+      const cacheKey = 'preset-browser';
+      this.mediaList = undefined;
+      const isCardEditMode = isCardInEditPreview(this.store.card);
+      if ((isCardEditMode) && (cacheKey in Card.mediaListCache)) {
+        this.mediaList = Card.mediaListCache[cacheKey] as PresetList;
         this.isUpdateInProgress = false;
-        this.requestUpdate();
-
-        //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
-        //console.log("%c preset-browser - updateMediaList info AFTER update:\n- player id = %s\n- %s = player.soundtouchplus_presets_lastupdated\n- %s = playerLastUpdatedOn\n- %s = mediaListLastUpdatedOn",
-        //  "color: green;",
-        //  this.player.id,
-        //  this.player.attributes.soundtouchplus_presets_lastupdated,
-        //  playerLastUpdatedOn,
-        //  this.mediaListLastUpdatedOn);
-
-        // if editing the card then store the list in the cache for next time.
-        if ((isCardEditMode) && !(cacheKey in Card.mediaListCache)) {
-          Card.mediaListCache[cacheKey] = this.mediaList;
-        //console.log("%c updateMediaList (preset-browser) - medialist stored to cache",
+        super.requestUpdate();
+        //console.log("%c updateMediaList (preset-browser) - medialist loaded from cache",
         //  "color: orange;",
         //);
-        }
+        return;
+      }
 
-      });
+      //console.log("%c updateMediaList (preset-browser) - updating medialist",
+      //  "color: orange;",
+      //);
+
+      // update status.
+      this._alertInfo = "Refreshing media list ...";
+
+      // call the service to retrieve the media list.
+      this.soundTouchPlusService.PresetList(player.id, true)
+        .then(result => {
+
+          this.mediaList = result;
+          this.mediaListLastUpdatedOn = result.LastUpdatedOn || (Date.now() / 1000);
+          this.isUpdateInProgress = false;
+          this._alertClear();
+
+          //const playerLastUpdatedOn = (this.player.attributes.soundtouchplus_presets_lastupdated || 0);
+          //console.log("%c preset-browser - updateMediaList info AFTER update:\n- player id = %s\n- %s = player.soundtouchplus_presets_lastupdated\n- %s = playerLastUpdatedOn\n- %s = mediaListLastUpdatedOn",
+          //  "color: green;",
+          //  this.player.id,
+          //  this.player.attributes.soundtouchplus_presets_lastupdated,
+          //  playerLastUpdatedOn,
+          //  this.mediaListLastUpdatedOn);
+
+          // if editing the card then store the list in the cache for next time.
+          if ((isCardEditMode) && !(cacheKey in Card.mediaListCache)) {
+            Card.mediaListCache[cacheKey] = this.mediaList;
+          }
+
+          // if no items then update status.
+          if ((this.mediaList) && (this.mediaList.Presets?.length == 0)) {
+            this._alertInfo = "No items found";
+          }
+
+        })
+        .catch(error => {
+
+          // a console `uncaught exception` will be is logged if an exception gets thrown in this catch block!
+
+          // clear results due to error and update status.
+          this.mediaList = undefined;
+          this.mediaListLastUpdatedOn = 0;
+          this.isUpdateInProgress = false;
+          this._alertErrorSet("Pandora favorites refresh failed: \n" + error.message);
+
+        });
+
+    } catch (error) {
+
+      // update status.
+      this.isUpdateInProgress = false;
+      this._alertErrorSet("Pandora favorites refresh failed: " + error);
+
+    } finally {
+    }
   }
 }

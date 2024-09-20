@@ -1,17 +1,27 @@
 // lovelace card imports.
 import { HomeAssistant } from 'custom-card-helpers';
 import { ServiceCallRequest } from 'custom-card-helpers/dist/types';
+import {
+  mdiNumeric1BoxOutline,
+  mdiNumeric2BoxOutline,
+  mdiNumeric3BoxOutline,
+  mdiNumeric4BoxOutline,
+  mdiNumeric5BoxOutline,
+  mdiNumeric6BoxOutline,
+} from '@mdi/js';
 
 // our imports.
-import { PROGRESS_DONE, PROGRESS_STARTED, DOMAIN_SOUNDTOUCHPLUS } from '../constants';
-import { customEvent } from '../utils/utils';
-import { ContentItem } from '../types/soundtouchplus/contentitem';
-import { NavigateResponse } from '../types/soundtouchplus/navigateresponse';
-import { PresetList } from '../types/soundtouchplus/presetlist';
-import { RecentList } from '../types/soundtouchplus/recentlist';
-import { SourceList } from '../types/soundtouchplus/sourcelist';
-import { Section } from '../types/section';
-import { ServiceCallResponse } from '../types/servicecallresponse';
+import { ProgressStartedEvent } from '../events/progress-started';
+import { ProgressEndedEvent } from '../events/progress-ended';
+import { DOMAIN_SOUNDTOUCHPLUS } from '../constants';
+import { ContentItem } from '../types/soundtouchplus/ContentItem';
+import { NavigateResponse } from '../types/soundtouchplus/NavigateResponse';
+import { PresetList } from '../types/soundtouchplus/PresetList';
+import { RecentList } from '../types/soundtouchplus/RecentList';
+import { SourceList } from '../types/soundtouchplus/SourceList';
+import { Section } from '../types/Section';
+import { ServiceCallResponse } from '../types/ServiceCallResponse';
+import { getMdiIconImageUrl } from '../utils/media-browser-utils';
 
 
 /** SoundTouchPlus custom services provider class. */
@@ -52,10 +62,14 @@ export class SoundTouchPlusService {
 
     try {
 
-      //console.log("%csoundtouchplus-service.CallService()\n Calling service '%s' (no response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest,null,2));
+      //console.log("%c CallService (soundtouchplus-service) - Calling service %s (no response)\n%s",
+      //  "color: orange;",
+      //  JSON.stringify(serviceRequest.service),
+      //  JSON.stringify(serviceRequest, null, 2)
+      //);
 
       // show the progress indicator on the main card.
-      this.card.dispatchEvent(customEvent(PROGRESS_STARTED, { section: this.section }));
+      this.card.dispatchEvent(ProgressStartedEvent(this.section));
 
       // call the service.
       await this.hass.callService(
@@ -68,7 +82,7 @@ export class SoundTouchPlusService {
     } finally {
 
       // hide the progress indicator on the main card.
-      this.card.dispatchEvent(customEvent(PROGRESS_DONE));
+      this.card.dispatchEvent(ProgressEndedEvent());
     }
   }
 
@@ -85,10 +99,14 @@ export class SoundTouchPlusService {
 
     try {
 
-      //console.log("%csoundtouchplus-service.CallServiceWithResponse()\n Calling service '%s' (with response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest, null, 2));
+      //console.log("%c CallServiceWithResponse (soundtouchplus-service) - Calling service %s (with response)\n%s",
+      //  "color: orange;",
+      //  JSON.stringify(serviceRequest.service),
+      //  JSON.stringify(serviceRequest, null, 2)
+      //);
 
       // show the progress indicator on the main card.
-      this.card.dispatchEvent(customEvent(PROGRESS_STARTED, { section: this.section }));
+      this.card.dispatchEvent(ProgressStartedEvent(this.section));
 
       // call the service as a script.
       const serviceResponse = await this.hass.connection.sendMessagePromise<ServiceCallResponse>({
@@ -105,7 +123,9 @@ export class SoundTouchPlusService {
         }]
       });
 
-      //console.log("soundtouchplus-service.CallServiceWithResponse()\n Service Response:\n%s", JSON.stringify(serviceResponse.response));
+      //console.log("CallServiceWithResponse (soundtouchplus-service) - Service Response:\n%s",
+      //  JSON.stringify(serviceResponse.response)
+      //);
 
       // return the service response data or an empty dictionary if no response data was generated.
       return JSON.stringify(serviceResponse.response)
@@ -113,7 +133,7 @@ export class SoundTouchPlusService {
     } finally {
 
       // hide the progress indicator on the main card.
-      this.card.dispatchEvent(customEvent(PROGRESS_DONE));
+      this.card.dispatchEvent(ProgressEndedEvent());
     }
   }
 
@@ -199,18 +219,25 @@ export class SoundTouchPlusService {
 
 
   /**
-   * Play media content from a content item source on a SoundTouch device.
+   * Calls the SoundTouchPlusService PlayerMediaPlayContext / PlayerMediaPlayTracks method to play media.
    * 
    * @param entityId Entity ID of the SoundTouchPlus device that will process the request (e.g. "media_player.soundtouch_livingroom").
-   * @param contentItem Content item type that contains media content details to play.
-  */
-  public async PlayContentItem(entityId: string, contentItem: ContentItem | undefined): Promise<void> {
+   * @param mediaItem Media Browser item that contains media content details to play.  
+   */
+  public async PlayContentItem(
+    entityId: string,
+    mediaItem: ContentItem | undefined,
+  ): Promise<void> {
+
+    // validations.
+    if (!entityId) {
+      throw new Error("Media player entity_id argument was not supplied to the PlayMediaBrowserItem service.")
+    }
+    if (!mediaItem) {
+      throw new Error("Media browser item argument was not supplied to the PlayMediaBrowserItem service.");
+    }
 
     try {
-
-      // validation.
-      if (!contentItem)
-        throw new Error("STPC0005 contentItem argument was not supplied to the PlayContentItem service.")
 
       //console.log("%c PlayContentItem (soundtouchplus-service)\n- entityId = %s\n- contentItem:\n%s",
       //  "color: orange;",
@@ -224,24 +251,30 @@ export class SoundTouchPlusService {
         service: 'play_contentitem',
         serviceData: {
           entity_id: entityId,
-          name: contentItem.Name,
-          source: contentItem.Source,
-          source_account: contentItem.SourceAccount,
-          item_type: contentItem.TypeValue,
-          location: contentItem.Location,
-          container_art: contentItem.ContainerArt,
-          is_presetable: contentItem.IsPresetable,
+          name: mediaItem.Name,
+          source: mediaItem.Source,
+          source_account: mediaItem.SourceAccount,
+          item_type: mediaItem.TypeValue,
+          location: mediaItem.Location,
+          container_art: mediaItem.ContainerArt,
+          is_presetable: mediaItem.IsPresetable,
         }
       };
 
       // call the service.
       await this.CallService(serviceRequest);
 
-    } finally {
+    }
+    catch (error) {
+
+      //console.log("PlayContentItem (soundtouchplus-service) - cannot play media item\n- mediaItem:\n%s",
+      //  JSON.stringify(mediaItem)
+      //);
+
+      throw new Error("Cannot play media item: " + (error as Error).message);
+
     }
   }
-
-
   /**
    * Retrieves the list of presets defined to the device.
    * 
@@ -272,6 +305,34 @@ export class SoundTouchPlusService {
       // call the service, and convert the response to a type.
       const response = await this.CallServiceWithResponse(serviceRequest);
       const responseObj = JSON.parse(response) as PresetList
+
+      // set ContainerArt property for open / empty preset items.
+      if ((responseObj != null) && (responseObj != null)) {
+        //console.log("%c PresetList (soundtouchplus-service)\n assigning image urls to open presets", "color: orange;");
+        responseObj.Presets?.forEach(item => {
+          if (item.ContentItem) {
+            if (item.ContentItem?.Name == 'empty preset') {
+              const presetId = item.PresetId;
+              let image_url: string | undefined = undefined;
+              if (presetId == 1) {
+                image_url = getMdiIconImageUrl(mdiNumeric1BoxOutline);
+              } else if (presetId == 2) {
+                image_url = getMdiIconImageUrl(mdiNumeric2BoxOutline);
+              } else if (presetId == 3) {
+                image_url = getMdiIconImageUrl(mdiNumeric3BoxOutline);
+              } else if (presetId == 4) {
+                image_url = getMdiIconImageUrl(mdiNumeric4BoxOutline);
+              } else if (presetId == 5) {
+                image_url = getMdiIconImageUrl(mdiNumeric5BoxOutline);
+              } else if (presetId == 6) {
+                image_url = getMdiIconImageUrl(mdiNumeric6BoxOutline);
+              }
+              item.ContentItem.ContainerArt = image_url;
+            }
+          }
+        })
+      }
+
       return responseObj;
 
     } finally {

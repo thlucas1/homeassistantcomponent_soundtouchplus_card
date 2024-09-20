@@ -3,15 +3,15 @@ import { css, html, LitElement, TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 
 // our imports.
-import { Store } from '../model/store';
-import { CardConfig } from '../types/cardconfig'
-import { ContentItemParent } from '../types/soundtouchplus/contentitem';
-import { Section } from '../types/section';
+import { Store } from '../model/Store';
+import { CardConfig } from '../types/CardConfig';
+import { ContentItemParent } from '../types/soundtouchplus/ContentItem';
+import { Section } from '../types/Section';
 import { listStyle, ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD } from '../constants';
 import { customEvent } from '../utils/utils';
 import {
-  itemsWithFallbacks,
-  renderMediaBrowserContentItem,
+  buildMediaBrowserItems,
+  renderMediaBrowserItem,
   styleMediaBrowserItemBackgroundImage,
   styleMediaBrowserItemTitle
 } from '../utils/media-browser-utils';
@@ -19,7 +19,7 @@ import {
 export class MediaBrowserList extends LitElement {
 
   @property({ attribute: false }) store!: Store;
-  @property({ type: Array }) items!: ContentItemParent[];
+  @property({ attribute: false }) items!: ContentItemParent[];
 
   @state() mousedownTimestamp!: number;
 
@@ -53,31 +53,31 @@ export class MediaBrowserList extends LitElement {
 
     // set title / source visibility based on selected section.
     let hideTitle = true;
-    let hideSource = true;
+    let hideSubTitle = true;
     let itemsPerRow = 1;
     let listItemClass = 'button';
     if (this.section == Section.PANDORA_STATIONS) {
       itemsPerRow = this.config.pandoraBrowserItemsPerRow || 3;
       hideTitle = this.config.pandoraBrowserItemsHideTitle || false;
-      hideSource = true;
+      hideSubTitle = true;
     } else if (this.section == Section.PRESETS) {
       itemsPerRow = this.config.presetBrowserItemsPerRow || 3;
       hideTitle = this.config.presetBrowserItemsHideTitle || false;
-      hideSource = this.config.presetBrowserItemsHideSource || false;
+      hideSubTitle = this.config.presetBrowserItemsHideSource || false;
     } else if (this.section == Section.RECENTS) {
       itemsPerRow = this.config.recentBrowserItemsPerRow || 3;
       hideTitle = this.config.recentBrowserItemsHideTitle || false;
-      hideSource = this.config.recentBrowserItemsHideSource || false;
+      hideSubTitle = this.config.recentBrowserItemsHideSource || false;
     } else if (this.section == Section.SOURCES) {
       itemsPerRow = this.config.sourceBrowserItemsPerRow || 3;
       hideTitle = this.config.sourceBrowserItemsHideTitle || false;
-      hideSource = true;
+      hideSubTitle = true;
       // make the source icons half the size of regular list buttons.
       listItemClass += ' button-source';
     } else if (this.section == Section.USERPRESETS) {
       itemsPerRow = this.config.presetBrowserItemsPerRow || 3;
       hideTitle = this.config.presetBrowserItemsHideTitle || false;
-      hideSource = this.config.presetBrowserItemsHideSource || false;
+      hideSubTitle = this.config.presetBrowserItemsHideSource || false;
     }
 
     //console.log("%c render (media-browser-list)\n Section %s items:\n%s",
@@ -94,16 +94,16 @@ export class MediaBrowserList extends LitElement {
         }
       </style>
       <mwc-list multi class="list">
-        ${itemsWithFallbacks(this.items, this.config, this.section).map((item, index) => {
+        ${buildMediaBrowserItems(this.items || [], this.config, this.section).map((item, index) => {
           return html`
-            ${styleMediaBrowserItemBackgroundImage(item.thumbnail, index, this.section)}
+            ${styleMediaBrowserItemBackgroundImage(item.media_browser_thumbnail, index, this.section)}
             <mwc-list-item
               class="${listItemClass}"
               @click=${() => this.buttonMediaBrowserItemClick(customEvent(ITEM_SELECTED, item))}
               @mousedown=${() => this.buttonMediaBrowserItemMouseDown()}
 
             >
-              <div class="row">${renderMediaBrowserContentItem(item.ContentItem, !item.thumbnail || !hideTitle, !hideSource)}</div>
+              <div class="row">${renderMediaBrowserItem(item, !item.media_browser_thumbnail || !hideTitle, !hideSubTitle)}</div>
             </mwc-list-item>
           `;
         })}

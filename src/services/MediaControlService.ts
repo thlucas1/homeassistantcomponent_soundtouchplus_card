@@ -2,16 +2,14 @@
 import { ServiceCallRequest } from 'custom-card-helpers/dist/types';
 
 // our imports.
-import { HassService } from './hass-service';
-//import { CardConfig } from '../types/cardconfig';
+import { HassService } from './HassService';
 import { MediaPlayerItem } from '../types';
-import { MediaPlayer } from '../model/media-player';
+import { MediaPlayer } from '../model/MediaPlayer';
 import { DOMAIN_MEDIA_PLAYER } from '../constants';
 
 export class MediaControlService {
 
   private hassService: HassService;
-  //private readonly config: CardConfig;
 
 
   /**
@@ -20,9 +18,7 @@ export class MediaControlService {
    * @param hassService HassService object.
    */
   constructor(hassService: HassService) {
-  //constructor(hassService: HassService, config: CardConfig) {
     this.hassService = hassService;
-    //this.config = config;
   }
 
 

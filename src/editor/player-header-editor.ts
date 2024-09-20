@@ -3,8 +3,8 @@ import { css, html, TemplateResult } from 'lit';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { Section } from '../types/section'
-import { PLAYER_CONTROLS_BACKGROUND_OPACITY_DEFAULT } from '../constants'
+import { Section } from '../types/Section';
+import { PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT } from '../sections/player';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
@@ -33,12 +33,12 @@ const CONFIG_SETTINGS_SCHEMA = [
     type: 'string',
   },
   {
-    name: 'playerHeaderBackgroundOpacity',
-    label: 'Opacity value for the header area background',
-    help: "-1 to 1.0",
+    name: 'playerHeaderBackgroundColor',
+    label: 'Color value (e.g. "#hhrrggbb") for header area background gradient',
+    help: "'transparent' to disable",
     required: false,
-    type: 'float',
-    default: PLAYER_CONTROLS_BACKGROUND_OPACITY_DEFAULT,
+    type: 'string',
+    default: PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT,
   },
   {
     name: 'playerHeaderHideProgressBar',
@@ -68,7 +68,7 @@ class PlayerHeaderSettingsEditor extends BaseEditor {
     // ensure store is created.
     super.createStore();
 
-    //console.log("render (player-editor) - rendering player header settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
+    //console.log("render (player-header-editor) - rendering player header settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
     //  JSON.stringify(this.section),
     //  JSON.stringify(Store.selectedConfigArea),
     //);
@@ -78,7 +78,7 @@ class PlayerHeaderSettingsEditor extends BaseEditor {
       <div class="schema-title">
         Player Header Status area settings
       </div>
-      <stpc-editor-form
+      <stpc-editor-form class="stpc-editor-form"
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PLAYER}
         .store=${this.store}

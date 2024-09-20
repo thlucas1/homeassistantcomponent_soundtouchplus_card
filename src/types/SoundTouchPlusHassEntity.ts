@@ -1,5 +1,5 @@
 import { Context } from 'home-assistant-js-websocket';
-import { SoundTouchPlusHassEntityAttributes } from '../types/hassentityattributes-soundtouchplus';
+import { SoundTouchPlusHassEntityAttributes } from '../types/SoundTouchPlusHassEntityAttributes';
 
 /**
  * SoundTouchPlus MediaPlayer Hass Entity type.

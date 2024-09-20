@@ -4,11 +4,11 @@ import { ServiceCallRequest } from 'custom-card-helpers/dist/types';
 import { HassEntity } from 'home-assistant-js-websocket';
 
 // our imports.
-import { MediaPlayer } from '../model/media-player';
-import { customEvent } from '../utils/utils';
-import { Section } from '../types/section'
+import { ProgressStartedEvent } from '../events/progress-started';
+import { ProgressEndedEvent } from '../events/progress-ended';
+import { MediaPlayer } from '../model/MediaPlayer';
+import { Section } from '../types/Section'
 import { MediaPlayerItem, TemplateResult } from '../types';
-import { PROGRESS_DONE, PROGRESS_STARTED } from '../constants';
 
 
 export class HassService {
@@ -46,10 +46,14 @@ export class HassService {
 
     try {
 
-      //console.log("%chass-service.CallService()\n Calling service '%s' (no response)\n%s", "color: orange;", serviceRequest.service, JSON.stringify(serviceRequest,null,2));
+      //console.log("%c CallService (hass-service) - Calling service %s (no response)\n%s",
+      //  "color: orange;",
+      //  JSON.stringify(serviceRequest.service),
+      //  JSON.stringify(serviceRequest, null, 2)
+      //);
 
       // show the progress indicator on the main card.
-      this.card.dispatchEvent(customEvent(PROGRESS_STARTED, { section: this.section }));
+      this.card.dispatchEvent(ProgressStartedEvent(this.section));
 
       // call the service.
       await this.hass.callService(
@@ -62,7 +66,7 @@ export class HassService {
     } finally {
 
       // hide the progress indicator on the main card.
-      this.card.dispatchEvent(customEvent(PROGRESS_DONE));
+      this.card.dispatchEvent(ProgressEndedEvent());
     }
   }
 
