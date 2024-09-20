@@ -117,7 +117,7 @@
     <TypeScriptCompile Include="src\services\soundtouchplus-service.ts" />
     <TypeScriptCompile Include="src\types\card-config.ts" />
     <TypeScriptCompile Include="src\types\config-area.ts" />
-    <TypeScriptCompile Include="src\types\custom-image-urls.ts" />
+    <TypeScriptCompile Include="src\types\custom-image-urls-renamed.ts" />
     <TypeScriptCompile Include="src\types\hass-entity-attributes-media-player.ts" />
     <TypeScriptCompile Include="src\types\home-assistant-ex.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus-hass-entity.ts" />
