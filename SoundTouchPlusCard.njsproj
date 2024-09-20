@@ -94,9 +94,7 @@
     <TypeScriptCompile Include="src\components\media-browser-icons.ts" />
     <TypeScriptCompile Include="src\components\media-browser-list.ts" />
     <TypeScriptCompile Include="src\components\player-controls.ts" />
-    <TypeScriptCompile Include="src\components\player-header.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\components\player-header.ts" />
     <TypeScriptCompile Include="src\components\player-progress.ts" />
     <TypeScriptCompile Include="src\components\player-volume.ts" />
     <TypeScriptCompile Include="src\editor\userpreset-browser-editor.ts" />
@@ -108,9 +106,7 @@
     <TypeScriptCompile Include="src\editor\pandora-browser-editor.ts" />
     <TypeScriptCompile Include="src\editor\recent-browser-editor.ts" />
     <TypeScriptCompile Include="src\events\editor-config-area-selected.ts" />
-    <TypeScriptCompile Include="src\events\editor-pandora-account-changed.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\events\editor-pandora-account-changed.ts" />
     <TypeScriptCompile Include="src\events\progress-ended.ts" />
     <TypeScriptCompile Include="src\events\progress-started.ts" />
     <TypeScriptCompile Include="src\sections\source-browser.ts" />
@@ -119,40 +115,22 @@
     <TypeScriptCompile Include="src\sections\userpreset-browser.ts" />
     <TypeScriptCompile Include="src\services\media-control-service.ts" />
     <TypeScriptCompile Include="src\services\soundtouchplus-service.ts" />
-    <TypeScriptCompile Include="src\types\card-config.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\config-area.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\custom-image-urls.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\card-config.ts" />
+    <TypeScriptCompile Include="src\types\config-area.ts" />
+    <TypeScriptCompile Include="src\types\custom-image-urls.ts" />
     <TypeScriptCompile Include="src\types\hass-entity-attributes-media-player.ts" />
-    <TypeScriptCompile Include="src\types\home-assistant-ex.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\home-assistant-ex.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus-hass-entity.ts" />
-    <TypeScriptCompile Include="src\types\imedia-browser-item.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\media-player-entity-feature.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\imedia-browser-item.ts" />
+    <TypeScriptCompile Include="src\types\media-player-entity-feature.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\navigate-response.ts" />
-    <TypeScriptCompile Include="src\types\soundtouchplus\navigate-item.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\soundtouchplus\navigate-item.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\source-item.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\recent.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\source-list.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\recent-list.ts" />
-    <TypeScriptCompile Include="src\types\section.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="src\types\service-call-request.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\section.ts" />
+    <TypeScriptCompile Include="src\types\service-call-request.ts" />
     <TypeScriptCompile Include="src\types\service-call-response.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\preset-list.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\preset.ts" />
