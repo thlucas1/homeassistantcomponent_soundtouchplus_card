@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.11 ] - 2024/09/20
+
+  * FINALLY got the thing to compile on github build!  Changing to release 1.0.11 to ensure the proper build is picked up.
+
 ###### [ 1.0.10 ] - 2024/09/20
 
   * Converted missed module names to lower-case due to github compile requirements!
