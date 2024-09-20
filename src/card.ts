@@ -23,7 +23,7 @@ import { PROGRESS_STARTED, ProgressStartedEventArgs } from './events/progress-st
 import { PROGRESS_ENDED } from './events/progress-ended';
 import { Store } from './model/store';
 import { CardConfig } from './types/card-config';
-import { CustomImageUrls } from './types/custom-image-urls-renamed';
+import { CustomImageUrls } from './types/custom-image-urls';
 import { ConfigArea } from './types/config-area';
 import { Section } from './types/section';
 import { formatTitleInfo, removeSpecialChars } from './utils/media-browser-utils';
