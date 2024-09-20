@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.10 ] - 2024/09/20
+
+  * Converted missed module names to lower-case due to github compile requirements!
+
 ###### [ 1.0.9 ] - 2024/09/20
 
   * Converted all module names to lower-case due to github compile requirements!
