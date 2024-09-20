@@ -14,13 +14,13 @@ import {
 import { ProgressStartedEvent } from '../events/progress-started';
 import { ProgressEndedEvent } from '../events/progress-ended';
 import { DOMAIN_SOUNDTOUCHPLUS } from '../constants';
-import { ContentItem } from '../types/soundtouchplus/ContentItem';
-import { NavigateResponse } from '../types/soundtouchplus/NavigateResponse';
-import { PresetList } from '../types/soundtouchplus/PresetList';
-import { RecentList } from '../types/soundtouchplus/RecentList';
-import { SourceList } from '../types/soundtouchplus/SourceList';
-import { Section } from '../types/Section';
-import { ServiceCallResponse } from '../types/ServiceCallResponse';
+import { ContentItem } from '../types/soundtouchplus/content-item';
+import { NavigateResponse } from '../types/soundtouchplus/navigate-response';
+import { PresetList } from '../types/soundtouchplus/preset-list';
+import { RecentList } from '../types/soundtouchplus/recent-list';
+import { SourceList } from '../types/soundtouchplus/source-list';
+import { Section } from '../types/section';
+import { ServiceCallResponse } from '../types/service-call-response';
 import { getMdiIconImageUrl } from '../utils/media-browser-utils';
 
 

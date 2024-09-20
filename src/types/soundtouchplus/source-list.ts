@@ -1,4 +1,4 @@
-import { SourceItem } from './SourceItem';
+import { SourceItem } from './source-item';
 
 /**
  * SoundTouch device SourceList configuration object.

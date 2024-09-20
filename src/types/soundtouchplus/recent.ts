@@ -1,4 +1,4 @@
-import { ContentItem } from './ContentItem';
+import { ContentItem } from './content-item';
 
 /**
  * SoundTouch device Recent configuration object.

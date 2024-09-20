@@ -2,16 +2,16 @@
 import { HomeAssistant } from 'custom-card-helpers';
 
 // our imports.
-import { HassService } from '../services/HassService';
-import { MediaControlService } from '../services/MediaControlService';
-import { SoundTouchPlusService } from '../services/SoundTouchPlusService';
+import { HassService } from '../services/hass-service';
+import { MediaControlService } from '../services/media-control-service';
+import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { Card } from '../card';
 import { BaseEditor } from '../editor/base-editor';
-import { CardConfig } from '../types/CardConfig';
-import { ConfigArea } from '../types/ConfigArea';
-import { Section } from '../types/Section';
-import { MediaPlayerEntityFeature } from '../types/MediaPlayerEntityFeature';
-import { MediaPlayer } from './MediaPlayer';
+import { CardConfig } from '../types/card-config';
+import { ConfigArea } from '../types/config-area';
+import { Section } from '../types/section';
+import { MediaPlayerEntityFeature } from '../types/media-player-entity-feature';
+import { MediaPlayer } from './media-player';
 
 const { TURN_OFF, TURN_ON } = MediaPlayerEntityFeature;
 

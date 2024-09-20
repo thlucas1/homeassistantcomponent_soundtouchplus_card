@@ -5,9 +5,9 @@ import { styleMap } from 'lit-html/directives/style-map.js';
 
 // our imports.
 import '../components/player-progress';
-import { CardConfig } from '../types/CardConfig';
-import { Store } from '../model/Store';
-import { MediaPlayer } from '../model/MediaPlayer';
+import { CardConfig } from '../types/card-config';
+import { Store } from '../model/store';
+import { MediaPlayer } from '../model/media-player';
 import { formatTitleInfo } from '../utils/media-browser-utils';
 
 class PlayerHeader extends LitElement {

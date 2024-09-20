@@ -6,8 +6,8 @@ import { HassEntity } from 'home-assistant-js-websocket';
 // our imports.
 import { ProgressStartedEvent } from '../events/progress-started';
 import { ProgressEndedEvent } from '../events/progress-ended';
-import { MediaPlayer } from '../model/MediaPlayer';
-import { Section } from '../types/Section'
+import { MediaPlayer } from '../model/media-player';
+import { Section } from '../types/section'
 import { MediaPlayerItem, TemplateResult } from '../types';
 
 

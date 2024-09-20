@@ -4,7 +4,7 @@ import { property, query } from 'lit/decorators.js';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { CardConfig } from '../types/CardConfig';
+import { CardConfig } from '../types/card-config';
 
 
 class Form extends BaseEditor {

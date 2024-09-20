@@ -13,9 +13,9 @@ import './recent-browser-editor';
 import './source-browser-editor';
 import './userpreset-browser-editor';
 import { BaseEditor } from './base-editor';
-import { ConfigArea } from '../types/ConfigArea';
-import { Section } from '../types/Section';
-import { Store } from '../model/Store';
+import { ConfigArea } from '../types/config-area';
+import { Section } from '../types/section';
+import { Store } from '../model/store';
 import { SHOW_SECTION } from '../constants';
 import { EditorConfigAreaSelectedEvent } from '../events/editor-config-area-selected';
 import {

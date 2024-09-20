@@ -3,10 +3,10 @@ import { css, html, LitElement, TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 
 // our imports.
-import { Store } from '../model/Store';
-import { CardConfig } from '../types/CardConfig';
-import { Section } from '../types/Section';
-import { ContentItemParent } from '../types/soundtouchplus/ContentItem';
+import { Store } from '../model/store';
+import { CardConfig } from '../types/card-config';
+import { Section } from '../types/section';
+import { ContentItemParent } from '../types/soundtouchplus/content-item';
 import { ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD } from '../constants';
 import { customEvent } from '../utils/utils';
 import {

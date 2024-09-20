@@ -19,14 +19,14 @@ import {
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
 import { Card } from '../card';
-import { CardConfig } from '../types/CardConfig';
-import { Section } from '../types/Section';
-import { Store } from '../model/Store';
-import { MediaPlayer } from '../model/MediaPlayer';
+import { CardConfig } from '../types/card-config';
+import { Section } from '../types/section';
+import { Store } from '../model/store';
+import { MediaPlayer } from '../model/media-player';
 import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo, getMdiIconImageUrl } from '../utils/media-browser-utils';
 import { ITEM_SELECTED } from '../constants';
-import { ContentItemParent, ContentItem } from '../types/soundtouchplus/ContentItem';
+import { ContentItemParent, ContentItem } from '../types/soundtouchplus/content-item';
 
 
 @customElement("stpc-source-browser")

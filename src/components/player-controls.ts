@@ -4,10 +4,10 @@ import { property } from 'lit/decorators.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 
 // our imports.
-import { CardConfig } from '../types/CardConfig';
-import { Store } from '../model/Store';
-import { MediaPlayer, REPEAT_STATE } from '../model/MediaPlayer';
-import { MediaPlayerEntityFeature } from '../types/MediaPlayerEntityFeature'
+import { CardConfig } from '../types/card-config';
+import { Store } from '../model/store';
+import { MediaPlayer, REPEAT_STATE } from '../model/media-player';
+import { MediaPlayerEntityFeature } from '../types/media-player-entity-feature'
 
 const { NEXT_TRACK, PAUSE, PLAY, PREVIOUS_TRACK, REPEAT_SET, SHUFFLE_SET } = MediaPlayerEntityFeature;
 

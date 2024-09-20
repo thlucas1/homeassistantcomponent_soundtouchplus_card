@@ -1,4 +1,4 @@
-import { Recent } from './Recent';
+import { Recent } from './recent';
 
 /**
  * SoundTouch device RecentList configuration object.

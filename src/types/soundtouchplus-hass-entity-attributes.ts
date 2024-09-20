@@ -1,4 +1,4 @@
-import { HassEntityAttributesMediaPlayer } from '../types/HassEntityAttributesMediaPlayer';
+import { HassEntityAttributesMediaPlayer } from './hass-entity-attributes-media-player';
 
 /**
  * SoundTouchPlus MediaPlayer Hass Entity Attributes type.

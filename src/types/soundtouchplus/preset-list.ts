@@ -1,4 +1,4 @@
-import { Preset } from './Preset';
+import { Preset } from './preset';
 
 /**
  * SoundTouch device PresetList configuration object.

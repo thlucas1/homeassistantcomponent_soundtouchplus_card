@@ -3,8 +3,8 @@ import { LovelaceCardConfig } from 'custom-card-helpers';
 
 // our imports.
 import { Section } from './Section';
-import { CustomImageUrls } from './CustomImageUrls';
-import { ContentItemParent } from './soundtouchplus/ContentItem';
+import { CustomImageUrls } from './custom-image-urls';
+import { ContentItemParent } from './soundtouchplus/content-item';
 
 /**
  * Card configuration settings.

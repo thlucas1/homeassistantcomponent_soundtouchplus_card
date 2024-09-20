@@ -3,8 +3,8 @@ import { css, html, TemplateResult } from 'lit';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { Section } from '../types/Section';
-import { CardConfig } from '../types/CardConfig';
+import { Section } from '../types/section';
+import { CardConfig } from '../types/card-config';
 import { EditorPandoraAccountChangedEvent } from '../events/editor-pandora-account-changed';
 
 

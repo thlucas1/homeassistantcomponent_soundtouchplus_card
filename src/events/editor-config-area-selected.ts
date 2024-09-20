@@ -1,5 +1,5 @@
 import { DOMAIN_SOUNDTOUCHPLUS } from '../constants';
-import { Section } from '../types/Section';
+import { Section } from '../types/section';
 
 /** 
  * Uniquely identifies the event. 

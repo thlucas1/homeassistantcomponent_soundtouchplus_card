@@ -1,7 +1,7 @@
 // our imports.
-import { SoundTouchPlusHassEntity } from '../types/SoundTouchPlusHassEntity';
-import { SoundTouchPlusHassEntityAttributes } from '../types/SoundTouchPlusHassEntityAttributes';
-import { MediaPlayerEntityFeature } from '../types/MediaPlayerEntityFeature';
+import { SoundTouchPlusHassEntity } from '../types/soundtouchplus-hass-entity';
+import { SoundTouchPlusHassEntityAttributes } from '../types/soundtouchplus-hass-entity-attributes';
+import { MediaPlayerEntityFeature } from '../types/media-player-entity-feature';
 
 const { TURN_ON } = MediaPlayerEntityFeature;
 

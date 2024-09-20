@@ -3,7 +3,7 @@ import { css, html, TemplateResult } from 'lit';
 
 // our imports.
 import { BaseEditor } from './base-editor';
-import { Section } from '../types/Section';
+import { Section } from '../types/section';
 import { DOMAIN_MEDIA_PLAYER, DOMAIN_SOUNDTOUCHPLUS } from '../constants';
 
 

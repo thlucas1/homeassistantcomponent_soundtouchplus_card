@@ -7,17 +7,17 @@ import { HomeAssistant } from 'custom-card-helpers';
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
 import { Card } from '../card';
-import { CardConfig } from '../types/CardConfig';
-import { Section } from '../types/Section';
-import { Store } from '../model/Store';
-import { MediaPlayer } from '../model/MediaPlayer';
+import { CardConfig } from '../types/card-config';
+import { Section } from '../types/section';
+import { Store } from '../model/store';
+import { MediaPlayer } from '../model/media-player';
 import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
-import { SoundTouchPlusService } from '../services/SoundTouchPlusService';
+import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { ProgressStartedEvent } from '../events/progress-started';
 import { ProgressEndedEvent } from '../events/progress-ended';
 import { ITEM_SELECTED } from '../constants';
-import { ContentItemParent } from '../types/soundtouchplus/ContentItem';
+import { ContentItemParent } from '../types/soundtouchplus/content-item';
 
 
 @customElement("stpc-userpreset-browser")

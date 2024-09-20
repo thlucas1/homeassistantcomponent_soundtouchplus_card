@@ -13,10 +13,10 @@ import Vibrant from 'node-vibrant/dist/vibrant';
 import '../components/player-header';
 import '../components/player-controls';
 import '../components/player-volume';
-import { CardConfig } from '../types/CardConfig';
-import { Store } from '../model/Store';
+import { CardConfig } from '../types/card-config';
+import { Store } from '../model/store';
 import { BRAND_LOGO_IMAGE_BASE64, BRAND_LOGO_IMAGE_SIZE } from '../constants';
-import { MediaPlayer } from '../model/MediaPlayer';
+import { MediaPlayer } from '../model/media-player';
 import { Palette } from '@vibrant/color';
 import { isCardInEditPreview } from '../utils/utils';
 

@@ -2,9 +2,9 @@
 import { ServiceCallRequest } from 'custom-card-helpers/dist/types';
 
 // our imports.
-import { HassService } from './HassService';
+import { HassService } from './hass-service';
 import { MediaPlayerItem } from '../types';
-import { MediaPlayer } from '../model/MediaPlayer';
+import { MediaPlayer } from '../model/media-player';
 import { DOMAIN_MEDIA_PLAYER } from '../constants';
 
 export class MediaControlService {

@@ -4,15 +4,15 @@ import { property } from 'lit/decorators.js';
 import { fireEvent, HomeAssistant } from 'custom-card-helpers';
 
 // our imports.
-import { CardConfig } from '../types/CardConfig';
-import { Store } from '../model/Store';
-import { ConfigArea } from '../types/ConfigArea';
-import { Section } from '../types/Section';
-import { MediaPlayer } from '../model/MediaPlayer';
-import { SoundTouchPlusService } from '../services/SoundTouchPlusService';
+import { CardConfig } from '../types/card-config';
+import { Store } from '../model/store';
+import { ConfigArea } from '../types/config-area';
+import { Section } from '../types/section';
+import { MediaPlayer } from '../model/media-player';
+import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { dispatch, getObjectDifferences, getSectionForConfigArea } from '../utils/utils';
 import { CONFIG_UPDATED } from '../constants';
-import { SourceList } from '../types/soundtouchplus/SourceList';
+import { SourceList } from '../types/soundtouchplus/source-list';
 import { EditorConfigAreaSelectedEvent } from '../events/editor-config-area-selected';
 
 

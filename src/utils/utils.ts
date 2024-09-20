@@ -1,7 +1,7 @@
 // our imports.
-import { CardConfig } from '../types/CardConfig';
-import { ConfigArea } from '../types/ConfigArea';
-import { Section } from '../types/Section';
+import { CardConfig } from '../types/card-config';
+import { ConfigArea } from '../types/config-area';
+import { Section } from '../types/section';
 
 export function cardDoesNotContainAllSections(config: CardConfig) {
   return config.sections && config.sections.length < Object.keys(Section).length;

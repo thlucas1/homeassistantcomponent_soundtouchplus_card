@@ -3,8 +3,8 @@ import { html, LitElement, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 
 // our imports.
-import { Store } from '../model/Store';
-import { MediaPlayerEntityFeature } from '../types/MediaPlayerEntityFeature';
+import { Store } from '../model/store';
+import { MediaPlayerEntityFeature } from '../types/media-player-entity-feature';
 
 class HaPlayer extends LitElement {
 

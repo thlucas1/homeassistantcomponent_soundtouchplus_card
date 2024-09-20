@@ -12,8 +12,8 @@ import {
 
 // our imports.
 import { SHOW_SECTION } from '../constants';
-import { CardConfig } from '../types/CardConfig'
-import { Section } from '../types/Section'
+import { CardConfig } from '../types/card-config'
+import { Section } from '../types/section'
 import { customEvent } from '../utils/utils';
 
 

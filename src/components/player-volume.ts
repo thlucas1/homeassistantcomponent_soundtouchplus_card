@@ -4,11 +4,11 @@ import { property } from 'lit/decorators.js';
 import { mdiVolumeHigh, mdiVolumeMute } from '@mdi/js';
 
 // our imports.
-import { CardConfig } from '../types/CardConfig';
-import { Store } from '../model/Store';
-import { MediaPlayer } from '../model/MediaPlayer';
-import { MediaPlayerEntityFeature } from '../types/MediaPlayerEntityFeature'
-import { MediaControlService } from '../services/MediaControlService';
+import { CardConfig } from '../types/card-config';
+import { Store } from '../model/store';
+import { MediaPlayer } from '../model/media-player';
+import { MediaPlayerEntityFeature } from '../types/media-player-entity-feature'
+import { MediaControlService } from '../services/media-control-service';
 
 const { TURN_OFF, TURN_ON } = MediaPlayerEntityFeature;
 

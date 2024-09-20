@@ -21,11 +21,11 @@ import './editor/editor';
 import { EDITOR_CONFIG_AREA_SELECTED, EditorConfigAreaSelectedEventArgs } from './events/editor-config-area-selected';
 import { PROGRESS_STARTED, ProgressStartedEventArgs } from './events/progress-started';
 import { PROGRESS_ENDED } from './events/progress-ended';
-import { Store } from './model/Store';
-import { CardConfig } from './types/CardConfig';
-import { CustomImageUrls } from './types/CustomImageUrls';
-import { ConfigArea } from './types/ConfigArea';
-import { Section } from './types/Section';
+import { Store } from './model/store';
+import { CardConfig } from './types/card-config';
+import { CustomImageUrls } from './types/custom-image-urls';
+import { ConfigArea } from './types/config-area';
+import { Section } from './types/section';
 import { formatTitleInfo, removeSpecialChars } from './utils/media-browser-utils';
 import { BRAND_LOGO_IMAGE_BASE64, BRAND_LOGO_IMAGE_SIZE } from './constants';
 import {
