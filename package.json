@@ -26,7 +26,7 @@
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-node-resolve": "^15.3.0",
     "@types/jest": "27.4.1",
     "@types/query-selector-shadow-dom": "^1.0.4",
     "@typescript-eslint/eslint-plugin": "^7.6.0",
