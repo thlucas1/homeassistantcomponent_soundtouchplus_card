@@ -1,13 +1,15 @@
+// debug logging.
+import Debug from 'debug/src/browser.js';
+import { DEBUG_APP_NAME } from '../constants';
+const debuglog = Debug(DEBUG_APP_NAME + ":hass-service");
+
 // lovelace card imports.
-import { HomeAssistant } from 'custom-card-helpers';
-import { ServiceCallRequest } from 'custom-card-helpers/dist/types';
 import { HassEntity } from 'home-assistant-js-websocket';
+import { HomeAssistant } from '../types/home-assistant-frontend/home-assistant';
+import { ServiceCallRequest } from '../types/home-assistant-frontend/service-call-request';
 
 // our imports.
-import { ProgressStartedEvent } from '../events/progress-started';
-import { ProgressEndedEvent } from '../events/progress-ended';
 import { MediaPlayer } from '../model/media-player';
-import { Section } from '../types/section'
 import { MediaPlayerItem, TemplateResult } from '../types';
 
 
@@ -16,24 +18,14 @@ export class HassService {
   /** Home Assistant instance. */
   private readonly hass: HomeAssistant;
 
-  /** Custom card instance. */
-  private readonly card: Element;
-
-  /** Currently selected section of the card. */
-  private readonly section: Section;
-
 
   /**
    * Initializes a new instance of the class.
    * 
    * @param hass Home Assistant instance.
-   * @param card Custom card instance.
-   * @param section Currently selected section of the card.
    */
-  constructor(hass: HomeAssistant, card: Element, section: Section) {
+  constructor(hass: HomeAssistant) {
     this.hass = hass;
-    this.card = card;
-    this.section = section;
   }
 
 
@@ -46,14 +38,13 @@ export class HassService {
 
     try {
 
-      //console.log("%c CallService (hass-service) - Calling service %s (no response)\n%s",
-      //  "color: orange;",
-      //  JSON.stringify(serviceRequest.service),
-      //  JSON.stringify(serviceRequest, null, 2)
-      //);
-
-      // show the progress indicator on the main card.
-      this.card.dispatchEvent(ProgressStartedEvent(this.section));
+      if (debuglog.enabled) {
+        debuglog("%cCallService - Calling service %s (no response)\n%s",
+          "color: orange;",
+          JSON.stringify(serviceRequest.service),
+          JSON.stringify(serviceRequest, null, 2),
+        );
+      }
 
       // call the service.
       await this.hass.callService(
@@ -63,10 +54,8 @@ export class HassService {
         serviceRequest.target,
       )
 
-    } finally {
-
-      // hide the progress indicator on the main card.
-      this.card.dispatchEvent(ProgressEndedEvent());
+    }
+    finally {
     }
   }
 
@@ -103,7 +92,8 @@ export class HassService {
               .map((item) => this.hass.states[item]),
           );
         }, subscribeMessage);
-      } catch (e) {
+      }
+      catch (e) {
         reject(e);
       }
     });

@@ -11,8 +11,17 @@ console.groupCollapsed(
   "color: green; font-weight: bold"
 );
 console.log(
-  "Wiki Docs:",
+  "SoundTouchPlus Card Wiki Docs:",
   "https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options"
+);
+console.log(
+  "SoundTouchPlus Integration Wiki Docs:",
+  "https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki"
+);
+console.log(
+  "SoundTouchPlus Card Debug Logging Console Commands:\n",
+  "- enable:  localStorage.setItem('debug', 'soundtouchplus-card:*');\n",
+  "- disable: localStorage.setItem('debug', '');"
 );
 console.groupEnd();
 

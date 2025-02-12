@@ -1,53 +1,30 @@
+// debug logging.
+import Debug from 'debug/src/browser.js';
+import { DEBUG_APP_NAME } from '../constants';
+const debuglog = Debug(DEBUG_APP_NAME + ":userpreset-browser");
+
 // lovelace card imports.
-import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { HomeAssistant } from 'custom-card-helpers';
+import { html, TemplateResult } from 'lit';
+import { customElement } from 'lit/decorators.js';
 
 // our imports.
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
-import { Card } from '../card';
-import { CardConfig } from '../types/card-config';
+import '../components/userpreset-actions';
+import { FavBrowserBase } from './fav-browser-base';
 import { Section } from '../types/section';
-import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
-import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo } from '../utils/media-browser-utils';
-import { SoundTouchPlusService } from '../services/soundtouchplus-service';
-import { ProgressStartedEvent } from '../events/progress-started';
-import { ProgressEndedEvent } from '../events/progress-ended';
-import { ITEM_SELECTED } from '../constants';
-import { ContentItemParent } from '../types/soundtouchplus/content-item';
+import { getHomeAssistantErrorMessage, getUtcNowTimestamp } from '../utils/utils';
+import { FilterSectionMediaEvent } from '../events/filter-section-media';
+import { IUserPreset } from '../types/soundtouchplus/user-preset';
 
 
 @customElement("stpc-userpreset-browser")
-export class UserPresetBrowser extends LitElement {
+export class UserPresetBrowser extends FavBrowserBase {
 
-  // public state properties.
-  @property({ attribute: false }) public hass!: HomeAssistant;
-  @property({ attribute: false }) store!: Store;
-
-  // private state properties.
-  @state() private _alertError?: string;
-  @state() private _alertInfo?: string;
-
-  /** Card configuration data. */
-  private config!: CardConfig;
-
-  /** MediaPlayer instance created from the configuration entity id. */
-  private player!: MediaPlayer;
-
-  /** Indicates if the media list is currently being updated. */
-  private isUpdateInProgress!: boolean;
-
-  /** Date and time (in epoch format) of when the media list was last updated. */
-  private mediaListLastUpdatedOn!: number;
-
-  /** User preset list. */
-  private mediaList!: ContentItemParent[] | undefined;
-
-  /** SoundTouchPlus services instance. */
-  private soundTouchPlusService!: SoundTouchPlusService;
+  /** Array of items to display in the media list. */
+  protected override mediaList!: Array<IUserPreset> | undefined;
 
 
   /**
@@ -56,11 +33,10 @@ export class UserPresetBrowser extends LitElement {
   constructor() {
 
     // invoke base class method.
-    super();
+    super(Section.USERPRESETS);
+    this.filterCriteriaPlaceholder = "filter by preset name or source";
+    this.isMediaListRefreshedOnSectionEntry = true;
 
-    // initialize storage.
-    this.isUpdateInProgress = false;
-    this.mediaListLastUpdatedOn = -1;  
   }
 
 
@@ -71,156 +47,65 @@ export class UserPresetBrowser extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    //console.log("render (userpreset-browser) - rendering control\n- mediaListLastUpdatedOn=%s",
-    //  JSON.stringify(this.mediaListLastUpdatedOn)
-    //);
+    // invoke base class method.
+    super.render();
 
-    // set common references from application common storage area.
-    this.hass = this.store.hass
-    this.config = this.store.config;
-    this.player = this.store.player;
-    this.soundTouchPlusService = this.store.soundTouchPlusService;
+    // filter items (if actions are not visible).
+    let filteredItems: Array<IUserPreset> | undefined;
+    if (!this.isActionsVisible) {
+      const filterName = (this.filterCriteria || "").toLocaleLowerCase();
+      filteredItems = this.mediaList?.filter((item: IUserPreset) => (item.ContentItem?.Name?.toLocaleLowerCase().indexOf(filterName) !== -1) || (item.ContentItem.Source?.toLocaleLowerCase().indexOf(filterName) !== -1));
+      this.filterItemCount = filteredItems?.length;
+    }
 
     // format title and sub-title details.
-    const title = formatTitleInfo(this.config.userPresetBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList);
-    const subtitle = formatTitleInfo(this.config.userPresetBrowserSubTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList);
+    const title = formatTitleInfo(this.config.userPresetBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList, filteredItems);
+    const subtitle = formatTitleInfo(this.config.userPresetBrowserSubTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList, filteredItems);
 
     // render html.
     return html`
-      <div class="userpreset-browser-section">
-        ${title ? html`<div class="userpreset-browser-title">${title}</div>` : html``}
-        ${subtitle ? html`<div class="userpreset-browser-subtitle">${subtitle}</div>` : html``}
-        <div class="userpreset-browser-content">
-          ${this._alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this._alertErrorClear}>${this._alertError}</ha-alert>` : ""}
-          ${this._alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this._alertInfoClear}>${this._alertInfo}</ha-alert>` : ""}
+      <div class="media-browser-section" style=${this.styleMediaBrowser()}>
+        ${title ? html`<div class="media-browser-section-title">${title}</div>` : html``}
+        ${subtitle ? html`<div class="media-browser-section-subtitle">${subtitle}</div>` : html``}
+        <div class="media-browser-controls">
+          ${!(this.isActionsVisible || false) ? html`` : html`${this.btnHideActionsHtml}`}
+          ${this.filterCriteriaHtml}${this.refreshMediaListHtml}
+        </div>
+        <div id="mediaBrowserContentElement" class="media-browser-content">
+          ${this.alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this.alertErrorClear}>${this.alertError}</ha-alert>` : ""}
+          ${this.alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this.alertInfoClear}>${this.alertInfo}</ha-alert>` : ""}
           ${(() => {
-            if (this.config.userPresetBrowserItemsPerRow === 1) {
-              return (
-                html`<stpc-media-browser-list
-                      .items=${this.mediaList}
-                      .store=${this.store}
-                      @item-selected=${this.OnItemSelected}
-                    ></stpc-media-browser-list>`
-              )
+            // if actions are not visbile, then render the media list.
+            if (!this.isActionsVisible) {
+              if (this.config.userPresetBrowserItemsPerRow === 1) {
+                return (
+                  html`<stpc-media-browser-list 
+                        class="media-browser-list"
+                        .items=${filteredItems}
+                        .store=${this.store}
+                        @item-selected=${this.onItemSelected}
+                        @item-selected-with-hold=${this.onItemSelectedWithHold}
+                       ></stpc-media-browser-list>`
+                )
+              } else {
+                return (
+                  html`<stpc-media-browser-icons 
+                        class="media-browser-list"
+                        .items=${filteredItems}
+                        .store=${this.store}
+                        @item-selected=${this.onItemSelected}
+                        @item-selected-with-hold=${this.onItemSelectedWithHold}
+                       ></stpc-media-browser-icons>`
+                )
+              }
+              // if actions are visbile, then render the actions display.
             } else {
-              return (
-                html`<stpc-media-browser-icons
-                      .items=${this.mediaList}
-                      .store=${this.store}
-                      @item-selected=${this.OnItemSelected}
-                    ></stpc-media-browser-icons>`
-              )
+              return html`<stpc-userpreset-actions class="media-browser-actions" .store=${this.store} .mediaItem=${this.mediaItem}></stpc-userpreset-actions>`;
             }
-          })()}
+          })()}  
         </div>
       </div>
     `;
-  }
-
-
-  /** 
-   * style definitions used by this component.
-   * */
-  static get styles() {
-    return css`
-
-      .userpreset-browser-section {
-        color: var(--secondary-text-color);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      }
-
-      .userpreset-browser-title {
-        margin-top: 0.5rem;
-        align-items: center;
-        display: flex;
-        flex-shrink: 0;
-        flex-grow: 0;
-        justify-content: center;
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.0rem;
-        color: var(--secondary-text-color);
-      }
-
-      .userpreset-browser-subtitle {
-        margin: 0.1rem 0;
-        align-items: center;
-        display: flex;
-        justify-content: center;
-        text-align: center;
-        font-weight: normal;
-        font-size: 0.85rem;
-        color: var(--secondary-text-color);
-      }
-
-      .userpreset-browser-content {
-        margin: 0.5rem;
-        flex: 3;
-        max-height: 100vh;
-        overflow-y: auto;
-      }
-
-      ha-alert {
-        display: block;
-        margin-bottom: 0.25rem;
-      }
-    `;
-  }
-
-
-  /**
-   * Called when the element has rendered for the first time. Called once in the
-   * lifetime of an element. Useful for one-time setup work that requires access to
-   * the DOM.
-   */
-  protected firstUpdated(changedProperties: PropertyValues): void {
-
-    // invoke base class method.
-    super.firstUpdated(changedProperties);
-
-    //console.log("firstUpdated (userpreset-browser) - changedProperties keys:\n- %s",
-    //  JSON.stringify(Array.from(changedProperties.keys())),
-    //);
-
-    // refresh the medialist.
-    this.updateMediaList();
-  }
-
-
-  /**
-   * Clears the error and informational alert text.
-   */
-  private _alertClear() {
-    this._alertInfo = undefined;
-    this._alertError = undefined;
-  }
-
-
-  /**
-   * Clears the error alert text.
-   */
-  private _alertErrorClear() {
-    this._alertError = undefined;
-  }
-
-
-  /**
-   * Sets the alert error message, and clears the informational alert message.
-   */
-  private _alertErrorSet(message: string): void {
-    this._alertError = message;
-    this._alertInfoClear();
-  }
-
-
-  /**
-   * Clears the informational alert text.
-   */
-  private _alertInfoClear() {
-    this._alertInfo = undefined;
   }
 
 
@@ -229,211 +114,187 @@ export class UserPresetBrowser extends LitElement {
    * 
    * @param args Event arguments that contain the media item that was clicked on.
    */
-  protected OnItemSelected = (args: CustomEvent) => {
+  protected override onItemSelected(args: CustomEvent) {
 
-    //console.log("OnItemSelected (userpreset-browser) - media item selected:\n%s",
-    //  JSON.stringify(args.detail,null,2),
-    //);
+    if (debuglog.enabled) {
+      debuglog("onItemSelected - media item selected:\n%s",
+        JSON.stringify(args.detail, null, 2),
+      );
+    }
 
-    const mediaItem = args.detail;
-    this.PlayItem(mediaItem);
-    this.dispatchEvent(customEvent(ITEM_SELECTED, mediaItem));
+    // is this a filtersection type?
+    if (args.detail.type == "filtersection") {
 
-  };
+      const preset = args.detail as IUserPreset;
 
+      // validate filter section name.
+      const enumValues: string[] = Object.values(Section);
+      if (!enumValues.includes(preset.filter_section || "")) {
+        //if (Object.values(Section) as string[]).includes(preset.filter_section || "") {
+        this.alertErrorSet("Preset filter_section \"" + preset.filter_section + "\" is not a valid section identifier.");
+        return;
+      }
 
-  /**
-   * Calls the SoundTouchPlusService PlayContentItem method to play media.
-   * 
-   * @param mediaItem The medialist item that was selected.
-   */
-  private async PlayItem(mediaItem: ContentItemParent) {
+      // fire event.
+      this.dispatchEvent(FilterSectionMediaEvent(preset.filter_section, preset.filter_criteria));
 
-    try {
+    } else {
 
-      // play content item.
-      await this.soundTouchPlusService.PlayContentItem(this.player.id, mediaItem.ContentItem);
-
-      // show player section.
-      this.store.card.SetSection(Section.PLAYER);
+      // call base class method to handle it.
+      super.onItemSelected(args);
 
     }
-    catch (error) {
 
-      this._alertErrorSet((error as Error).message);
-
-    }
   }
 
 
   /**
-   * Updates the mediaList with the most current list of user presets from the configuration.
+   * Updates the mediaList display.
    */
-  private updateMediaList(): void {
+  protected override updateMediaList(player: MediaPlayer): boolean {
 
-    // check if update is already in progress.
-    if (!this.isUpdateInProgress) {
-      this.isUpdateInProgress = true;
-    } else {
-      this._alertErrorSet("Previous refresh is still in progress - please wait");
-      return;
+    // invoke base class method; if it returns false, then we should not update the media list.
+    if (!super.updateMediaList(player)) {
+      return false;
     }
 
     try {
 
-      // clear alerts.
-      this._alertClear();
+      // initialize the media list, as we are loading it from multiple sources.
+      this.mediaListLastUpdatedOn = getUtcNowTimestamp();
+      this.mediaList = new Array<IUserPreset>();
 
-      // update the media list; we will force the `mediaListLastUpdatedOn` attribute
-      // with the current epoch date (in seconds) so that the refresh is only triggered once.
-      // we also copy the array (do not use `this.mediaList = this.config.userPresets`, as it
-      // maintains object references and causes objects to keep appending!).
-      this.mediaListLastUpdatedOn = (Date.now() / 1000);
+      // we use the `Promise.allSettled` approach here like we do with actions, so
+      // that we can easily add promises if more data gathering is needed in the future.
+      const promiseRequests = new Array<Promise<unknown>>();
 
-      // if card is being edited, then we will use the cached media list as the data source;
-      // otherwise, we will refresh the media list from the real-time source.
-      const cacheKey = 'userpreset-browser';
-      this.mediaList = undefined;
-      const isCardEditMode = isCardInEditPreview(this.store.card);
-      if ((isCardEditMode) && (cacheKey in Card.mediaListCache)) {
-        this.mediaList = Card.mediaListCache[cacheKey] as ContentItemParent[];
-        this.isUpdateInProgress = false;
-        super.requestUpdate();
-        //console.log("%c updateMediaList (userpreset-browser) - medialist loaded from cache",
-        //  "color: orange;",
-        //);
-        return;
-      }
+      // create promise - get media list from config settings.
+      const promiseUpdateMediaListConfig = new Promise((resolve, reject) => {
 
-      //console.log("%c updateMediaList (userpreset-browser) - updating medialist",
-      //  "color: orange;",
-      //);
+        try {
 
-      // update status.
-      this._alertInfo = "Refreshing media list ...";
+          // load settings, append to the media list, and resolve the promise.
+          const result = JSON.parse(JSON.stringify(this.config.userPresets || [])) as IUserPreset[];
+          if (result) {
 
-      // load media list.
-      this.mediaList = JSON.parse(JSON.stringify(this.config.userPresets || [])) as ContentItemParent[];
-      this.mediaListLastUpdatedOn = (Date.now() / 1000);
-      if (!this.mediaList) {
-        this.mediaList = new Array<ContentItemParent>();
-      }
+            // set where the configuration items were loaded from, and
+            // replace nocache indicator if specified.
+            //const noCacheKey = "nocache=" + getUtcNowTimestamp();
+            result.forEach(item => {
+              item.origin = "card config";
+              //item.image_url = (item.image_url || "").replace("{nocache}", noCacheKey);
+            });
 
-      //console.log("%c updateMediaList (userpreset-browser) - medialist before url load:\n%s",
-      //  "color: orange;",
-      //  JSON.stringify(this.mediaList,null,2),
-      //);
+            // append results to media list.
+            (this.mediaList || []).push(...result);
+          }
+
+          // call base class method, indicating media list update succeeded.
+          super.updatedMediaListOk();
+          resolve(true);
+        }
+        catch (error) {
+
+          // reject the promise.
+          super.updatedMediaListError("Load User Presets from config failed: " + getHomeAssistantErrorMessage(error));
+          reject(error);
+
+        }
+      });
+
+      promiseRequests.push(promiseUpdateMediaListConfig);
 
       // was a user presets url specified?
       if (this.config.userPresetsFile || '' != '') {
 
-        // call the service to retrieve the media list.
-        const url = this.config.userPresetsFile + '?nocache=' + Date.now()  // force refresh if cached
-        this.UserPresetList(url)
-          .then(result => {
+        // create promise - get media list from user presets url.
+        const promiseUpdateMediaListUrl = new Promise((resolve, reject) => {
 
-            // append user-configured results to file results and update status.
-            (this.mediaList || []).push(...result);
-            this.mediaListLastUpdatedOn = (Date.now() / 1000);
-            this.isUpdateInProgress = false;
-            this._alertClear();
+          // call fetch api to get media list content from the url.
+          // note that "nocache=" will force refresh, if url content is cached.
+          fetch(this.config.userPresetsFile + '?nocache=' + Date.now())
+            .then(response => {
+              // if bad response then raise an exception with error details.
+              if (!response.ok) {
+                throw new Error("server response: " + response.status + " " + response.statusText);
+              }
+              // otherwise, return json response data.
+              return response.json();
+            })
+            .then(response => {
+              // append to the media list, and resolve the promise.
+              const responseObj = response as IUserPreset[]
+              if (responseObj) {
 
-            //console.log("%c userpreset-browser - updateMediaList info AFTER update:\n- mediaListLastUpdatedOn=%s\n- player id=%s",
-            //  "color: green;",
-            //  JSON.stringify(this.mediaListLastUpdatedOn),
-            //  JSON.stringify(this.player.id),
-            //);
+                // set where the configuration items were loaded from, and 
+                // replace nocache indicator if specified.
+                //const noCacheKey = "nocache=" + getUtcNowTimestamp();
+                responseObj.forEach(item => {
+                  item.origin = this.config.userPresetsFile as string;
+                  //item.image_url = (item.image_url || "").replace("{nocache}", noCacheKey);
+                });
 
-            // if editing the card then store the list in the cache for next time.
-            if ((isCardEditMode) && !(cacheKey in Card.mediaListCache)) {
-              Card.mediaListCache[cacheKey] = this.mediaList || [];
-            }
+                // append results to media list.
+                (this.mediaList || []).push(...responseObj);
+              }
 
-            // if no items then update status.
-            if ((this.mediaList) && (this.mediaList.length == 0)) {
-              this._alertInfo = "No items found";
-            }
-
-          })
-          .catch(error => {
-
-            // a console `uncaught exception` will be logged if an exception gets thrown in this catch block!
-
-            // update status, but do not clear response in case we loaded items from configuration settings.
-            this.isUpdateInProgress = false;
-            this._alertErrorSet("User Presets refresh failed: \n" + error.message);
-
-          });
-
-      } else {
-
-        // if no file to load from, then loading is complete.
-        this.isUpdateInProgress = false;
-        this._alertClear();
-
-        // if no items then update status.
-        if ((this.mediaList) && (this.mediaList.length == 0)) {
-          this._alertInfo = "No items found";
-        }
-
-      }
-
-    } catch (error) {
-
-      // update status.
-      this.isUpdateInProgress = false;
-      this._alertErrorSet("User Presets refresh failed: " + error);
-
-    } finally {
-    }
-  }
-
-
-  /**
-   * Retrieves the list of user presets from a url.
-   * 
-   * @param url URL that contains user presets (e.g. "/local/soundtouchplus/userpresets.json").
-   * @returns A ContentItemParent[] object.
-  */
-  public async UserPresetList(url: string): Promise<ContentItemParent[]> {
-
-    try {
-
-      //console.log("%c UserPresetList (userpreset-browser) - Retrieving url:\n%s",
-      //  "color: orange;",
-      //  JSON.stringify(url),
-      //);
-
-      // show the progress indicator on the main card.
-      this.store.card.dispatchEvent(ProgressStartedEvent(Section.USERPRESETS));
-
-      const responseObj = await fetch(url)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("server response: " + response.status + " " + response.statusText);
-          }
-          return response.json();
-        })
-        .then(response => {
-          const responseObj = response as ContentItemParent[]
-          return responseObj;
-        })
-        .catch(err => {
-          //console.log("UserPresetList (userpreset-browser) - Could not fetch userpresets url\n- url = %s\n- reason: %s", url, err);
-          throw new Error("Could not fetch userpresets url (" + url + "); " + (err as Error).message);
+              // call base class method, indicating media list update succeeded.
+              super.updatedMediaListOk();
+              resolve(true);
+            })
+            .catch(error => {
+              // process error result and reject the promise.
+              super.updatedMediaListError("Could not fetch data from configuration `userPresetsFile` (" + this.config.userPresetsFile + "); " + getHomeAssistantErrorMessage(error));
+              reject(error);
+            });
         });
 
-      //console.log("%c updateMediaList (userpreset-browser) - medialist url response:\n%s",
-      //  "color: orange;",
-      //  JSON.stringify(responseObj, null, 2),
-      //);
+        promiseRequests.push(promiseUpdateMediaListUrl);
+      }
 
-      return responseObj as ContentItemParent[];
+      // show visual progress indicator.
+      this.progressShow();
 
-    } finally {
+      // execute all promises, and wait for all of them to settle.
+      // we use `then` logic so we can log the mediaList contents
+      // since we are not calling a service / logging service response. 
+      // we use `finally` logic so we can clear the progress indicator.
+      // any exceptions raised should have already been handled in the 
+      // individual promise definitions; nothing else to do at this point.
+      Promise.allSettled(promiseRequests)
+        .then(results => {
+          if (results) { }  // keep compiler happy
 
-      // hide the progress indicator on the main card.
-      this.store.card.dispatchEvent(ProgressEndedEvent());
+          if (debuglog.enabled) {
+            debuglog("%cupdateMediaList - %s mediaList response:\n%s",
+              "color: red",
+              JSON.stringify(this.mediaType),
+              JSON.stringify(this.mediaList, null, 2),
+            );
+          }
+
+        })
+        .finally(() => {
+
+          // clear the progress indicator.
+          this.progressHide();
+
+        });
+
+      return true;
+
+    }
+    catch (error) {
+
+      // clear the progress indicator.
+      this.progressHide();
+
+      // set alert error message.
+      super.updatedMediaListError("User Presets favorites refresh failed: " + getHomeAssistantErrorMessage(error));
+      return true;
+
+    }
+    finally {
     }
   }
 

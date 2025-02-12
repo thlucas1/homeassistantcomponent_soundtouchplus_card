@@ -1,4 +1,4 @@
-import { NavigateItem } from './navigate-item';
+import { INavigateItem } from './navigate-item';
 
 /**
  * SoundTouch device NavigateResponse configuration object.
@@ -6,7 +6,7 @@ import { NavigateItem } from './navigate-item';
  * This interface contains the attributes and subitems that represent the
  * navigate response configuration of the device.
  */
-export interface NavigateResponse {
+export interface INavigateResponse {
 
   /** 
    * Date and time (in epoch format) of when the list was last updated.  
@@ -23,9 +23,9 @@ export interface NavigateResponse {
   ItemCount?: number;
 
   /** 
-   * List of `NavigateItem` items. 
+   * List of `INavigateItem` items. 
    */
-  Items?: Array<NavigateItem>;
+  Items?: Array<INavigateItem>;
 
   /** 
    * Music service source where the result was obtained from (e.g. "PANDORA", etc). 

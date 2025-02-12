@@ -4,7 +4,12 @@ import { css, html, TemplateResult } from 'lit';
 // our imports.
 import { BaseEditor } from './base-editor';
 import { Section } from '../types/section';
-import { DOMAIN_MEDIA_PLAYER, DOMAIN_SOUNDTOUCHPLUS } from '../constants';
+import {
+  CARD_VERSION,
+  DOMAIN_MEDIA_PLAYER,
+  DOMAIN_SOUNDTOUCHPLUS,
+  FOOTER_ICON_SIZE_DEFAULT
+} from '../constants';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
@@ -16,12 +21,12 @@ const CONFIG_SETTINGS_SCHEMA = [
     type: 'multi_select',
     options: {
       /* the following must match defined names in `secion.ts` */
-      player: 'Player',
-      sources: 'Sources',
-      presets: 'Device Presets',
-      userpresets: 'User Presets',
-      recents: 'Recently Played',
-      pandorastations: 'Pandora Stations',
+      player: 'Player',                       /* Section.PLAYER */
+      sources: 'Sources',                     /* Section.SOURCES */
+      presets: 'Device Presets',              /* Section.PRESETS */
+      userpresets: 'User Presets',            /* Section.USERPRESETS */
+      recents: 'Recently Played',             /* Section.RECENTS */
+      pandorastations: 'Pandora Stations',    /* Section.PANDORA_STATIONS */
     },
   },
   {
@@ -47,6 +52,14 @@ const CONFIG_SETTINGS_SCHEMA = [
     type: 'string',
   },
   {
+    name: 'footerIconSize',
+    label: 'Size of the icons in the Footer area.',
+    help: 'default is "' + FOOTER_ICON_SIZE_DEFAULT + '"',
+    required: false,
+    type: 'string',
+    default: FOOTER_ICON_SIZE_DEFAULT,
+  },
+  {
     name: 'width',
     label: 'Width of the card',
     help: 'in rem units; or "fill" for 100% width',
@@ -62,12 +75,13 @@ const CONFIG_SETTINGS_SCHEMA = [
     type: 'string',
     default: 35.15,
   },
-//  {
-//    name: 'imageUrlsReplaceHttpWithHttps',
-//    label: "Replace HTTP with HTTPS for image url's",
-//    required: false,
-//    selector: { boolean: {} },
-//  },
+  {
+    name: 'touchSupportDisabled',
+    label: "Disable touch event support",
+    help: 'force mouse events',
+    required: false,
+    selector: { boolean: {} },
+  },
 ];
 
 
@@ -84,16 +98,10 @@ class GeneralEditor extends BaseEditor {
     // ensure store is created.
     super.createStore();
 
-    //console.log("render (general-editor) - rendering general editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
-
     // render html.
     return html`
       <div class="schema-title">
-        Settings that control the <a href="https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#general-options" target="_blank">
-        General setup</a> of the card
+        Settings that control overall look of card - version ${CARD_VERSION}
       </div>
       <stpc-editor-form class="stpc-editor-form"
         .schema=${CONFIG_SETTINGS_SCHEMA}

@@ -1,10 +1,10 @@
 // lovelace card imports.
-import { LovelaceCardConfig } from 'custom-card-helpers';
+import { LovelaceCardConfig } from '../types/home-assistant-frontend/lovelace-card-config';
 
 // our imports.
 import { Section } from './section';
 import { CustomImageUrls } from './custom-image-urls';
-import { ContentItemParent } from './soundtouchplus/content-item';
+import { IContentItemParent } from './soundtouchplus/content-item';
 
 /**
  * Card configuration settings.
@@ -18,10 +18,8 @@ export interface CardConfig extends LovelaceCardConfig {
 
   /** 
    * Sections of the card to display. 
-   * Valid values are:
-   * - `presets` Presets section will be displayed.
-   * - `recents` Recently Played section will be displayed.
-   * - `pandorastations` Pandora Stations section will be displayed.
+   * 
+   * Valid values must match defined names in `secion.ts`.
    */
   sections?: Section[];
 
@@ -30,6 +28,12 @@ export interface CardConfig extends LovelaceCardConfig {
    * This value supports Title Formatter Options.
    */
   title?: string;
+
+  /**
+   * Size of the icons in the Footer controls area.
+   * Default is '2rem'.
+   */
+  footerIconSize?: string;
 
   /**
    * Width of the card (in 'rem' units).
@@ -46,6 +50,13 @@ export interface CardConfig extends LovelaceCardConfig {
    * Default is 35.15rem.
    */
   height?: string | number;
+
+  /**
+   * True to disable touch events and force mouse events for media browser items;
+   * othersie, False to enable touch events if they are detected.
+   * Default is false.
+   */
+  touchSupportDisabled?: boolean;
 
   /**
    * User account used to connect to Pandora music service.
@@ -79,6 +90,16 @@ export interface CardConfig extends LovelaceCardConfig {
    * Default is false.
    */
   pandoraBrowserItemsHideTitle?: boolean;
+
+  /**
+   * Size of the player background image.
+   * Suggested values:
+   * - "100% 100%" image size is 100%, stretching to fill available space.
+   * - "contain" image is contained in the boundaries without stretching.
+   * - "cover" image covers the entire background, stretching to fill available space.
+   * Default is "100% 100%".
+   */
+  playerBackgroundImageSize?: string;
 
   /**
    * Title displayed in the header area of the Player section form.
@@ -172,6 +193,49 @@ export interface CardConfig extends LovelaceCardConfig {
   playerControlsBackgroundColor?: string;
 
   /**
+   * Color of the player media control labels.
+   * Default is '#ffffff'.
+   */
+  playerControlsColor?: string;
+
+  /**
+   * Size of the icons in the Player controls area.
+   * Default is '2.0rem'.
+   */
+  playerControlsIconSize?: string;
+
+  /**
+   * Color of the icons in the Player controls area.
+   * Default is '#ffffff'.
+   */
+  playerControlsIconColor?: string;
+
+  /**
+   * Color of the toggled icons in the Player controls area.
+   * Default is '#ffffff'.
+   */
+  playerControlsIconToggleColor?: string;
+
+  /**
+   * Color of the player progress text labels.
+   * Default is '#ffffff'.
+   */
+  playerProgressLabelColor?: string;
+
+  /**
+   * Color of the player progress slider bar.
+   * Default is '#2196F3'.
+   */
+  playerProgressSliderColor?: string;
+
+  /**
+   * Hide volume level numbers and percentages in the volume controls area of the Player 
+   * section form.  Volume slider control is not affected by this setting.
+   * Default is false.
+   */
+  playerVolumeControlsHideLevels?: boolean;
+
+  /**
    * Hide mute button in the volume controls area of the Player section form.
    * Default is false.
    */
@@ -188,6 +252,25 @@ export interface CardConfig extends LovelaceCardConfig {
    * Default is false.
    */
   playerVolumeControlsHideSlider?: boolean;
+
+  /**
+   * Maximum volume value allowed to be set via the card user-interface.  This value does
+   * not apply if adjusting the volume via services or other media player UI's.
+   * Default is 100.
+   */
+  playerVolumeMaxValue?: number;
+
+  /**
+   * Color of the player volume text labels.
+   * Default is '#ffffff'.
+   */
+  playerVolumeLabelColor?: string;
+
+  /**
+   * Color of the player volume slider bar.
+   * Default is '#2196F3'.
+   */
+  playerVolumeSliderColor?: string;
 
   /**
    * Title displayed at the top of the Preset media browser section form.
@@ -217,10 +300,10 @@ export interface CardConfig extends LovelaceCardConfig {
   presetBrowserItemsHideTitle?: boolean;
 
   /** 
-   * Hide source titles displayed for Preset media browser items.
+   * Hide sub-titles displayed for Preset media browser items.
    * Default is false.
    */
-  presetBrowserItemsHideSource?: boolean;
+  presetBrowserItemsHideSubTitle?: boolean;
 
   /**
    * Title displayed at the top of the Recently Played media browser section form.
@@ -250,10 +333,10 @@ export interface CardConfig extends LovelaceCardConfig {
   recentBrowserItemsHideTitle?: boolean;
 
   /** 
-   * Hide source titles displayed for Recently Played media browser items.
+   * Hide sub-titles displayed for Recently Played media browser items.
    * Default is false.
    */
-  recentBrowserItemsHideSource?: boolean;
+  recentBrowserItemsHideSubTitle?: boolean;
 
   /**
    * Title displayed at the top of the Source browser section form.
@@ -310,10 +393,10 @@ export interface CardConfig extends LovelaceCardConfig {
   userPresetBrowserItemsHideTitle?: boolean;
 
   /** 
-   * Hide source titles displayed for User Preset media browser items.
+   * Hide sub-titles displayed for User Preset media browser items.
    * Default is false.
    */
-  userPresetBrowserItemsHideSource?: boolean;
+  userPresetBrowserItemsHideSubTitle?: boolean;
 
   /**
    * Collection of custom imageUrl's that can be displayed in various media browser
@@ -362,7 +445,7 @@ export interface CardConfig extends LovelaceCardConfig {
    *     Source: "TUNEIN"
    *     TypeValue: "stationurl"
    */
-  userPresets?: Array<ContentItemParent>;
+  userPresets?: Array<IContentItemParent>;
 
   /**
    * File path to a collection of user-defined preset items that can be displayed in various media browser
@@ -372,5 +455,90 @@ export interface CardConfig extends LovelaceCardConfig {
    */
   userPresetsFile?: string;
 
-  //imageUrlsReplaceHttpWithHttps?: boolean;
+  // **********************************************************************************************************************************
+  // * Card theming options:
+  // **********************************************************************************************************************************
+
+  /**
+   * Color of the card area wait progress indicator.
+   * Default is '#2196F3'.
+   */
+  cardWaitProgressSliderColor?: string;
+
+  /**
+   * Media Browser section title text color.
+   */
+  mediaBrowserSectionTitleColor?: string;
+
+  /**
+   * Media Browser section title text font-size (in 'rem' units).
+   */
+  mediaBrowserSectionTitleFontSize?: string;
+
+  /**
+   * Media Browser section sub-title text color.
+   */
+  mediaBrowserSectionSubTitleColor?: string;
+
+  /**
+   * Media Browser section sub-title text font-size (in 'rem' units).
+   */
+  mediaBrowserSectionSubTitleFontSize?: string;
+
+  /**
+   * Media list item title and sub-title text color.
+   */
+  mediaBrowserItemsColor?: string;
+
+  /**
+   * Media list item title and sub-title text color when list is configured
+   * for non-icon format.
+   */
+  mediaBrowserItemsListColor?: string;
+
+  /**
+   * Media browser list item svg icon color.
+   */
+  mediaBrowserItemsSvgIconColor?: string;
+
+  /**
+   * Media browser items title text font-size (in 'rem' units).
+   */
+  mediaBrowserItemsTitleFontSize?: string;
+
+  /**
+   * Media browser items sub-title text font-size (in 'rem' units).
+   */
+  mediaBrowserItemsSubTitleFontSize?: string;
+
+  /**
+   * Player header title 1 text color (in #xxxxxx hex format).
+   */
+  playerHeaderTitle1Color?: string;
+
+  /**
+   * Player header title 1 text font-size (in 'rem' units).
+   */
+  playerHeaderTitle1FontSize?: string;
+
+  /**
+   * Player header title 2 text color (in #xxxxxx hex format).
+   */
+  playerHeaderTitle2Color?: string;
+
+  /**
+   * Player header title 2 text font-size (in 'rem' units).
+   */
+  playerHeaderTitle2FontSize?: string;
+
+  /**
+   * Player header title 3 text color (in #xxxxxx hex format).
+   */
+  playerHeaderTitle3Color?: string;
+
+  /**
+   * Player header title 3 text font-size (in 'rem' units).
+   */
+  playerHeaderTitle3FontSize?: string;
+
 }

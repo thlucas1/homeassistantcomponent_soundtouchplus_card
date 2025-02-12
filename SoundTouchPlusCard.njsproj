@@ -37,6 +37,8 @@
     <Content Include="developer_notes.txt">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="dist\soundtouchplus-card.js" />
+    <Content Include="dist\soundtouchplus-card.js.map" />
     <Content Include="hacs.json" />
     <Content Include="images\general_editor_options.png" />
     <Content Include="images\pandora_nofooter_panel.png" />
@@ -49,6 +51,12 @@
     <Content Include="package-lock.json" />
     <Content Include="package.json" />
     <Content Include="rollup.config.js" />
+    <Content Include="src\styles\shared-styles-fav-actions.js">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="src\styles\shared-styles-fav-browser.js" />
+    <Content Include="src\styles\shared-styles-grid.js" />
+    <Content Include="src\styles\shared-styles-media-info.js" />
     <Content Include="src\types\soundtouchplus-hass-entity-attributes.ts">
       <SubType>Code</SubType>
     </Content>
@@ -59,7 +67,6 @@
     <None Include="src\main.ts" />
     <None Include="src\types.ts" />
     <None Include="src\components\footer.ts" />
-    <None Include="src\components\ha-player.ts" />
     <None Include="src\editor\preset-browser-editor.ts" />
     <None Include="src\editor\base-editor.ts" />
     <None Include="src\editor\editor.ts" />
@@ -84,19 +91,34 @@
     <Folder Include="src\editor" />
     <Folder Include="src\events\" />
     <Folder Include="src\model" />
+    <Folder Include="src\decorators\" />
+    <Folder Include="src\styles\" />
     <Folder Include="src\types\" />
     <Folder Include="src\sections" />
     <Folder Include="src\services" />
+    <Folder Include="src\types\home-assistant-frontend\" />
     <Folder Include="src\types\soundtouchplus\" />
     <Folder Include="src\utils" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="src\components\fav-actions-base.ts" />
+    <TypeScriptCompile Include="src\components\media-browser-base.ts" />
     <TypeScriptCompile Include="src\components\media-browser-icons.ts" />
     <TypeScriptCompile Include="src\components\media-browser-list.ts" />
+    <TypeScriptCompile Include="src\components\player-body.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\components\player-controls.ts" />
     <TypeScriptCompile Include="src\components\player-header.ts" />
     <TypeScriptCompile Include="src\components\player-progress.ts" />
     <TypeScriptCompile Include="src\components\player-volume.ts" />
+    <TypeScriptCompile Include="src\components\userpreset-actions.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\decorators\storage.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\editor\player-general-editor.ts" />
     <TypeScriptCompile Include="src\editor\userpreset-browser-editor.ts" />
     <TypeScriptCompile Include="src\editor\source-browser-editor.ts" />
     <TypeScriptCompile Include="src\editor\player-volume-editor.ts" />
@@ -107,8 +129,12 @@
     <TypeScriptCompile Include="src\editor\recent-browser-editor.ts" />
     <TypeScriptCompile Include="src\events\editor-config-area-selected.ts" />
     <TypeScriptCompile Include="src\events\editor-pandora-account-changed.ts" />
+    <TypeScriptCompile Include="src\events\filter-section-media.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\events\progress-ended.ts" />
     <TypeScriptCompile Include="src\events\progress-started.ts" />
+    <TypeScriptCompile Include="src\sections\fav-browser-base.ts" />
     <TypeScriptCompile Include="src\sections\source-browser.ts" />
     <TypeScriptCompile Include="src\sections\pandora-browser.ts" />
     <TypeScriptCompile Include="src\sections\recent-browser.ts" />
@@ -119,10 +145,15 @@
     <TypeScriptCompile Include="src\types\config-area.ts" />
     <TypeScriptCompile Include="src\types\custom-image-urls.ts" />
     <TypeScriptCompile Include="src\types\hass-entity-attributes-media-player.ts" />
-    <TypeScriptCompile Include="src\types\home-assistant-ex.ts" />
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\fire-event.ts" />
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\home-assistant.ts" />
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\lovelace-card-config.ts" />
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\service-call-request.ts" />
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\service-call-response.ts" />
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\service-validation-error.ts" />
+    <TypeScriptCompile Include="src\types\playerAlerts.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus-hass-entity.ts" />
-    <TypeScriptCompile Include="src\types\imedia-browser-item.ts" />
-    <TypeScriptCompile Include="src\types\media-player-entity-feature.ts" />
+    <TypeScriptCompile Include="src\types\media-browser-item.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\navigate-response.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\navigate-item.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\source-item.ts" />
@@ -130,11 +161,13 @@
     <TypeScriptCompile Include="src\types\soundtouchplus\source-list.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\recent-list.ts" />
     <TypeScriptCompile Include="src\types\section.ts" />
-    <TypeScriptCompile Include="src\types\service-call-request.ts" />
     <TypeScriptCompile Include="src\types\service-call-response.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\preset-list.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\preset.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\content-item.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\user-preset.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\utils\media-browser-utils.ts" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />

@@ -1,7 +1,11 @@
+// debug logging.
+import Debug from 'debug/src/browser.js';
+import { DEBUG_APP_NAME } from '../constants';
+const debuglog = Debug(DEBUG_APP_NAME + ":source-browser");
+
 // lovelace card imports.
-import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { HomeAssistant } from 'custom-card-helpers';
+import { html, TemplateResult } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import {
   mdiApple,
   mdiAudioInputRca,
@@ -18,42 +22,20 @@ import {
 // our imports.
 import '../components/media-browser-list';
 import '../components/media-browser-icons';
-import { Card } from '../card';
-import { CardConfig } from '../types/card-config';
+import { FavBrowserBase } from './fav-browser-base';
 import { Section } from '../types/section';
-import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
-import { customEvent, isCardInEditPreview } from '../utils/utils';
 import { formatTitleInfo, getMdiIconImageUrl } from '../utils/media-browser-utils';
-import { ITEM_SELECTED } from '../constants';
-import { ContentItemParent, ContentItem } from '../types/soundtouchplus/content-item';
+import { getHomeAssistantErrorMessage, getUtcNowTimestamp } from '../utils/utils';
+import { IPreset } from '../types/soundtouchplus/preset';
+import { IContentItem, IContentItemParent } from '../types/soundtouchplus/content-item';
 
 
 @customElement("stpc-source-browser")
-export class SourceBrowser extends LitElement {
+export class SourceBrowser extends FavBrowserBase {
 
-  // public state properties.
-  @property({ attribute: false }) public hass!: HomeAssistant;
-  @property({ attribute: false }) store!: Store;
-
-  // private state properties.
-  @state() private _alertError?: string;
-  @state() private _alertInfo?: string;
-
-  /** Card configuration data. */
-  private config!: CardConfig;
-
-  /** MediaPlayer instance created from the configuration entity id. */
-  private player!: MediaPlayer;
-
-  /** Indicates if the media list is currently being updated. */
-  private isUpdateInProgress!: boolean;
-
-  /** Date and time (in epoch format) of when the media list was last updated. */
-  private mediaListLastUpdatedOn!: number;
-
-  /** Media player source list. */
-  private mediaList!: ContentItemParent[] | undefined;
+  /** Array of items to display in the media list. */
+  protected override mediaList!: Array<IContentItemParent> | undefined;
 
 
   /**
@@ -62,13 +44,12 @@ export class SourceBrowser extends LitElement {
   constructor() {
 
     // invoke base class method.
-    super();
+    super(Section.SOURCES);
+    this.filterCriteriaPlaceholder = "filter by name";
+    this.isActionsEnabled = false;
+    this.isMediaListRefreshedOnSectionEntry = true;
 
-    // initialize storage.
-    this.isUpdateInProgress = false;
-    this.mediaListLastUpdatedOn = -1;  
   }
-
 
 
   /**
@@ -78,155 +59,181 @@ export class SourceBrowser extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    //console.log("render (source-browser) - rendering control\n- mediaListLastUpdatedOn=%s",
-    //  JSON.stringify(this.mediaListLastUpdatedOn)
-    //);
+    // invoke base class method.
+    super.render();
 
-    // set common references from application common storage area.
-    this.hass = this.store.hass
-    this.config = this.store.config;
-    this.player = this.store.player;
+    // filter items.
+    const filterName = (this.filterCriteria || "").toLocaleLowerCase();
+    const filteredItems = this.mediaList?.filter((item: IPreset) => (item.ContentItem?.Name?.toLocaleLowerCase().indexOf(filterName) !== -1));
+    this.filterItemCount = filteredItems?.length;
 
     // format title and sub-title details.
-    const title = formatTitleInfo(this.config.sourceBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList);
-    const subtitle = formatTitleInfo(this.config.sourceBrowserSubTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList);
+    const title = formatTitleInfo(this.config.sourceBrowserTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList, filteredItems);
+    const subtitle = formatTitleInfo(this.config.sourceBrowserSubTitle, this.config, this.player, this.mediaListLastUpdatedOn, this.mediaList, filteredItems);
 
     // render html.
     return html`
-      <div class="source-browser-section">
-        ${title ? html`<div class="source-browser-title">${title}</div>` : html``}
-        ${subtitle ? html`<div class="source-browser-subtitle">${subtitle}</div>` : html``}
-        <div class="source-browser-content">
-          ${this._alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this._alertErrorClear}>${this._alertError}</ha-alert>` : ""}
-          ${this._alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this._alertInfoClear}>${this._alertInfo}</ha-alert>` : ""}
+      <div class="media-browser-section" style=${this.styleMediaBrowser()}>
+        ${title ? html`<div class="media-browser-section-title">${title}</div>` : html``}
+        ${subtitle ? html`<div class="media-browser-section-subtitle">${subtitle}</div>` : html``}
+        <div class="media-browser-controls">
+          ${!(this.isActionsVisible || false) ? html`` : html`${this.btnHideActionsHtml}`}
+          ${this.filterCriteriaHtml}${this.refreshMediaListHtml}
+        </div>
+        <div id="mediaBrowserContentElement" class="media-browser-content">
+          ${this.alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this.alertErrorClear}>${this.alertError}</ha-alert>` : ""}
+          ${this.alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this.alertInfoClear}>${this.alertInfo}</ha-alert>` : ""}
           ${(() => {
             if (this.config.sourceBrowserItemsPerRow === 1) {
               return (
                 html`<stpc-media-browser-list
-                      .items=${this.mediaList}
+                      class="media-browser-list"
+                      .items=${filteredItems}
                       .store=${this.store}
-                      @item-selected=${this.OnItemSelected}
-                    ></stpc-media-browser-list>`
+                      @item-selected=${this.onItemSelected}
+                      @item-selected-with-hold=${this.onItemSelectedWithHold}
+                     ></stpc-media-browser-list>`
               )
             } else {
               return (
                 html`<stpc-media-browser-icons
-                      .items=${this.mediaList}
+                      class="media-browser-list"
+                      .items=${filteredItems}
                       .store=${this.store}
-                      @item-selected=${this.OnItemSelected}
-                    ></stpc-media-browser-icons>`
+                      @item-selected=${this.onItemSelected}
+                      @item-selected-with-hold=${this.onItemSelectedWithHold}
+                     ></stpc-media-browser-icons>`
               )
             }
-          })()}
+          })()}  
         </div>
       </div>
     `;
   }
 
 
-  /** 
-   * style definitions used by this component.
-   * */
-  static get styles() {
-    return css`
-
-      .source-browser-section {
-        color: var(--secondary-text-color);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      }
-
-      .source-browser-title {
-        margin-top: 0.5rem;
-        align-items: center;
-        display: flex;
-        flex-shrink: 0;
-        flex-grow: 0;
-        justify-content: center;
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.0rem;
-        color: var(--secondary-text-color);
-      }
-
-      .source-browser-subtitle {
-        margin: 0.1rem 0;
-        align-items: center;
-        display: flex;
-        justify-content: center;
-        text-align: center;
-        font-weight: normal;
-        font-size: 0.85rem;
-        color: var(--secondary-text-color);
-      }
-
-      .source-browser-content {
-        margin: 0.5rem;
-        flex: 3;
-        max-height: 100vh;
-        overflow-y: auto;
-      }
-
-      ha-alert {
-        display: block;
-        margin-bottom: 0.25rem;
-      }
-    `;
-  }
-
-
   /**
-   * Called when the element has rendered for the first time. Called once in the
-   * lifetime of an element. Useful for one-time setup work that requires access to
-   * the DOM.
+   * Updates the mediaList display.
    */
-  protected firstUpdated(changedProperties: PropertyValues): void {
+  protected override updateMediaList(player: MediaPlayer): boolean {
 
-    // invoke base class method.
-    super.firstUpdated(changedProperties);
+    // invoke base class method; if it returns false, then we should not update the media list.
+    if (!super.updateMediaList(player)) {
+      return false;
+    }
 
-    //console.log("firstUpdated (userpreset-browser) - changedProperties keys:\n- %s",
-    //  JSON.stringify(Array.from(changedProperties.keys())),
-    //);
+    try {
 
-    // refresh the medialist.
-    this.updateMediaList(this.player);
-  }
+      // initialize the media list, as we are loading it from multiple sources.
+      this.mediaListLastUpdatedOn = getUtcNowTimestamp();
+      this.mediaList = new Array<IContentItemParent>();
 
+      // we use the `Promise.allSettled` approach here like we do with actions, so
+      // that we can easily add promises if more data gathering is needed in the future.
+      const promiseRequests = new Array<Promise<unknown>>();
 
-  /**
-   * Clears the error and informational alert text.
-   */
-  private _alertClear() {
-    this._alertInfo = undefined;
-    this._alertError = undefined;
-  }
+      // create promise - get media list from config settings.
+      const promiseUpdateMediaListConfig = new Promise((resolve, reject) => {
 
+        try {
 
-  /**
-   * Clears the error alert text.
-   */
-  private _alertErrorClear() {
-    this._alertError = undefined;
-  }
+          // build an array of IContentItemParent objects that can be used in the media browser.
+          this.mediaList = new Array<IContentItemParent>();
+          for (const source of (player.attributes.source_list || [])) {
 
+            // create new content item parent and set name value.
+            const parent = <IContentItemParent>{};
+            parent.ContentItem = <IContentItem>{};
+            parent.ContentItem.Name = source;
 
-  /**
-   * Sets the alert error message, and clears the informational alert message.
-   */
-  private _alertErrorSet(message: string): void {
-    this._alertError = message;
-    this._alertInfoClear();
-  }
+            // set container art path using mdi icons for common sources.
+            if (source.startsWith('Airplay')) {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiApple);
+            } else if (source.startsWith('Pandora')) {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiPandora);
+            } else if (source.startsWith('Spotify')) {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiSpotify);
+            } else if (source.startsWith('Tunein')) {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiRadio);
+            } else if (source.startsWith('Alexa')) {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiMicrophone);
+            } else if (source.startsWith('Bluetooth')) {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiBluetooth);
+            } else if (source.startsWith('Notification')) {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiSpeakerMessage);
+            } else if (source.startsWith('Product(HDMI')) {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiVideoInputHdmi);
+            } else if (source.startsWith('Product(TV')) {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiTelevision);
+            } else {
+              parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiAudioInputRca);
+            }
+            this.mediaList.push(parent);
+          }
 
+          this.mediaListLastUpdatedOn = getUtcNowTimestamp();
 
-  /**
-   * Clears the informational alert text.
-   */
-  private _alertInfoClear() {
-    this._alertInfo = undefined;
+          // call base class method, indicating media list update succeeded.
+          super.updatedMediaListOk();
+
+          // resolve the promise.
+          resolve(true);
+        }
+        catch (error) {
+
+          // reject the promise.
+          super.updatedMediaListError("Load Source List failed: " + getHomeAssistantErrorMessage(error));
+          reject(error);
+
+        }
+      });
+
+      promiseRequests.push(promiseUpdateMediaListConfig);
+
+      // show visual progress indicator.
+      this.progressShow();
+
+      // execute all promises, and wait for all of them to settle.
+      // we use `then` logic so we can log the mediaList contents
+      // since we are not calling a service / logging service response. 
+      // we use `finally` logic so we can clear the progress indicator.
+      // any exceptions raised should have already been handled in the 
+      // individual promise definitions; nothing else to do at this point.
+      Promise.allSettled(promiseRequests)
+        .then(results => {
+          if (results) { }  // keep compiler happy
+
+          if (debuglog.enabled) {
+            debuglog("%cupdateMediaList - %s mediaList response:\n%s",
+              "color: red",
+              JSON.stringify(this.mediaType),
+              JSON.stringify(this.mediaList, null, 2),
+            );
+          }
+
+        })
+        .finally(() => {
+
+          // clear the progress indicator.
+          this.progressHide();
+
+        });
+
+      return true;
+
+    }
+    catch (error) {
+
+      // clear the progress indicator.
+      this.progressHide();
+
+      // set alert error message.
+      super.updatedMediaListError("User Presets favorites refresh failed: " + getHomeAssistantErrorMessage(error));
+      return true;
+
+    }
+    finally {
+    }
   }
 
 
@@ -235,34 +242,54 @@ export class SourceBrowser extends LitElement {
    * 
    * @param args Event arguments that contain the media item that was clicked on.
    */
-  protected OnItemSelected = (args: CustomEvent) => {
+  protected override onItemSelected(args: CustomEvent) {
 
-    //console.log("OnItemSelected (source-browser) - media item selected:\n%s",
-    //  JSON.stringify(args.detail, null, 2),
-    //);
+    if (debuglog.enabled) {
+      debuglog("onItemSelected - media item selected:\n%s",
+        JSON.stringify(args.detail, null, 2),
+      );
+    }
 
-    const mediaItem = args.detail;  // a ContentItemParent object
-    this.SelectSource(mediaItem);
-    this.dispatchEvent(customEvent(ITEM_SELECTED, mediaItem));
+    // select the source.
+    this.mediaItem = args.detail;
+    this.SelectSource(this.mediaItem);
 
-  };
+  }
 
 
   /**
-   * Calls the SoundTouchPlusService PlayContentItem method to play media.
+   * Handles the `item-selected-with-hold` event fired when a media browser item is clicked and held.
    * 
-   * @param mediaItem The source item that was selected.
+   * @param args Event arguments that contain the media item that was clicked on.
    */
-  private async SelectSource(mediaItem: ContentItemParent) {
+  protected override onItemSelectedWithHold(args: CustomEvent) {
 
-    //console.log("SelectSource (source-browser) - select source\n- mediaItem:\n%s",
-    //  JSON.stringify(mediaItem, null, 2),
-    //);
+    if (debuglog.enabled) {
+      debuglog("onItemSelectedWithHold - media item selected:\n%s",
+        JSON.stringify(args.detail, null, 2),
+      );
+    }
+
+    // select the source.
+    this.onItemSelected(args);
+
+  }
+
+
+  /**
+   * Calls the mediaControlService select_source method to select a source.
+   *
+   * @param mediaItem The Preset item that was selected.
+   */
+  private async SelectSource(mediaItem: IContentItemParent) {
 
     try {
 
+      // show progress indicator.
+      this.progressShow();
+
       // select the source.
-      await this.store.mediaControlService.sourceSelect(this.player, mediaItem.ContentItem?.Name || '');
+      await this.store.mediaControlService.select_source(this.player, mediaItem.ContentItem?.Name || '');
 
       // show player section.
       this.store.card.SetSection(Section.PLAYER);
@@ -270,124 +297,17 @@ export class SourceBrowser extends LitElement {
     }
     catch (error) {
 
-      this._alertErrorSet((error as Error).message);
+      // set error message and reset scroll position to zero so the message is displayed.
+      this.alertErrorSet("Could not select source.  " + getHomeAssistantErrorMessage(error));
+      this.mediaBrowserContentElement.scrollTop = 0;
 
     }
+    finally {
 
-  }
+      // hide progress indicator.
+      this.progressHide();
 
-
-  /**
-   * Updates the mediaList with the most current list of sources from the SoundTouch device.  
-   */
-  private updateMediaList(player: MediaPlayer): void {
-
-    // check if update is already in progress.
-    if (!this.isUpdateInProgress) {
-      this.isUpdateInProgress = true;
-    } else {
-      this._alertErrorSet("Previous refresh is still in progress - please wait");
-      return;
-    }
-
-    try {
-
-      // clear alerts.
-      this._alertClear();
-
-      // update the media list; we will force the `mediaListLastUpdatedOn` attribute
-      // with the current epoch date (in seconds) so that the refresh is only triggered once.
-      this.mediaListLastUpdatedOn = (Date.now() / 1000);
-
-      // if card is being edited, then we will use the cached media list as the data source;
-      // otherwise, we will refresh the media list from the real-time source.
-      const cacheKey = 'source-browser';
-      this.mediaList = undefined;
-      const isCardEditMode = isCardInEditPreview(this.store.card);
-      if ((isCardEditMode) && (cacheKey in Card.mediaListCache)) {
-        this.mediaList = Card.mediaListCache[cacheKey] as [];
-        this.isUpdateInProgress = false;
-        super.requestUpdate();
-        //console.log("%c updateMediaList (source-browser) - medialist loaded from cache",
-        //  "color: orange;",
-        //);
-        return;
-      }
-
-      // no need to call a service - just use the source_list attribute for the list.
-      // we could have simplified this, but wanted to keep the structure like the other sections.
-
-      //console.log("%c updateMediaList (source-browser) - updating medialist\n-source_list:\n%s",
-      //  "color: orange;",
-      //  JSON.stringify(player.attributes.source_list,null,2)
-      //);
-
-      // update status.
-      this._alertInfo = "Refreshing media list ...";
-
-      // build an array of ContentItemParent objects that can be used in the media browser.
-      this.mediaList = new Array<ContentItemParent>();
-      for (const source of (player.attributes.source_list || [])) {
-
-        // create new content item parent and set name value.
-        const parent = <ContentItemParent>{};
-        parent.ContentItem = <ContentItem>{};
-        parent.ContentItem.Name = source;
-
-        // set container art path using mdi icons for common sources.
-        if (source.startsWith('Airplay')) {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiApple);
-        } else if (source.startsWith('Pandora')) {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiPandora);
-        } else if (source.startsWith('Spotify')) {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiSpotify);
-        } else if (source.startsWith('Tunein')) {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiRadio);
-        } else if (source.startsWith('Alexa')) {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiMicrophone);
-        } else if (source.startsWith('Bluetooth')) {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiBluetooth);
-        } else if (source.startsWith('Notification')) {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiSpeakerMessage);
-        } else if (source.startsWith('Product(HDMI')) {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiVideoInputHdmi);
-        } else if (source.startsWith('Product(TV')) {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiTelevision);
-        } else {
-          parent.ContentItem.ContainerArt = getMdiIconImageUrl(mdiAudioInputRca);
-        }
-        this.mediaList.push(parent);
-      }
-
-      this.mediaListLastUpdatedOn = (Date.now() / 1000);
-      this.isUpdateInProgress = false;
-      this._alertClear();
-
-      //console.log("%c source-browser - updateMediaList info AFTER update:\n player id=%s\n %s=mediaListLastUpdatedOn\n source_list:\n%s\n mediaList:\n%s",
-      //  "color: green;",
-      //  this.player.id,
-      //  this.mediaListLastUpdatedOn,
-      //  this.player.attributes.source_list,
-      //  JSON.stringify(this.mediaList)
-      //);
-
-      // if editing the card then store the list in the cache for next time.
-      if ((isCardEditMode) && !(cacheKey in Card.mediaListCache)) {
-        Card.mediaListCache[cacheKey] = this.mediaList;
-      }
-
-      // if no items then update status.
-      if ((this.mediaList) && (this.mediaList.length == 0)) {
-        this._alertInfo = "No items found";
-      }
-
-    } catch (error) {
-
-      // update status.
-      this.isUpdateInProgress = false;
-      this._alertErrorSet("Source list refresh failed: " + error);
-
-    } finally {
     }
   }
+
 }

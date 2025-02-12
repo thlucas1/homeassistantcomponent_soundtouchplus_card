@@ -4,7 +4,7 @@
  * This interface contains the attributes and subitems that represent a
  * single source configuration of the device.
  */
-export interface SourceItem {
+export interface ISourceItem {
 
   /** The friendly name of the source (e.g. "My Media Player", "SpotifyConnectUserName", etc). */
   FriendlyName?: string;
@@ -26,5 +26,11 @@ export interface SourceItem {
 
   /** Indicates whether the source is available or not, and its current status. */
   Status?: string;
+
+  /** 
+   * Item's container art url.
+   * This is a helper property for the UI, and not part of the SoundTouch API result.
+   * */
+  image_url?: string;
 
 }

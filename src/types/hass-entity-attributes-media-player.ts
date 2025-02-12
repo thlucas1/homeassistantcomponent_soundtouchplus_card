@@ -1,4 +1,5 @@
 import { HassEntityAttributeBase } from 'home-assistant-js-websocket';
+import { RepeatMode } from '../services/media-control-service';
 
 /**
  * MediaPlayer Hass Entity Attributes type.
@@ -30,7 +31,7 @@ export declare type HassEntityAttributesMediaPlayer = HassEntityAttributeBase & 
   media_series_title?: string;
   media_title?: string;
   media_track?: number;
-  repeat?: string;
+  repeat?: RepeatMode;
   shuffle?: boolean;
   sound_mode_list?: [string];
   sound_mode?: string;

@@ -1,4 +1,4 @@
-import { ContentItem } from './content-item';
+import { IContentItem } from './content-item';
 
 /**
  * SoundTouch device NavigateItem configuration object.
@@ -6,7 +6,7 @@ import { ContentItem } from './content-item';
  * This interface contains the attributes and subitems that represent a
  * single navigate configuration of the device.
  */
-export interface NavigateItem {
+export interface INavigateItem {
 
   /** 
    * BackupUrl value.
@@ -22,7 +22,7 @@ export interface NavigateItem {
    * Parent container ContentItem to navigate, if navigating for child containers.
    * Specify null if navigating a root container.ContentItem object. 
    */
-  ContentItem?: ContentItem;
+  ContentItem?: IContentItem;
 
   /** 
    * Description value.

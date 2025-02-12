@@ -4,7 +4,7 @@ import { css, html, TemplateResult } from 'lit';
 // our imports.
 import { BaseEditor } from './base-editor';
 import { Section } from '../types/section';
-import { PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT } from '../sections/player';
+import { PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT } from '../constants';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
@@ -15,6 +15,16 @@ const CONFIG_SETTINGS_SCHEMA = [
     required: false,
     type: 'string',
     default: PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT,
+  },
+  {
+    name: 'playerVolumeMaxValue',
+    label: 'Maximum volume value allowed via card UI',
+    help: 'range 10 - 100',
+    required: true,
+    type: 'integer',
+    default: 100,
+    valueMin: 10,
+    valueMax: 100,
   },
   {
     name: 'playerVolumeControlsHideMute',
@@ -30,7 +40,13 @@ const CONFIG_SETTINGS_SCHEMA = [
   },
   {
     name: 'playerVolumeControlsHideSlider',
-    label: 'Hide volume slider in the volume controls area',
+    label: 'Hide volume slider and levels in the volume controls area',
+    required: false,
+    selector: { boolean: {} },
+  },
+  {
+    name: 'playerVolumeControlsHideLevels',
+    label: "Hide volume level numbers / %'s in the volume controls area",
     required: false,
     selector: { boolean: {} },
   },
@@ -50,17 +66,12 @@ class PlayerVolumeSettingsEditor extends BaseEditor {
     // ensure store is created.
     super.createStore();
 
-    //console.log("render (player-volume-editor) - rendering player volume settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
-
     // render html.
     return html`
       <div class="schema-title">
         Player Volume Control area settings
       </div>
-      <stpc-editor-form class="stpc-editor-form"
+      <stpc-editor-form
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PLAYER}
         .store=${this.store}

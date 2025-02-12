@@ -1,4 +1,4 @@
-import { ContentItem } from './content-item';
+import { IContentItem } from './content-item';
 
 /**
  * SoundTouch device Recent configuration object.
@@ -6,10 +6,10 @@ import { ContentItem } from './content-item';
  * This interface contains the attributes and subitems that represent a
  * single recent configuration of the device.
  */
-export interface Recent {
+export interface IRecent {
 
   /** ContentItem object. */
-  ContentItem?: ContentItem;
+  ContentItem?: IContentItem;
 
   /** 
    * Date and time(in epoch format) of when the recent was created. 

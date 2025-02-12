@@ -6,7 +6,7 @@
  * 
  * Instances of this class can be used to switch the input source of media.
  */
-export interface ContentItem {
+export interface IContentItem {
 
   /** Item's container art url. */
   ContainerArt?: string;
@@ -43,8 +43,9 @@ export interface ContentItem {
 * This interface contains the attributes and subitems that represent a
 * single object that contains a ContentItem attribute.
 */
-export interface ContentItemParent {
+export interface IContentItemParent {
 
   /** ContentItem object. */
-  ContentItem?: ContentItem;
+  ContentItem?: IContentItem;
+
 }

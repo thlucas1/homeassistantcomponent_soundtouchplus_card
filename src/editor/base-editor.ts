@@ -1,7 +1,8 @@
 // lovelace card imports.
 import { css, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
-import { fireEvent, HomeAssistant } from 'custom-card-helpers';
+import { HomeAssistant } from '../types/home-assistant-frontend/home-assistant';
+import { fireEvent } from '../types/home-assistant-frontend/fire-event';
 
 // our imports.
 import { CardConfig } from '../types/card-config';
@@ -12,8 +13,8 @@ import { MediaPlayer } from '../model/media-player';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { dispatch, getObjectDifferences, getSectionForConfigArea } from '../utils/utils';
 import { CONFIG_UPDATED } from '../constants';
-import { SourceList } from '../types/soundtouchplus/source-list';
 import { EditorConfigAreaSelectedEvent } from '../events/editor-config-area-selected';
+import { ISourceList } from '../types/soundtouchplus/source-list';
 
 
 export abstract class BaseEditor extends LitElement {
@@ -27,11 +28,11 @@ export abstract class BaseEditor extends LitElement {
   /** MediaPlayer instance created from the configuration entity id. */
   public player!: MediaPlayer;
 
-  /** SoundTouchPlus device source list. */
-  public sourceList!: SourceList;
-
   /** SoundTouchPlus services instance. */
   public soundTouchPlusService!: SoundTouchPlusService;
+
+  /** SoundTouchPlus device source list. */
+  public sourceList!: ISourceList;
 
 
   /**
@@ -103,7 +104,6 @@ export abstract class BaseEditor extends LitElement {
 
     // if no sections are configured then configure the default.
     if (!newConfig.sections || newConfig.sections.length === 0) {
-      //console.log("setConfig (base-editor) - sections not configured, adding PLAYER selection")
       newConfig.sections = [Section.PLAYER];
       Store.selectedConfigArea = ConfigArea.GENERAL;
     }
@@ -119,6 +119,7 @@ export abstract class BaseEditor extends LitElement {
     //  JSON.stringify(this.section),
     //  JSON.stringify(Store.selectedConfigArea),
     //);
+
   }
 
 
@@ -200,7 +201,7 @@ export abstract class BaseEditor extends LitElement {
 
   protected dispatchClose() {
     //console.log("dispatchClose (base-editor) - method called - close form?");
-    return this.dispatchEvent(new CustomEvent('closed'));
+    return super.dispatchEvent(new CustomEvent('closed'));
   }
 
 
@@ -215,7 +216,6 @@ export abstract class BaseEditor extends LitElement {
     // have we already created the store? if so, then don't do it again.
     // we check this here, as most of the `x-editor` inherit from BaseEditor and call this method.
     if (this.store) {
-      //console.log("createStore (base-editor) - store already created; nothing to do");
       return;
     }
 
@@ -224,7 +224,6 @@ export abstract class BaseEditor extends LitElement {
 
     // if no sections are configured then configure the default.
     if (!this.config.sections || this.config.sections.length === 0) {
-      //console.log("createStore (base-editor) - sections not configured, adding PLAYER to config.sections")
       this.config.sections = [Section.PLAYER];
       Store.selectedConfigArea = ConfigArea.GENERAL;
     }

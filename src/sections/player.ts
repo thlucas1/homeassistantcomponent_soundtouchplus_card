@@ -1,7 +1,12 @@
+// debug logging.
+import Debug from 'debug/src/browser.js';
+import { DEBUG_APP_NAME } from '../constants';
+const debuglog = Debug(DEBUG_APP_NAME + ":player");
+
 // lovelace card imports.
 import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { styleMap } from 'lit-html/directives/style-map.js';
+import { customElement, property, state } from "lit/decorators.js";
+import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
 
 // ** IMPORTANT - Vibrant notes:
 // ensure that you have "compilerOptions"."lib": [ ... , "WebWorker" ] specified
@@ -11,26 +16,33 @@ import Vibrant from 'node-vibrant/dist/vibrant';
 
 // our imports.
 import '../components/player-header';
+import '../components/player-body';
 import '../components/player-controls';
 import '../components/player-volume';
 import { CardConfig } from '../types/card-config';
 import { Store } from '../model/store';
-import { BRAND_LOGO_IMAGE_BASE64, BRAND_LOGO_IMAGE_SIZE } from '../constants';
 import { MediaPlayer } from '../model/media-player';
 import { Palette } from '@vibrant/color';
 import { isCardInEditPreview } from '../utils/utils';
-
-/** default color value of the player header / controls background gradient. */
-export const PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT = '#000000BB';
+import { playerAlerts } from '../types/playerAlerts';
+import {
+  BRAND_LOGO_IMAGE_BASE64,
+  BRAND_LOGO_IMAGE_SIZE,
+  PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT,
+  PLAYER_CONTROLS_ICON_SIZE_DEFAULT
+} from '../constants';
 
 
 @customElement("stpc-player")
-export class Player extends LitElement {
+export class Player extends LitElement implements playerAlerts {
 
-  /** Application common storage area. */
+  // public state properties.
   @property({ attribute: false }) store!: Store;
+  @property({ attribute: false }) mediaContentId!: string;
 
   // private storage.
+  @state() private alertError?: string;
+  @state() private alertInfo?: string;
   @state() private config!: CardConfig;
   @state() private playerImage?: string;
   @state() private _colorPaletteVibrant?: string;
@@ -51,8 +63,6 @@ export class Player extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    //console.log("render (player) - rendering control\n- mediaListLastUpdatedOn=%s");
-
     // set common references from application common storage area.
     this.config = this.store.config;
     this.player = this.store.player;
@@ -64,9 +74,17 @@ export class Player extends LitElement {
           class="player-section-header"
           .store=${this.store}
         ></stpc-player-header>
-        <stpc-player-controls style=${this.styleControls()}
+        <div class="player-section-body">
+          <div class="player-alert-bgcolor">
+            ${this.alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this.alertErrorClear}>${this.alertError}</ha-alert>` : ""}
+            ${this.alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this.alertInfoClear}>${this.alertInfo}</ha-alert>` : ""}
+          </div>
+          <div class="player-section-body-content"></div>
+        </div>
+        <stpc-player-controls style=${this.stylePlayerControls()}
           class="player-section-controls"
           .store=${this.store}
+          .mediaContentId=${this.mediaContentId}
         ></stpc-player-controls>
       </div>
     `;
@@ -77,6 +95,7 @@ export class Player extends LitElement {
    * style definitions used by this component.
    * */
   static get styles() {
+
     return css`
 
       .hoverable:focus,
@@ -94,33 +113,70 @@ export class Player extends LitElement {
         grid-template-rows: min-content auto min-content;
         grid-template-areas:
           'header'
-          'artwork'
+          'body'
           'controls';
-        min-height: 100%;
+        align-items: center;
         background-position: center;
         background-repeat: no-repeat;
-        background-size: var(--stpc-player-background-size);
+        background-size: var(--stpc-player-background-size, 100% 100%);  /* PLAYER_BACKGROUND_IMAGE_SIZE_DEFAULT */
         text-align: -webkit-center;
+        height: 100%;
+        width: 100%;
       }
 
       .player-section-header {
+        /* border: 1px solid red;      /* FOR TESTING CONTROL LAYOUT CHANGES */
         grid-area: header;
-        margin: 0.0rem 0.0rem;
-        padding: 0.0rem;
         background: linear-gradient(180deg, var(--stpc-player-header-bg-color) 30%, transparent 100%);
         background-repeat: no-repeat;
-        /*border: 1px solid yellow;  /*  FOR TESTING CONTROL LAYOUT CHANGES */
+        padding: 0.2rem;
+      }
+
+      .player-section-body {
+        /* border: 1px solid orange;   /* FOR TESTING CONTROL LAYOUT CHANGES */
+        grid-area: body;
+        height: 100%;
+        overflow: hidden;
+        padding: 0.5rem;
+        box-sizing: border-box;
+        background: transparent;
+      }
+
+      .player-section-body-content {
+        /* border: 1px solid yellow;   /* FOR TESTING CONTROL LAYOUT CHANGES */
+        height: inherit;
+        background: transparent;
+        overflow: hidden;
+        display: none;              /* don't display initially */
+        /* for fade-in, fade-out support */
+        transition: opacity 0.25s, display 0.25s;
+        transition-behavior: allow-discrete;    /* Note: be sure to write this after the shorthand */
+      }
+
+      .player-section-body-queue {
+        /* border: 1px solid yellow;   /* FOR TESTING CONTROL LAYOUT CHANGES */
+        height: inherit;
+        background: transparent;
+        overflow: hidden;
+        display: none;              /* don't display initially */
+        /* for fade-in, fade-out support */
+        transition: opacity 0.25s, display 0.25s;
+        transition-behavior: allow-discrete;    /* Note: be sure to write this after the shorthand */
       }
 
       .player-section-controls {
+        /* border: 1px solid blue;     /* FOR TESTING CONTROL LAYOUT CHANGES */
         grid-area: controls;
-        margin: 0.0rem 0.0rem;
-        padding: 0.0rem;
         overflow-y: auto;
         background: linear-gradient(0deg, var(--stpc-player-controls-bg-color) 30%, transparent 100%);
         background-repeat: no-repeat;
-        /*border: 1px solid yellow;  /*  FOR TESTING CONTROL LAYOUT CHANGES */
       }
+
+      /* have to set a background color for alerts due to parent background transparency. */
+      .player-alert-bgcolor {
+        background-color: rgba(var(--rgb-card-background-color), 0.92);
+      }
+
     `;
   }
 
@@ -130,17 +186,19 @@ export class Player extends LitElement {
    */
   private styleBackgroundImage() {
 
-    //console.log("styleBackgroundImage (player) - styling background image");
+    // get default player background size.
+    let backgroundSize: string | undefined;
 
-    // stretch the background cover art to fit the entire player.
-    //const backgroundSize = 'cover';
-    //const backgroundSize = 'contain';
-    let backgroundSize = '100% 100%';
-    if (this.config.width == 'fill') {
-      // if in fill mode, then do not stretch the image.
+    // allow user configuration to override background size.
+    if (this.config.playerBackgroundImageSize) {
+      backgroundSize = this.config.playerBackgroundImageSize;
+    }
+
+    // if not configured AND in fill mode, then do not stretch the background image.
+    if ((!backgroundSize) && (this.config.width == 'fill')) {
       backgroundSize = 'contain';
     }
-    
+
     // get various image source settings.
     const configImagePlayerBg = this.config.customImageUrls?.['playerBackground'];
     const configImagePlayerOffBg = this.config.customImageUrls?.['playerOffBackground'];
@@ -153,8 +211,8 @@ export class Player extends LitElement {
     // if player is off or unknown, then reset the playerImage value so that one
     // of the default images is selected below.
     if (this.player.isPoweredOffOrUnknown()) {
-      //console.log("styleBackgroundImage (player) - using config.customImageUrls['playerOffBackground']")
       this.playerImage = undefined;
+      this.store.card.footerBackgroundColor = undefined;
     }
 
     // set background image to display (first condition that is true):
@@ -164,45 +222,65 @@ export class Player extends LitElement {
     // - use static logo image (if none of the above).
     let imageUrl: string = '';
     if (configImagePlayerOffBg && this.player.isPoweredOffOrUnknown()) {
-      //console.log("styleBackgroundImage (player) - using config.customImageUrls['playerOffBackground']")
       imageUrl = configImagePlayerOffBg;
     } else if (configImagePlayerBg) {
-      //console.log("styleBackgroundImage (player) - using config.customImageUrls['playerBackground']")
       imageUrl = configImagePlayerBg;
     } else if (this.playerImage) {
-      //console.log("styleBackgroundImage (player) - using this.playerImage")
       imageUrl = this.playerImage;
     } else {
-      //console.log("styleBackgroundImage (player) - using resource image BRAND_LOGO_IMAGE_BASE64")
       imageUrl = configImageDefault || BRAND_LOGO_IMAGE_BASE64;
       headerBackgroundColor = 'transparent';
       controlsBackgroundColor = 'transparent';
       backgroundSize = BRAND_LOGO_IMAGE_SIZE;
+      this.store.card.footerBackgroundColor = undefined;
     }
 
-    //console.log("styleBackgroundImage (player) - resolved background image:\n%s",
-    //  JSON.stringify(imageUrl),
-    //);
+    // set player controls and volume controls icon size.
+    const playerControlsIconSize = this.config.playerControlsIconSize || PLAYER_CONTROLS_ICON_SIZE_DEFAULT;
+    const playerControlsIconColor = this.config.playerControlsIconColor;
+    const playerControlsIconToggleColor = this.config.playerControlsIconToggleColor;
+    const playerControlsColor = this.config.playerControlsColor;
+    const playerProgressSliderColor = this.config.playerProgressSliderColor;
+    const playerProgressLabelColor = this.config.playerProgressLabelColor;
+    const playerVolumeSliderColor = this.config.playerVolumeSliderColor;
+    const playerVolumeLabelColor = this.config.playerVolumeLabelColor;
 
-    return styleMap({
-      'background-image': `url(${imageUrl})`,
-      '--stpc-player-background-size': `${backgroundSize}`,
-      '--stpc-player-header-bg-color': `${headerBackgroundColor}`,
-      '--stpc-player-header-color': `#ffffff`,
-      '--stpc-player-controls-bg-color': `${controlsBackgroundColor}`,
-      '--stpc-player-controls-color': `#ffffff`,
-      '--stpc-player-palette-vibrant': `${this._colorPaletteVibrant}`,
-      '--stpc-player-palette-muted': `${this._colorPaletteMuted}`,
-      '--stpc-player-palette-darkvibrant': `${this._colorPaletteDarkVibrant}`,
-      '--stpc-player-palette-darkmuted': `${this._colorPaletteDarkMuted}`,
-      '--stpc-player-palette-lightvibrant': `${this._colorPaletteLightVibrant}`,
-      '--stpc-player-palette-lightmuted': `${this._colorPaletteLightMuted}`,
-    });
+    // build style info object.
+    const styleInfo: StyleInfo = <StyleInfo>{};
+    styleInfo['background-image'] = `url(${imageUrl})`;
+    if (backgroundSize)
+      styleInfo['--stpc-player-background-size'] = `${backgroundSize}`;
+    styleInfo['--stpc-player-header-bg-color'] = `${headerBackgroundColor}`;
+    styleInfo['--stpc-player-controls-bg-color'] = `${controlsBackgroundColor} `;
+    if (playerControlsColor)
+      styleInfo['--stpc-player-controls-color'] = `${playerControlsColor}`;
+    if (playerControlsIconToggleColor)
+      styleInfo['--stpc-player-controls-icon-toggle-color'] = `${playerControlsIconToggleColor}`;
+    if (playerControlsIconColor)
+      styleInfo['--stpc-player-controls-icon-color'] = `${playerControlsIconColor}`;
+    styleInfo['--stpc-player-controls-icon-size'] = `${playerControlsIconSize}`;
+    styleInfo['--stpc-player-controls-icon-button-size'] = `var(--stpc-player-controls-icon-size, ${PLAYER_CONTROLS_ICON_SIZE_DEFAULT}) + 0.75rem`;
+    if (playerProgressLabelColor)
+      styleInfo['--stpc-player-progress-label-color'] = `${playerProgressLabelColor}`;
+    if (playerProgressSliderColor)
+      styleInfo['--stpc-player-progress-slider-color'] = `${playerProgressSliderColor}`;
+    if (playerVolumeLabelColor)
+      styleInfo['--stpc-player-volume-label-color'] = `${playerVolumeLabelColor}`;
+    if (playerVolumeSliderColor)
+      styleInfo['--stpc-player-volume-slider-color'] = `${playerVolumeSliderColor}`;
+    styleInfo['--stpc-player-palette-vibrant'] = `${this._colorPaletteVibrant}`;
+    styleInfo['--stpc-player-palette-muted'] = `${this._colorPaletteMuted}`;
+    styleInfo['--stpc-player-palette-darkvibrant'] = `${this._colorPaletteDarkVibrant}`;
+    styleInfo['--stpc-player-palette-darkmuted'] = `${this._colorPaletteDarkMuted}`;
+    styleInfo['--stpc-player-palette-lightvibrant'] = `${this._colorPaletteLightVibrant}`;
+    styleInfo['--stpc-player-palette-lightmuted'] = `${this._colorPaletteLightMuted}`;
+    return styleMap(styleInfo);
+
   }
 
 
   /**
-   * Returns an element style for the header portion of the control.
+   * Returns an element style for the header portion of the form.
    */
   private styleHeader(): string | undefined {
 
@@ -216,16 +294,56 @@ export class Player extends LitElement {
 
 
   /**
-   * Returns an element style for the header portion of the control.
+   * Returns an element style for the player controls portion of the form.
    */
-  private styleControls(): string | undefined {
+  private stylePlayerControls() {
 
     // show / hide the media controls.
     const hideControls = this.config.playerControlsHide || false;
     if (hideControls)
-      return `display: none`;
+      return styleMap({
+        'display': 'none'
+      });
 
-    return
+    return styleMap({
+    });
+
+  }
+
+
+  /**
+   * Clears the error alert text.
+   */
+  public alertErrorClear(): void {
+    this.alertError = undefined;
+  }
+
+
+  /**
+   * Clears the informational alert text.
+   */
+  public alertInfoClear(): void {
+    this.alertInfo = undefined;
+  }
+
+
+  /**
+   * Sets the alert info message.
+   * 
+   * @param message alert message text.
+   */
+  public alertInfoSet(message: string): void {
+    this.alertInfo = message;
+  }
+
+
+  /**
+   * Sets the alert error message.
+   * 
+   * @param message alert message text.
+   */
+  public alertErrorSet(message: string): void {
+    this.alertError = message;
   }
 
 
@@ -245,10 +363,11 @@ export class Player extends LitElement {
     // get list of changed property keys.
     const changedPropKeys = Array.from(changedProperties.keys())
 
-    //console.log("%c willUpdate (player) - changed property keys:\n",
-    //  "color: gold;",
-    //  JSON.stringify(changedPropKeys),
-    //);
+    //if (debuglog.enabled) {
+    //  debuglog("willUpdate - changed property keys:\n",
+    //    JSON.stringify(changedPropKeys),
+    //  );
+    //}
 
     // we only care about "store" property changes at this time, as it contains a
     // reference to the "hass" property.  we are looking for background image changes.
@@ -296,14 +415,19 @@ export class Player extends LitElement {
     // portion of the image url could change even though it's the same content that's playing!
     if ((oldImage != newImage) && (!isCardInEditPreview(this.store.card))) {
 
-      //console.log("%c willUpdate (player) - player image changed:\n- OLD IMAGE = %s\n- NEW IMAGE = %s",
-      //  "color: gold;",
-      //  JSON.stringify(oldImage),
-      //  JSON.stringify(newImage),
-      //);
+      if (debuglog.enabled) {
+        debuglog("willUpdate - player content changed:\n- OLD IMAGE = %s\n- NEW IMAGE = %s",
+          JSON.stringify(oldImage),
+          JSON.stringify(newImage),
+        );
+      }
 
       // extract the color differences from the new image and set the player colors.
       this._extractColors();
+
+      // store the new media id in the exposed property so that other forms
+      // are informed of the change.
+      this.mediaContentId = newImage || "";
 
     }
   }
@@ -320,10 +444,6 @@ export class Player extends LitElement {
    * https://github.com/Vibrant-Colors/node-vibrant/issues/44
    */
   private async _extractColors(): Promise<void> {
-
-    //console.log("_extractColors (player) - extracting colors; playerImage:\n%s",
-    //  JSON.stringify(this.playerImage || undefined),
-    //);
 
     //console.log("_extractColors (player) - colors before extract:\n- Vibrant      = %s\n- Muted        = %s\n- DarkVibrant  = %s\n- DarkMuted    = %s\n- LightVibrant = %s\n- LightMuted   = %s",
     //  this._colorPaletteVibrant,
@@ -348,17 +468,9 @@ export class Player extends LitElement {
       // create vibrant instance with our desired options.
       const vibrant: Vibrant = new Vibrant(this.playerImage || '', vibrantOptions);
 
-      //console.log("_extractColors (player) 10\n- Vibrant Options:\n%s",
-      //  JSON.stringify(vibrant.opts, null, 2),
-      //);
-
       // get the color palettes for the player background image.
       await vibrant.getPalette().then(
         (palette: Palette) => {
-
-          //console.log("_extractColors (player) 02 palette object:\n%s",
-          //  JSON.stringify(palette,null,2),
-          //);
 
           //console.log("_extractColors (player) - colors found by getPalette:\n- Vibrant      = %s\n- Muted        = %s\n- DarkVibrant  = %s\n- DarkMuted    = %s\n- LightVibrant = %s\n- LightMuted   = %s",
           //  (palette['Vibrant']?.hex) || 'undefined',
@@ -381,11 +493,13 @@ export class Player extends LitElement {
           this.store.card.footerBackgroundColor = this._colorPaletteVibrant;
 
         },
-        (reason: string) => {
+        (_reason: string) => {
 
-          console.log("_extractColors (player) - Could not retrieve color palette info for player background image\nreason = %s",
-            JSON.stringify(reason),
-          );
+          if (debuglog.enabled) {
+            debuglog("_extractColors - Could not retrieve color palette info for player background image\nreason = %s",
+              JSON.stringify(_reason),
+            );
+          }
 
           // reset player color palette values.
           this._colorPaletteVibrant = undefined;
@@ -400,7 +514,6 @@ export class Player extends LitElement {
 
         }
       );
-
     }
   }
 }

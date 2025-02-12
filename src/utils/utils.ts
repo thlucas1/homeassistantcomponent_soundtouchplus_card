@@ -1,7 +1,14 @@
+// debug logging.
+import Debug from 'debug/src/browser.js';
+import { DEBUG_APP_NAME } from '../constants';
+const debuglog = Debug(DEBUG_APP_NAME + ":utils");
+
 // our imports.
 import { CardConfig } from '../types/card-config';
 import { ConfigArea } from '../types/config-area';
 import { Section } from '../types/section';
+import copy from 'copy-text-to-clipboard';
+
 
 export function cardDoesNotContainAllSections(config: CardConfig) {
   return config.sections && config.sections.length < Object.keys(Section).length;
@@ -23,6 +30,60 @@ export function customEvent(type: string, detail?: unknown) {
 export function dispatch(type: string, detail?: unknown) {
   const event = customEvent(type, detail);
   document.dispatchEvent(event);
+}
+
+
+/**
+ * Unescapes html that has been stored in an escaped format.
+ * 
+ * @param escapedHtml Escaped html value.
+ * @returns A string with the unescaped html.
+ */
+export function unescapeHtml(escapedHtml: string): string {
+
+  if (escapedHtml) {
+    return escapedHtml.replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&#x27;/g, "'");
+  } else {
+    return "";
+  }
+
+}
+
+
+/**
+ * Return POSIX utc timestamp (e.g. the number of seconds since the utc epoch date).
+ * 
+ * This is the equivalent of the Python `datetime.utcnow().timestamp()` function.
+ * 
+ * @returns number of milliseconds between current UTC time and midnight of January 1, 1970.
+ */
+export function getUtcNowTimestamp(): number {
+
+  const tmLoc = new Date();
+  const tmDiffMS = tmLoc.getTime() + (tmLoc.getTimezoneOffset() * 60000);  // offset is in minutes; convert it to milliseconds.
+  return (tmDiffMS / 1000);   // convert milliseconds to seconds.
+
+}
+
+
+/**
+ * Converts a UTC datetime object to local datetime object.
+ * 
+ * @param date A UTC datetime object to convert.
+ * @returns A local datetime object.
+ */
+export function convertUTCDateToLocalDate(date): Date {
+
+  const newDate = new Date(date.getTime() + date.getTimezoneOffset() * 60 * 1000);
+  const offset = date.getTimezoneOffset() / 60;
+  const hours = date.getHours();
+  newDate.setHours(hours - offset);
+  return newDate;
 }
 
 
@@ -49,14 +110,36 @@ export function formatDateEpochSecondsToLocaleString(epochSeconds: number | unde
 
 
 /**
+ * Formats a milliseconds value to "HH:MM:SS" value.
+ * 
+ * @param ms Milliseconds to format.
+ * @returns Minutes and seconds portion of the timestamp if hours is "00:"; otherwise, return the hours, minutes, and seconds portion of the timestamp.
+ */
+export function formatDateHHMMSSFromMilliseconds(ms: number) {
+
+  // create a timestamp from specified milliseconds value.
+  const date = new Date(ms).toISOString().substring(11, 19);
+
+  // return the minutes and seconds portion of the timestamp if hours is "00:";
+  // otherwise, return the hours, minutes, and seconds portion of the timestamp.
+  return date.startsWith('00:') ? date.substring(3) : date;
+
+}
+
+
+/**
 * Converts a string value to proper case.
 * 
 * @param str String to convert to propercase (e.g. "hello world").
 * @returns A properly cased string value (e.g. "Hello World").
 */
-export function formatStringProperCase(str: string): string | void {
+export function formatStringProperCase(str: string): string {
+
   let upper = true;
   let newStr = "";
+  if (!str)
+    return newStr;
+
   for (let i = 0, l = str.length; i < l; i++) {
     if (str[i] == " ") {
       upper = true;
@@ -66,6 +149,7 @@ export function formatStringProperCase(str: string): string | void {
     newStr += upper ? str[i].toUpperCase() : str[i].toLowerCase();
     upper = false;
   }
+
   return newStr;
 }
 
@@ -94,12 +178,6 @@ export function getSectionForConfigArea(configArea: ConfigArea) {
   } else if (configArea == ConfigArea.USERPRESET_BROWSER) {
     section = Section.USERPRESETS;
   }
-
-
-  //console.log("getSectionForConfigArea - return section for ConfigArea\n-Section=%s for ConfigArea %s",
-  //  JSON.stringify(section),
-  //  JSON.stringify(configArea),
-  //);
 
   return section;
 }
@@ -145,19 +223,9 @@ export function getConfigAreaForSection(section: Section) {
   */
 export function isCardInDashboardEditor() {
 
-  //console.log("isCardInDashboardEditor - processing url querystring parms");
-
   // get current url querystring.
   const queryString = window.location.search;
   const urlParms = new URLSearchParams(queryString);
-
-  //const urlKeys = urlParms.keys();
-  //const urlValues = urlParms.values();
-  //console.log("isCardInDashboardEditor - querystring parms\n- urlParms=%s\n- urlKeys:\n%s\n- urlValues:\n%s",
-  //  JSON.stringify(urlParms),
-  //  JSON.stringify(urlKeys, null, 2),
-  //  JSON.stringify(urlValues, null, 2),
-  //);
 
   // is `edit=1` parameter present?  if so, then the dashboard is in edit mode.
   const urlParmEdit = urlParms.get('edit');
@@ -166,11 +234,8 @@ export function isCardInDashboardEditor() {
     result = true;
   }
 
-  //console.log("isCardInDashboardEditor - result=%s",
-  //  JSON.stringify(result)
-  //);
-
   return result;
+
 }
 
 
@@ -196,46 +261,32 @@ export function isCardInDashboardEditor() {
   */
 export function isCardInEditPreview(cardElement: Element) {
 
-  //console.log("isCardInEditPreview - processing parentElement data");
-
   let parent1Cls: string | undefined = undefined;
   let parent2Cls: string | undefined = undefined;
 
   // get parent element data.
   if (cardElement) {
 
-    //console.log("isCardInEditPreview - ParentElement tagName info:\n parentElement1=%s\n parentElement2=%s\n parentElement3=%s\n parentElement4=%s\n parentElement5=%s\n parentElement6=%s\n parentElement7=%s",
-    //  cardElement.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-    //);
-
-    //console.log("isCardInEditPreview - ParentElement className info:\n parentElement1=%s\n parentElement2=%s\n parentElement3=%s\n parentElement4=%s\n parentElement5=%s\n parentElement6=%s\n parentElement7=%s",
-    //  cardElement.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //console.log("isCardInEditPreview - ParentElement tagName info:\n parentElement1: %s = %s\n parentElement2: %s = %s\n parentElement3: %s = %s\n parentElement4: %s = %s\n parentElement5: %s = %s\n parentElement6: %s = %s\n parentElement7: %s = %s",
+    //  cardElement.parentElement?.tagName, cardElement.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
     //);
 
     const parent1Elm = cardElement.parentElement;
     if (parent1Elm) {
       parent1Cls = (parent1Elm.className || '').trim();
-      //console.log("isCardInEditPreview - parent1Cls = %s", JSON.stringify(parent1Cls));
       const parent2Elm = parent1Elm.parentElement;
       if (parent2Elm) {
         parent2Cls = (parent2Elm.className || '').trim();
-        //console.log("isCardInEditPreview - parent2Cls = %s", JSON.stringify(parent1Cls));
       }
     }
   } else {
-    //console.log("isCardInEditPreview - cardElement was undefined");
+    // cardElement was undefined.
   }
 
   // check if the main or editor cards are in the configuration editor preview pane.
@@ -247,10 +298,6 @@ export function isCardInEditPreview(cardElement: Element) {
     // EDITOR card is in the configuration editor preview pane.
     result = true;
   }
-
-  //console.log("isCardInEditPreview - result=%s",
-  //  JSON.stringify(result)
-  //);
 
   return result;
 }
@@ -272,8 +319,6 @@ export function isCardInEditPreview(cardElement: Element) {
   */
 export function isCardInPickerPreview(cardElement: Element) {
 
-  //console.log("isCardInPickerPreview - processing parentElement data");
-
   let parent1Cls: string | undefined = undefined;
   let parent2Cls: string | undefined = undefined;
   let parent3Cls: string | undefined = undefined;
@@ -281,43 +326,30 @@ export function isCardInPickerPreview(cardElement: Element) {
   // get parent element data.
   if (cardElement) {
 
-    //console.log("isCardInPickerPreview - ParentElement tagName info:\n parentElement1=%s\n parentElement2=%s\n parentElement3=%s\n parentElement4=%s\n parentElement5=%s\n parentElement6=%s\n parentElement7=%s",
-    //  cardElement.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName,
-    //);
-
-    //console.log("isCardInPickerPreview - ParentElement className info:\n parentElement1=%s\n parentElement2=%s\n parentElement3=%s\n parentElement4=%s\n parentElement5=%s\n parentElement6=%s\n parentElement7=%s",
-    //  cardElement.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
-    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //console.log("isCardInEditPreview - ParentElement tagName info:\n parentElement1: %s = %s\n parentElement2: %s = %s\n parentElement3: %s = %s\n parentElement4: %s = %s\n parentElement5: %s = %s\n parentElement6: %s = %s\n parentElement7: %s = %s",
+    //  cardElement.parentElement?.tagName, cardElement.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
+    //  cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.tagName, cardElement.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.parentElement?.className,
     //);
 
     const parent1Elm = cardElement.parentElement;
     if (parent1Elm) {
       parent1Cls = (parent1Elm.className || '').trim();
-      //console.log("isCardInPickerPreview - parent1Cls = %s", JSON.stringify(parent1Cls));
       const parent2Elm = parent1Elm.parentElement;
       if (parent2Elm) {
         parent2Cls = (parent2Elm.className || '').trim();
-        //console.log("isCardInPickerPreview - parent2Cls = %s", JSON.stringify(parent2Cls));
         const parent3Elm = parent2Elm.parentElement;
         if (parent3Elm) {
           parent3Cls = (parent3Elm.className || '').trim();
-          //console.log("isCardInPickerPreview - parent3Cls = %s", JSON.stringify(parent3Cls));
         }
       }
     }
   } else {
-    //console.log("isCardInPickerPreview - cardElement was undefined");
+    // cardElement was undefined.
   }
 
   // check if the card is in the card picker preview pane.
@@ -325,10 +357,6 @@ export function isCardInPickerPreview(cardElement: Element) {
   if ((parent1Cls === 'preview') && (parent2Cls === 'card') && (parent3Cls === 'cards-container')) {
     result = true;
   }
-
-  //console.log("isCardInPickerPreview - result=%s",
-  //  JSON.stringify(result)
-  //);
 
   return result;
 }
@@ -346,6 +374,7 @@ export function isNumber(numStr: string): boolean {
 
 
 export function getObjectDifferences(obj1: any, obj2: any): any {
+
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
     return obj1 !== obj2 ? [obj1, obj2] : undefined;
   }
@@ -371,4 +400,178 @@ export function getObjectDifferences(obj1: any, obj2: any): any {
   }
 
   return Object.keys(differences).length === 0 ? undefined : differences;
+}
+
+
+/**
+ * Find the closest matching element in a chain of nested, slotted custom elements.
+ * 
+ * @param selector selector used to find the element; values are case-sensitive.
+ * @param base element to start searching from; specify `this` to start searching from the current element.
+ * @returns a matching element if found; otherwise, null.
+ * 
+ * examples:
+ * - find element by it's `id=` value:
+ *   const container = this.closestElement('#spcPlayer', this);
+ * - find element by it's html tag name (e.g. `<stpc-player>`):
+ *   const container = this.closestElement('stpc-player', this);
+ */
+export function closestElement(selector: string, base: Element) {
+
+  function __closestFrom(el: Element | Window | Document | null): Element | null {
+    if (!el || el === document || el === window) return null;
+    if ((el as Slottable).assignedSlot) el = (el as Slottable).assignedSlot;
+
+    const found = (el as Element).closest(selector);
+    return found
+      ? found
+      : __closestFrom(((el as Element).getRootNode() as ShadowRoot).host);
+  }
+  return __closestFrom(base);
+}
+
+
+/**
+ * Determine if the current device supports touch events.
+ * 
+ * @returns true if touch events are supported; otherwise, false.
+ */
+export function isTouchDevice(): boolean {
+  //return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  let result = false;
+  if (window.PointerEvent && ('maxTouchPoints' in navigator)) {
+    // if Pointer Events are supported, just check maxTouchPoints
+    if (navigator.maxTouchPoints > 0) {
+      result = true;
+    }
+  } else {
+    // no Pointer Events...
+    if (window.matchMedia && window.matchMedia("(any-pointer:coarse)").matches) {
+      // check for any-pointer:coarse which mostly means touchscreen
+      result = true;
+    } else if (window.TouchEvent || ('ontouchstart' in window)) {
+      // last resort - check for exposed touch events API / event handler
+      result = true;
+    }
+  }
+  return result;
+}
+
+
+/**
+ * Determines if the following lazily-loaded controls are defined to customElements, and
+ * forces a page load to load the controls if not.  Controls checked for are:
+ * - <search-input-outlined>
+ * - <ha-md-button-menu>
+ * - <ha-alert>
+ * 
+ * This can happen when the user presses F5 to refresh the page, and the above controls
+ * are not loaded.  If they are used on the form, then they will not render correctly!
+ * 
+ * To find out what custom elements are available on a dashboard, bring up the console (in 
+ * Chrome) and run the following command:
+ * > Array.from(customElements.l.keys()).sort().join(", ");
+ */
+export const loadHaFormLazyControls = async () => {
+
+  // if specified customElements already exist then we are done.
+  if (customElements.get("search-input-outlined") && customElements.get("ha-md-button-menu") && customElements.get("ha-alert")) {
+    return;
+  }
+
+  if (debuglog.enabled) {
+    debuglog("loadHaFormLazyControls - loading lazy controls via partial-panel-resolver");
+  }
+
+  // create partial panel resolver element.
+  await customElements.whenDefined("partial-panel-resolver");
+  const ppr = document.createElement('partial-panel-resolver') as any;
+  ppr.hass = {
+    panels: [{
+      url_path: "tmp",
+      component_name: "config",
+    }]
+  };
+  ppr._updateRoutes();
+  await ppr.routerOptions.routes.tmp.load();
+
+  await customElements.whenDefined("ha-panel-config");
+  const cpr = document.createElement("ha-panel-config") as any;
+  await cpr.routerOptions.routes.automation.load();
+
+  if (debuglog.enabled) {
+    debuglog("loadHaFormLazyControls - done; lazy controls should now be loaded");
+  }
+
+}
+
+
+/**
+ * Copy div.innerText value to clipboard.
+ * 
+ * @param elm DIV element whose contents are to be copied.
+ * @returns true if text was copied to the clipboard successfully; otherwise, false.
+ * 
+ * example usage:
+ * <div @click=${copyToClipboard}>This text will be copied</div>
+ */
+export function copyToClipboard(ev): boolean {
+  const elm = ev.currentTarget as HTMLDivElement;
+  const result = copy(elm.innerText);
+  if (debuglog.enabled) {
+    debuglog("copyToClipboard - text copied to clipboard:\n%s",
+      JSON.stringify(elm.innerText),
+    );
+  }
+  window.status = "text copied to clipboard";
+  return result;
+}
+
+
+/**
+ * Checks if a returned Error message implements the HomeAssistantError interface;
+ * and returns the error message text.
+ * 
+ * @param ex Error object to return the message from.
+ * @returns Error message text.
+ */
+export function getHomeAssistantErrorMessage(ex): string {
+
+  // trace.
+  if (debuglog.enabled) {
+    debuglog("getHomeAssistantErrorMessage - error object:\n%s",
+      JSON.stringify(ex, null, 2),
+    );
+  }
+
+  // if nothing passed then just return an empty string.
+  if (ex === null)
+    return "";
+
+  // does object implement home assistant error interface?
+  if ((typeof ex === 'object') && ('code' in ex) && ('message' in ex)) {
+
+    // get error code and message values.
+    const code: string = ex['code'];
+    const message: string = ex['message'];
+
+    // for ServiceValidationError messages, drop the "Validation error: " prefix!
+    if (code == 'service_validation_error') {
+      if (message.startsWith('Validation error: ')) {
+        return message.substring(18);
+      }
+    }
+
+    // return message as-is.
+    return message;
+  }
+
+  // does object implement Error interface?
+  if ((typeof ex === 'object') && ('message' in ex)) {
+    return ex['message'];
+  }
+
+  // return message as string.
+  return ex + "";
 }

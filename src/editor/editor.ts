@@ -6,8 +6,8 @@ import { choose } from 'lit/directives/choose.js';
 // our imports.
 import './editor-form';
 import './general-editor';
-import './pandora-browser-editor';
 import './player-editor';
+import './pandora-browser-editor';
 import './preset-browser-editor';
 import './recent-browser-editor';
 import './source-browser-editor';
@@ -36,9 +36,17 @@ class CardEditor extends BaseEditor {
   */
   protected render(): TemplateResult | void {
 
+    //console.log("render (editor) - rendering starting");
+
     // just in case hass property has not been set yet.
-    if (!this.hass)
+    if (!this.hass) {
       return html``;
+    }
+
+    // just in case config property has not been set yet.
+    if (!this.config) {
+      return html``;
+    }
 
     // ensure store is created.
     super.createStore();
@@ -200,13 +208,13 @@ class CardEditor extends BaseEditor {
    * Typically, anything done in `connectedCallback()` should be undone when the
    * element is disconnected, in `disconnectedCallback()`.
    */
-  connectedCallback() {
+  public connectedCallback() {
 
     // invoke base class method.
     super.connectedCallback();
 
-    // add event listeners for this control.
-    window.addEventListener(SHOW_SECTION, this.OnFooterShowSection);
+    // add window level event listeners.
+    window.addEventListener(SHOW_SECTION, this.onFooterShowSection);
   }
 
 
@@ -220,10 +228,10 @@ class CardEditor extends BaseEditor {
    *
    * An element may be re-connected after being disconnected.
    */
-  disconnectedCallback() {
+  public disconnectedCallback() {
 
-    // remove event listeners for this control.
-    window.removeEventListener(SHOW_SECTION, this.OnFooterShowSection);
+    // remove window level event listeners.
+    window.removeEventListener(SHOW_SECTION, this.onFooterShowSection);
 
     // invoke base class method.
     super.disconnectedCallback();
@@ -231,7 +239,7 @@ class CardEditor extends BaseEditor {
 
 
   /**
-   * Called when your element has rendered for the first time. Called once in the
+   * Called when the element has rendered for the first time. Called once in the
    * lifetime of an element. Useful for one-time setup work that requires access to
    * the DOM.
    */
@@ -247,27 +255,22 @@ class CardEditor extends BaseEditor {
     // if there are things that you only want to happen one time when the configuration
     // is initially loaded, then do them here.
 
-    //console.log("firstUpdated (editor) - card is being edited, selecting configArea",
-    //  JSON.stringify(this.section),
-    //);
-
     // at this point, the first render has occurred.
-    // select the configarea for the first section that has been configured so that its settings 
+    // select the configarea for the first section that has been configured so that its settings
     // are automatically displayed when the card editor dialog opens.
     // if the media player entity has not been configured then display the GENERAL configArea.
+    // make sure we check if `this.config` has been set before attempting to access anything
+    // in the configuration settings; otherwise, an uncaught exception is raised!
     let configArea = getConfigAreaForSection(this.section);
-    if (!this.config.entity) {
-      configArea = ConfigArea.GENERAL;
-      //console.log("firstUpdated (editor) - entity not configured; showing GENERAL");
+    if (this.config) {
+      if (!this.config.entity) {
+        configArea = ConfigArea.GENERAL;
+      }
     }
     this.configArea = configArea;
     Store.selectedConfigArea = this.configArea;
     super.requestUpdate();
 
-    //console.log("firstUpdated (editor) - first render complete\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section || '*undefined*'),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
   }
 
 
@@ -279,20 +282,11 @@ class CardEditor extends BaseEditor {
    * 
    * @param args Event arguments that contain the section that was selected.
   */
-  protected OnFooterShowSection = (args: Event) => {
+  protected onFooterShowSection = (args: Event) => {
 
     // get the ConfigArea value for the active footer section.
     const sectionToSelect = (args as CustomEvent).detail as Section;
     const configArea = getConfigAreaForSection(sectionToSelect);
-
-    //console.log("OnFooterShowSection (editor) - args:\n%s",
-    //  JSON.stringify(args,null,2),
-    //);
-
-    //console.log("OnFooterShowSection (editor) - SHOW_SECTION event\n- OLD configArea=%s\n- NEW configArea=%s",
-    //  JSON.stringify(this.configArea),
-    //  JSON.stringify(configArea)
-    //);
 
     // select the configuration area.
     this.configArea = configArea;

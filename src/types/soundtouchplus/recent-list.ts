@@ -1,4 +1,4 @@
-import { Recent } from './recent';
+import { IRecent } from './recent';
 
 /**
  * SoundTouch device RecentList configuration object.
@@ -6,11 +6,11 @@ import { Recent } from './recent';
  * This interface contains the attributes and subitems that represent the
  * recent configuration of the device.
  */
-export interface RecentList {
+export interface IRecentList {
 
   /** Date and time (in epoch format) of when the list was last updated.  */
   LastUpdatedOn?: number;
 
   /** List of `Recent` items. */
-  Recents?: Array<Recent>;
+  Recents?: Array<IRecent>;
 }

@@ -1,4 +1,4 @@
-import { Preset } from './preset';
+import { IPreset } from './preset';
 
 /**
  * SoundTouch device PresetList configuration object.
@@ -6,11 +6,11 @@ import { Preset } from './preset';
  * This interface contains the attributes and subitems that represent the
  * preset configuration of the device.
  */
-export interface PresetList {
+export interface IPresetList {
 
   /** Date and time (in epoch format) of when the list was last updated.  */
   LastUpdatedOn?: number;
 
   /** List of `Preset` items. */
-  Presets?: Array<Preset>;
+  Presets?: Array<IPreset>;
 }

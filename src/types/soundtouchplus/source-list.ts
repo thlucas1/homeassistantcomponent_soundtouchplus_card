@@ -1,4 +1,4 @@
-import { SourceItem } from './source-item';
+import { ISourceItem } from './source-item';
 
 /**
  * SoundTouch device SourceList configuration object.
@@ -6,7 +6,7 @@ import { SourceItem } from './source-item';
  * This interface contains the attributes and subitems that represent the
  * source list configuration of the device.
  */
-export interface SourceList {
+export interface ISourceList {
 
   /** 
    * Date and time (in epoch format) of when the list was last updated.  
@@ -17,6 +17,6 @@ export interface SourceList {
   /** Device identifier the configuration information was obtained from. */
   DeviceId?: string;
 
-  /** List of `SourceItem` items. */
-  SourceItems?: Array<SourceItem>;
+  /** List of `ISourceItem` items. */
+  SourceItems?: Array<ISourceItem>;
 }

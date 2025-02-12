@@ -4,9 +4,18 @@ import { css, html, TemplateResult } from 'lit';
 // our imports.
 import { BaseEditor } from './base-editor';
 import { Section } from '../types/section';
+import { PLAYER_CONTROLS_ICON_SIZE_DEFAULT } from '../constants';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
+  {
+    name: 'playerControlsIconSize',
+    label: 'Size of the icons in the Player controls area.',
+    help: 'default is "' + PLAYER_CONTROLS_ICON_SIZE_DEFAULT + '"',
+    required: false,
+    type: 'string',
+    default: PLAYER_CONTROLS_ICON_SIZE_DEFAULT,
+  },
   {
     name: 'playerControlsHideShuffle',
     label: 'Hide shuffle control button in the controls area',
@@ -59,17 +68,12 @@ class PlayerControlsSettingsEditor extends BaseEditor {
     // ensure store is created.
     super.createStore();
 
-    //console.log("render (player-controls-editor) - rendering player controls settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
-
     // render html.
     return html`
       <div class="schema-title">
         Player Media Control area settings
       </div>
-      <stpc-editor-form class="stpc-editor-form"
+      <stpc-editor-form
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PLAYER}
         .store=${this.store}

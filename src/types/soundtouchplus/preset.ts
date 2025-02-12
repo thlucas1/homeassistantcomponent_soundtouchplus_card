@@ -1,4 +1,4 @@
-import { ContentItem } from './content-item';
+import { IContentItem } from './content-item';
 
 /**
  * SoundTouch device Preset configuration object.
@@ -6,10 +6,10 @@ import { ContentItem } from './content-item';
  * This interface contains the attributes and subitems that represent a
  * single preset configuration of the device.
  */
-export interface Preset {
+export interface IPreset {
 
   /** ContentItem object. */
-  ContentItem?: ContentItem;
+  ContentItem?: IContentItem;
 
   /** 
    * Date and time(in epoch format) of when the preset was created. 

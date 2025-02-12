@@ -5,6 +5,7 @@ import { css, html, TemplateResult } from 'lit';
 import { BaseEditor } from './base-editor';
 import { Section } from '../types/section';
 
+
 const CONFIG_SETTINGS_SCHEMA = [
   {
     name: 'userPresetBrowserTitle',
@@ -17,6 +18,13 @@ const CONFIG_SETTINGS_SCHEMA = [
     name: 'userPresetBrowserSubTitle',
     label: 'Section sub-title text',
     help: 'displayed below the section title',
+    required: false,
+    type: 'string',
+  },
+  {
+    name: 'userPresetsFile',
+    label: 'File that contains user-defined preset items',
+    help: 'e.g. "/local/spotifyplus/userpresets.json"',
     required: false,
     type: 'string',
   },
@@ -37,8 +45,8 @@ const CONFIG_SETTINGS_SCHEMA = [
     selector: { boolean: {} },
   },
   {
-    name: 'userPresetBrowserItemsHideSource',
-    label: 'Hide item row source title text',
+    name: 'userPresetBrowserItemsHideSubTitle',
+    label: 'Hide item row sub-title text',
     help: 'if Title visible',
     required: false,
     selector: { boolean: {} },
@@ -59,16 +67,10 @@ class UserPresetSettingsEditor extends BaseEditor {
     // ensure store is created.
     super.createStore();
 
-    //console.log("render (userpreset-browser-editor) - rendering userpreset settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
-
     // render html.
     return html`
       <div class="schema-title">
-        Settings that control the <a href="https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#user-preset-section-options" target="_blank">
-        User Preset Browser Section</a> look and feel
+        Settings that control the User Preset Browser section look and feel
       </div>
       <stpc-editor-form class="stpc-editor-form"
         .schema=${CONFIG_SETTINGS_SCHEMA}

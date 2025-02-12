@@ -6,23 +6,26 @@ import { choose } from 'lit/directives/choose.js';
 // our imports.
 import { BaseEditor } from './base-editor';
 import './editor-form';
+import './player-general-editor';
 import './player-header-editor';
 import './player-controls-editor';
 import './player-volume-editor';
 
 /** Configuration area editor sections enum. */
 enum ConfigArea {
+  GENERAL = 'General',
   HEADER = 'Header',
   CONTROLS = 'Controls',
   VOLUME = 'Volume',
 }
 
 /** Configuration area editor section keys array. */
-const { HEADER, CONTROLS, VOLUME } = ConfigArea;
+const { GENERAL, HEADER, CONTROLS, VOLUME } = ConfigArea;
+
 
 class PlayerSettingsEditor extends BaseEditor {
 
-  @state() private configArea = HEADER;
+  @state() private configArea = GENERAL;
 
   /**
    * Invoked on each update to perform rendering tasks. 
@@ -35,27 +38,21 @@ class PlayerSettingsEditor extends BaseEditor {
     // ensure store is created.
     super.createStore();
 
-    //console.log("render (player-editor) - rendering player settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
-
     return html`
       <div class="schema-title">
-        Settings that control the <a href="https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#player-section-options" target="_blank">
-        Player Section</a> look and feel
+        Settings that control the Player section look and feel
       </div>
       <ha-control-button-group>
-        ${[HEADER, CONTROLS, VOLUME].map(
+        ${[GENERAL, HEADER, CONTROLS, VOLUME].map(
           (configArea) => html`
             <ha-control-button
               selected=${this.configArea === configArea || nothing}
-              @click=${() => this.OnConfigPlayerSectionClick(configArea)}
+              @click=${() => this.onConfigPlayerSectionClick(configArea)}
             >
               ${configArea}
             </ha-control-button>
           `,
-        )}
+    )}
       </ha-control-button-group>
 
       ${this.subEditor()}
@@ -65,10 +62,12 @@ class PlayerSettingsEditor extends BaseEditor {
 
   private subEditor() {
 
-    //console.log("subEditor()\n this.configArea=%s", this.configArea);
-
     // show the desired section editor.
     return choose(this.configArea, [
+      [
+        GENERAL,
+        () => html`<stpc-player-general-editor .config=${this.config} .hass=${this.hass}></stpc-player-general-editor>`,
+      ],
       [
         HEADER,
         () => html`<stpc-player-header-editor .config=${this.config} .hass=${this.hass}></stpc-player-header-editor>`,
@@ -92,13 +91,7 @@ class PlayerSettingsEditor extends BaseEditor {
    * 
    * @param args Event arguments that contain the configArea that was clicked on.
    */
-  private OnConfigPlayerSectionClick(configArea: ConfigArea) {
-
-    //console.log("OnConfigPlayerSectionClick (player-editor)\n- OLD configArea=%s\n- NEW configArea=%s\n- section=%s",
-    //  JSON.stringify(this.configArea),
-    //  JSON.stringify(configArea),
-    //  JSON.stringify(this.section)
-    //);
+  private onConfigPlayerSectionClick(configArea: ConfigArea) {
 
     // show the section editor form.
     this.configArea = configArea;

@@ -37,8 +37,8 @@ const CONFIG_SETTINGS_SCHEMA = [
     selector: { boolean: {} },
   },
   {
-    name: 'presetBrowserItemsHideSource',
-    label: 'Hide item row source title text',
+    name: 'presetBrowserItemsHideSubTitle',
+    label: 'Hide item row sub-title text',
     help: 'if Title visible',
     required: false,
     selector: { boolean: {} },

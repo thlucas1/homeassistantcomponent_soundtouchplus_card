@@ -12,9 +12,7 @@ class Form extends BaseEditor {
   @property({ attribute: false }) schema!: unknown;
   @property({ attribute: false }) data!: unknown;
   @property() changed!: (ev: CustomEvent) => void;
-
-  /** Indicates if the renderRoot styles have been updated yet (true) or not (false|undefined). */
-  @property({ attribute: true }) isRenderRootStylesUpdated!: boolean;
+  @property() isRenderRootStylesUpdated!: boolean;
 
   /** query selector for the currently selected <ha-form> element. */
   @query("#elmHaForm") private _elmHaForm!: LitElement;
@@ -28,10 +26,6 @@ class Form extends BaseEditor {
   */
   protected render(): TemplateResult {
 
-    //console.log("render (editor-form) - rendering editor form - section=%s",
-    //  JSON.stringify(super.section),
-    //);
-
     // style renderRoot elements.
     this._styleRenderRootElements();
 
@@ -42,7 +36,7 @@ class Form extends BaseEditor {
         .schema=${this.schema}
         .computeLabel=${formatLabel}
         .hass=${this.hass}
-        @value-changed=${this.changed || this.OnValueChanged}
+        @value-changed=${this.changed || this.onValueChanged}
       ></ha-form>
     `;
   }
@@ -72,13 +66,8 @@ class Form extends BaseEditor {
     // invoke base class method.
     super.firstUpdated(changedProperties);
 
-    //console.log("firstUpdated (editor-form) - 1st render complete - changedProperties keys:\n- %s",
-    //  JSON.stringify(Array.from(changedProperties.keys())),
-    //);
-
     // if renderRoot elements were not styled, then request another update.
     if (!this.isRenderRootStylesUpdated) {
-      //console.log("firstUpdated (editor-form) - isRenderRootStylesUpdated = false, requesting another update");
       this.requestUpdate();
     }
 
@@ -88,13 +77,10 @@ class Form extends BaseEditor {
   /**
    * Handles a "value-changed" event.
    * This event is raised whenever a form value is changed in the UI.
-   * 
-   * This will update the configuration with the changed value and re-render the
-   * card preview area.
    */
-  protected OnValueChanged(args: CustomEvent): void {
+  protected onValueChanged(args: CustomEvent): void {
 
-    //console.log("OnValueChanged (editor-form) - event:\n%s",
+    //console.log("onValueChanged (editor-form) - event:\n%s",
     //  JSON.stringify(args,null,2)
     //);
 
@@ -104,6 +90,7 @@ class Form extends BaseEditor {
     // call configuration changed method to update the existing config with our changes,
     // fire an event that something has changed, and re-render the card preview.
     this.configChanged(changedConfig);
+
   }
 
 
@@ -115,28 +102,24 @@ class Form extends BaseEditor {
 
     // have we already updated the renderRoot styles?
     if (this.isRenderRootStylesUpdated) {
-      //console.log("_styleRenderRootElements (editor-form) - <ha-form> elements have already been styled");
       return;
     }
 
     // <ha-form> element may not be present when the configuration editor is initially displayed.
     // we have to wait for a section to be displayed first.
     if (!this._elmHaForm) {
-      //console.log("_styleRenderRootElements (editor-form) - <ha-form> element was null; can't style yet");
       this.requestUpdate();
       return;
     }
 
     // if shadowRoot has not updated yet then we can't do anything.
     if (!this._elmHaForm.shadowRoot) {
-      //console.log("_styleRenderRootElements (editor-form) - <ha-form> shadowRoot was null; can't style yet");
       this.requestUpdate();
       return;
     }
 
     // if <ha-form> has not completely updated yet then we can't do anything.
     if (!this._elmHaForm?.updateComplete) {
-      //console.log("_styleRenderRootElements (editor-form) - <ha-form> element has not completed updating; can't style yet");
       this.requestUpdate();
       return;
     }
@@ -144,12 +127,9 @@ class Form extends BaseEditor {
     // if <ha-form> has not completely updated yet then we can't do anything.
     // has renderRoot happened yet?  if not, then don't bother!
     if (!this.hasUpdated) {
-      //console.log("_styleRenderRootElements (editor-form) - editor-form.hasUpdated is false, and renderRoot is not available; can't style yet");
       this.requestUpdate();
       return;
     }
-
-    //console.log("_styleRenderRootElements (editor-form) - adding styles to renderRoot elements");
 
     // get all controls defined to the root <div> element.
     const root = this._elmHaForm.renderRoot.querySelector(".root");
@@ -178,12 +158,11 @@ class Form extends BaseEditor {
             //console.log("HA-SELECTOR child shadowRoot firstElementChild tagName = %s", JSON.stringify(grandChild.tagName));
             if (grandChild.tagName == "HA-SELECTOR-BOOLEAN") {
               const haFormField = grandChild.shadowRoot?.firstElementChild;
-              //const haFormField = root.children[idx].shadowRoot?.firstElementChild?.shadowRoot?.firstElementChild;
               //console.log("HA-SELECTOR-BOOLEAN first element = %s", JSON.stringify(haFormField?.tagName));
               if (haFormField?.tagName == "HA-FORMFIELD") {
                 haFormField.setAttribute("style", "min-height: var(--ha-form-style-selector-boolean-min-height, 56px);");
               } else {
-                console.log("%c HA-SELECTOR underlying type was not styled: %s", "color:orange", child.tagName);
+                console.log("%c HA-SELECTOR underlying type was not styled: %s", "color:red", child.tagName);
               }
             }
 
@@ -198,7 +177,7 @@ class Form extends BaseEditor {
           child.setAttribute("style", "margin-bottom: var(--ha-form-style-integer-margin-bottom, 24px);");
 
         } else {
-          console.log("%c _styleRenderRootElements (editor-form) - did not style %s element", "color:orange", child.tagName);
+          console.log("%c _styleRenderRootElements (editor-form) - did not style %s element", "color:red", child.tagName);
         }
       }
 

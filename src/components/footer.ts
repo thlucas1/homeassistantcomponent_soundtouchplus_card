@@ -1,6 +1,6 @@
 // lovelace card imports.
 import { css, html, LitElement, TemplateResult, nothing } from 'lit';
-import { property } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import {
   mdiAudioInputRca,
   mdiBookmarkMusicOutline,
@@ -12,12 +12,13 @@ import {
 
 // our imports.
 import { SHOW_SECTION } from '../constants';
-import { CardConfig } from '../types/card-config'
-import { Section } from '../types/section'
+import { CardConfig } from '../types/card-config';
+import { Section } from '../types/section';
 import { customEvent } from '../utils/utils';
 
 
-class Footer extends LitElement {
+@customElement("stpc-footer")
+export class Footer extends LitElement {
 
   @property({ attribute: false }) config!: CardConfig;
   @property() section!: Section;
@@ -32,45 +33,43 @@ class Footer extends LitElement {
     return html`
       <ha-icon-button
         .path=${mdiPlayCircle}
-        .label="Player"
-        @click=${() => this.OnSectionClick(Section.PLAYER)}
+        label="Player"
+        @click=${() => this.onSectionClick(Section.PLAYER)}
         selected=${this.getSectionSelected(Section.PLAYER)}
         hide=${this.getSectionEnabled(Section.PLAYER)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiAudioInputRca}
-        .label="Sources"
-        @click=${() => this.OnSectionClick(Section.SOURCES)}
+        label="Sources"
+        @click=${() => this.onSectionClick(Section.SOURCES)}
         selected=${this.getSectionSelected(Section.SOURCES)}
         hide=${this.getSectionEnabled(Section.SOURCES)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiStarOutline}
-        .label="Presets"
-        @click=${() => this.OnSectionClick(Section.PRESETS)}
+        label="Device Presets"
+        @click=${() => this.onSectionClick(Section.PRESETS)}
         selected=${this.getSectionSelected(Section.PRESETS)}
         hide=${this.getSectionEnabled(Section.PRESETS)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiBookmarkMusicOutline}
-        .label="Presets"
-        @click=${() => this.OnSectionClick(Section.USERPRESETS)}
+        label="User Presets"
+        @click=${() => this.onSectionClick(Section.USERPRESETS)}
         selected=${this.getSectionSelected(Section.USERPRESETS)}
         hide=${this.getSectionEnabled(Section.USERPRESETS)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiHistory}
-        .label="Recently Played"
-        @click=${() => this.OnSectionClick(Section.RECENTS)}
+        label="Recently Played"
+        @click=${() => this.onSectionClick(Section.RECENTS)}
         selected=${this.getSectionSelected(Section.RECENTS)}
         hide=${this.getSectionEnabled(Section.RECENTS)}
       ></ha-icon-button>
       <ha-icon-button
         .path=${mdiPandora}
-        .label='Pandora Stations'
-        .hideTitle=false
-        .ariaHasPopup=true
-        @click=${() => this.OnSectionClick(Section.PANDORA_STATIONS)}
+        label='Pandora Stations'
+        @click=${() => this.onSectionClick(Section.PANDORA_STATIONS)}
         selected=${this.getSectionSelected(Section.PANDORA_STATIONS)}
         hide=${this.getSectionEnabled(Section.PANDORA_STATIONS)}
       ></ha-icon-button>
@@ -90,11 +89,6 @@ class Footer extends LitElement {
       :host > *[hide] {
         display: none;
       }
-
-      .ha-icon-button {
-        --mwc-icon-button-size: 3rem;
-        --mwc-icon-size: 2rem;
-      }
     `;
   }
 
@@ -104,11 +98,10 @@ class Footer extends LitElement {
    * 
    * @param section Event arguments.
    */
-  private OnSectionClick(section: Section) {
-    //console.log("OnSectionClick (footer)\n- section=%s",
-    //  JSON.stringify(section),
-    //);
+  private onSectionClick(section: Section) {
+
     this.dispatchEvent(customEvent(SHOW_SECTION, section));
+
   }
 
 
@@ -120,12 +113,9 @@ class Footer extends LitElement {
    * @param section Section identifier to check.
    */
   private getSectionSelected(section: Section | typeof nothing) {
-    //console.log("getSectionSelected (footer)\n CURRENT section=%s, COMPARE section=%s, result=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(section),
-    //  JSON.stringify(this.section === section || nothing),
-    //);
+
     return this.section === section || nothing;
+
   }
 
 
@@ -136,10 +126,8 @@ class Footer extends LitElement {
    * @param section Section identifier to check.
    */
   private getSectionEnabled(searchElement: Section) {
+
     return (this.config.sections && !this.config.sections?.includes(searchElement)) || nothing;
+
   }
-
 }
-
-
-customElements.define('stpc-footer', Footer);

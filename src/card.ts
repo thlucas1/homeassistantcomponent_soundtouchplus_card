@@ -1,10 +1,15 @@
+// debug logging.
+import Debug from 'debug/src/browser.js';
+import { DEBUG_APP_NAME } from './constants';
+const debuglog = Debug(DEBUG_APP_NAME + ":card");
+
 // lovelace card imports.
-import { HomeAssistant } from 'custom-card-helpers';
 import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
-import { styleMap } from 'lit-html/directives/style-map.js';
-import { customElement, property, state } from 'lit/decorators.js';
+import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { choose } from 'lit/directives/choose.js';
 import { when } from 'lit/directives/when.js';
+import { HomeAssistant } from './types/home-assistant-frontend/home-assistant';
 
 // our imports - card sections and editor.
 import './sections/pandora-browser';
@@ -13,21 +18,31 @@ import './sections/preset-browser';
 import './sections/recent-browser';
 import './sections/source-browser';
 import './sections/userpreset-browser';
-import './components/ha-player';
 import './components/footer';
 import './editor/editor';
 
 // our imports.
 import { EDITOR_CONFIG_AREA_SELECTED, EditorConfigAreaSelectedEventArgs } from './events/editor-config-area-selected';
-import { PROGRESS_STARTED, ProgressStartedEventArgs } from './events/progress-started';
+import { FILTER_SECTION_MEDIA, FilterSectionMediaEventArgs } from './events/filter-section-media';
+import { PROGRESS_STARTED } from './events/progress-started';
 import { PROGRESS_ENDED } from './events/progress-ended';
 import { Store } from './model/store';
 import { CardConfig } from './types/card-config';
 import { CustomImageUrls } from './types/custom-image-urls';
 import { ConfigArea } from './types/config-area';
 import { Section } from './types/section';
+import { FavBrowserBase } from './sections/fav-browser-base';
+import { PandoraBrowser } from './sections/pandora-browser';
+import { PresetBrowser } from './sections/preset-browser';
+import { RecentBrowser } from './sections/recent-browser';
+import { SourceBrowser } from './sections/source-browser';
+import { UserPresetBrowser } from './sections/userpreset-browser';
 import { formatTitleInfo, removeSpecialChars } from './utils/media-browser-utils';
-import { BRAND_LOGO_IMAGE_BASE64, BRAND_LOGO_IMAGE_SIZE } from './constants';
+import {
+  BRAND_LOGO_IMAGE_BASE64,
+  BRAND_LOGO_IMAGE_SIZE,
+  FOOTER_ICON_SIZE_DEFAULT
+} from './constants';
 import {
   getConfigAreaForSection,
   getSectionForConfigArea,
@@ -80,11 +95,18 @@ export class Card extends LitElement {
   @state() cancelLoader!: boolean;
   @state() playerId!: string;
 
+  // card section references.
+  @query("#elmPandoraBrowserForm", false) private elmPandoraBrowserForm!: PandoraBrowser;
+  @query("#elmPresetBrowserForm", false) private elmPresetBrowserForm!: PresetBrowser;
+  @query("#elmRecentBrowserForm", false) private elmRecentBrowserForm!: RecentBrowser;
+  @query("#elmSourceBrowserForm", false) private elmSourceBrowserForm!: SourceBrowser;
+  @query("#elmUserPresetBrowserForm", false) private elmUserPresetBrowserForm!: UserPresetBrowser;
+
   // card editor medialist cache items.
   static mediaListCache: { [key: string]: object } = {};
 
   /** Indicates if createStore method is executing for the first time (true) or not (false). */
-  private _isFirstTimeSetup: boolean = true;
+  private isFirstTimeSetup: boolean = true;
 
 
   /**
@@ -145,18 +167,18 @@ export class Card extends LitElement {
         <div class="stpc-loader" ?hidden=${!this.showLoader}>
           <ha-circular-progress indeterminate></ha-circular-progress>
         </div>
-        ${title ? html`<div class="stpc-card-header">${title}</div>` : html``}
+        ${title ? html`<div class="stpc-card-header" style=${this.styleCardHeader()}>${title}</div>` : ""}
         <div class="stpc-card-content-section">
           ${
               this.playerId
               ? choose(this.section, [
-                [Section.PANDORA_STATIONS, () => html` <stpc-pandora-browser .store=${this.store} @item-selected=${this.OnMediaListItemSelected}></stp-pandora-browser>`],
-                [Section.PLAYER, () => html` <stpc-player .store=${this.store}></stpc-player>`],
-                [Section.PRESETS, () => html` <stpc-preset-browser .store=${this.store} @item-selected=${this.OnMediaListItemSelected}></stp-presets-browser>`],
-                [Section.RECENTS, () => html` <stpc-recent-browser .store=${this.store} @item-selected=${this.OnMediaListItemSelected}></stp-recents-browser>`],
-                [Section.SOURCES, () => html` <stpc-source-browser .store=${this.store} @item-selected=${this.OnMediaListItemSelected}></stp-source-browser>`],
-                [Section.USERPRESETS, () => html` <stpc-userpreset-browser .store=${this.store} @item-selected=${this.OnMediaListItemSelected}></stp-userpresets-browser>`],
-                [Section.UNDEFINED, () => html`<div class="stpc-not-configured">SpotifyPlus card configuration error.<br/>Please configure section(s) to display.</div>`],
+                [Section.PANDORA_STATIONS, () => html` <stpc-pandora-browser .store=${this.store} id="elmPandoraBrowserForm" @item-selected=${this.onMediaListItemSelected}></stp-pandora-browser>`],
+                [Section.PLAYER, () => html`<stpc-player id="spcPlayer" .store=${this.store}></stpc-player>`],
+                [Section.PRESETS, () => html` <stpc-preset-browser .store=${this.store} id="elmPresetBrowserForm"  @item-selected=${this.onMediaListItemSelected}></stp-presets-browser>`],
+                [Section.RECENTS, () => html` <stpc-recent-browser .store=${this.store} id="elmRecentBrowserForm" @item-selected=${this.onMediaListItemSelected}></stp-recents-browser>`],
+                [Section.SOURCES, () => html` <stpc-source-browser .store=${this.store} id="elmSourceBrowserForm" @item-selected=${this.onMediaListItemSelected}></stp-source-browser>`],
+                [Section.USERPRESETS, () => html` <stpc-userpreset-browser .store=${this.store} id="elmUserPresetBrowserForm" @item-selected=${this.onMediaListItemSelected}></stp-userpresets-browser>`],
+                [Section.UNDEFINED, () => html`<div class="stpc-not-configured">SoundTouchPlus card configuration error.<br/>Please configure section(s) to display.</div>`],
               ])
               : html`<div class="stpc-initial-config">Welcome to the SoundTouchPlus media player card.<br/>Start by configuring a media player entity.</div>`
           //    : choose(this.section, [
@@ -171,7 +193,7 @@ export class Card extends LitElement {
               class="stpc-card-footer"
               .config=${this.config}
               .section=${this.section}
-              @show-section=${this.OnFooterShowSection}
+              @show-section=${this.onFooterShowSection}
             ></stpc-footer>
           </div>`
         )}
@@ -201,7 +223,7 @@ export class Card extends LitElement {
         margin: 0;
       }
 
-      soundtouchplus-card {
+      spotifyplus-card {
         display: block;
         height: 100% !important;
         width: 100% !important;
@@ -220,18 +242,20 @@ export class Card extends LitElement {
         --stpc-card-edit-tab-height: 0px;
         --stpc-card-edit-bottom-toolbar-height: 0px;
         box-sizing: border-box;
-        color: var(--secondary-text-color);
-        overflow: hidden;
+        padding: 0rem;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
         min-height: 20rem;
         height: calc(100vh - var(--stpc-card-footer-height) - var(--stpc-card-edit-tab-height) - var(--stpc-card-edit-bottom-toolbar-height));
         min-width: 20rem;
         width: calc(100vw - var(--mdc-drawer-width));
+        color: var(--secondary-text-color);
       }
 
       .stpc-card-header {
-        margin: 0.2rem;
+        box-sizing: border-box;
+        padding: 0.2rem;
         display: flex;
         align-self: flex-start;
         align-items: center;
@@ -255,6 +279,9 @@ export class Card extends LitElement {
         display: flex;
         align-items: center;
         background-repeat: no-repeat;
+        color: var(--stpc-card-footer-color, inherit);
+        background-color: var(--stpc-card-footer-background-color, var(--stpc-player-footer-bg-color, var(--card-background-color, transparent)));
+        background-image: var(--stpc-card-footer-background-image, linear-gradient(rgba(0, 0, 0, 0.6), rgb(0, 0, 0)));
       }
 
       .stpc-card-footer {
@@ -263,9 +290,10 @@ export class Card extends LitElement {
         align-self: flex-start;
         align-items: center;
         justify-content: space-around;
+        flex-wrap: wrap;
         width: 100%;
-        --mdc-icon-size: 1.75rem;
-        --mdc-icon-button-size: 2.5rem;
+        --mdc-icon-button-size: var(--stpc-footer-icon-button-size, 2.5rem);
+        --mdc-icon-size: var(--stpc-footer-icon-size, 1.75rem);
         --mdc-ripple-top: 0px;
         --mdc-ripple-left: 0px;
         --mdc-ripple-fg-size: 10px;
@@ -277,7 +305,7 @@ export class Card extends LitElement {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        --mdc-theme-primary: var(--dark-primary-color);
+        --mdc-theme-primary: var(--stpc-card-wait-progress-slider-color, var(--dark-primary-color, #2196F3));
       }
 
       .stpc-not-configured {
@@ -296,19 +324,7 @@ export class Card extends LitElement {
       }
 
       ha-circular-progress {
-        --md-sys-color-primary: var(--dark-primary-color);
-      }
-
-      /* TODO TEST - reduce margin between editor controls */
-      .root > * {
-        display: block;
-        margin-bottom: 0px;
-        border: 1px solid red !important;
-      }
-      /* TODO TEST - reduce margin between editor controls */
-      .root > *:not([own-margin]):not(:last-child) {
-        margin-bottom: 0px;
-        border: 1px solid yellow !important;
+        --md-sys-color-primary: var(--stpc-card-wait-progress-slider-color, var(--dark-primary-color, #2196F3));
       }
     `;
   }
@@ -323,14 +339,7 @@ export class Card extends LitElement {
   private createStore() {
 
     // create the store.
-    //console.log("createStore (card) - creating store");
     this.store = new Store(this.hass, this.config, this, this.section, this.config.entity);
-
-    //console.log("createStore (card) - store created\n- this.store.section=%s\n- Store.selectedConfigArea=%s\n- isCardInEditPreview=%s",
-    //  JSON.stringify(this.store.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //  JSON.stringify(isCardInEditPreview(this)),
-    //);
 
     // have we set the player id yet?  if not, then make it so.
     if (!this.playerId) {
@@ -338,7 +347,7 @@ export class Card extends LitElement {
     }
 
     // is this the first time executing?
-    if ((this._isFirstTimeSetup) && (this.playerId)) {
+    if ((this.isFirstTimeSetup) && (this.playerId)) {
 
       // if there are things that you only want to happen one time when the configuration
       // is initially loaded, then do them here.
@@ -347,21 +356,24 @@ export class Card extends LitElement {
 
       // set the initial section reference; if none defined, then default;
       if ((!this.config.sections) || (this.config.sections.length == 0)) {
-        //console.log("createStore (card) - config change event\n- sections not configured, adding PLAYER to config.sections");
+
         this.config.sections = [Section.PLAYER];
         this.section = Section.PLAYER;
         this.store.section = this.section;
         Store.selectedConfigArea = ConfigArea.GENERAL;
         super.requestUpdate();
+
       } else if (!this.section) {
+
+        // section was not set; set section selected based on selected ConfigArea.
         this.section = getSectionForConfigArea(Store.selectedConfigArea);
         this.store.section = this.section;
-        //console.log("createStore (card) - config change event\n- section was not set, so section %s was selected based on selected ConfigArea", JSON.stringify(this.section));
         super.requestUpdate();
+
       }
 
       // indicate first time setup has completed.
-      this._isFirstTimeSetup = false;
+      this.isFirstTimeSetup = false;
     }
   }
 
@@ -375,11 +387,6 @@ export class Card extends LitElement {
 
     // is the session configured for display?
     if (!this.config.sections || this.config.sections.indexOf(section) > -1) {
-
-      //console.log("SetSection (card) - set section reference and display the section\n- OLD section=%s\n- NEW section=%s",
-      //  JSON.stringify(this.section),
-      //  JSON.stringify(section)
-      //);
 
       this.section = section;
       this.store.section = this.section;
@@ -405,19 +412,16 @@ export class Card extends LitElement {
     // invoke base class method.
     super.connectedCallback();
 
-    // add event listeners for this control.
-    this.addEventListener(PROGRESS_ENDED, this.OnProgressEndedEventHandler);
-    this.addEventListener(PROGRESS_STARTED, this.OnProgressStartedEventHandler);
+    // add card level event listeners.
+    this.addEventListener(PROGRESS_ENDED, this.onProgressEndedEventHandler);
+    this.addEventListener(PROGRESS_STARTED, this.onProgressStartedEventHandler);
+    this.addEventListener(FILTER_SECTION_MEDIA, this.onFilterSectionMediaEventHandler);
 
     // only add the following events if card configuration is being edited.
     if (isCardInEditPreview(this)) {
 
-      document.addEventListener(EDITOR_CONFIG_AREA_SELECTED, this.OnEditorConfigAreaSelectedEventHandler);
-
-      //console.log("%c connectedCallback (card) - added event listener: %s",
-      //  "color: red;",
-      //  JSON.stringify(EDITOR_CONFIG_AREA_SELECTED),
-      //);
+      // add document level event listeners.
+      document.addEventListener(EDITOR_CONFIG_AREA_SELECTED, this.onEditorConfigAreaSelectedEventHandler);
 
     }
 
@@ -436,23 +440,20 @@ export class Card extends LitElement {
    */
   public disconnectedCallback() {
 
-    // remove event listeners for this control.
-    this.removeEventListener(PROGRESS_ENDED, this.OnProgressEndedEventHandler);
-    this.removeEventListener(PROGRESS_STARTED, this.OnProgressStartedEventHandler);
+    // remove card level event listeners.
+    this.removeEventListener(PROGRESS_ENDED, this.onProgressEndedEventHandler);
+    this.removeEventListener(PROGRESS_STARTED, this.onProgressStartedEventHandler);
+    this.removeEventListener(FILTER_SECTION_MEDIA, this.onFilterSectionMediaEventHandler);
 
     // the following event is only added when the card configuration editor is created.
     // always remove the following events, as isCardInEditPreview() can sometimes
     // return a different value than when the event was added in connectedCallback!
-    document.removeEventListener(EDITOR_CONFIG_AREA_SELECTED, this.OnEditorConfigAreaSelectedEventHandler);
 
-    //console.log("%c disconnectedCallback (card) - removed event listener: %s",
-    //  "color: blue;",
-    //  JSON.stringify(EDITOR_CONFIG_AREA_SELECTED),
-    //);
+    // remove document level event listeners.
+    document.removeEventListener(EDITOR_CONFIG_AREA_SELECTED, this.onEditorConfigAreaSelectedEventHandler);
 
     // invoke base class method.
     super.disconnectedCallback();
-
   }
 
 
@@ -473,20 +474,11 @@ export class Card extends LitElement {
     // if there are things that you only want to happen one time when the configuration
     // is initially loaded, then do them here.
 
-    //console.log("firstUpdated (card) - first render complete\n- isCardInEditPreview=%s",
-    //  JSON.stringify(isCardInEditPreview(this)),
-    //);
-
     // at this point, the first render has occurred.
     // ensure that the specified section is configured; if not, find the first available
     // section that IS configured and display it.
     const sectionsConfigured = this.config.sections || []
     if (!sectionsConfigured.includes(this.section)) {
-
-      //console.log("firstUpdated (card) - active section is not configured\n- active section=%s\n- configured sections:\n%s",
-      //  JSON.stringify(this.section || '*undefined*'),
-      //  JSON.stringify(this.config.sections),
-      //);
 
       // find the first active section, as determined by the order listed in the footer.
       let sectionNew: Section = Section.PLAYER;
@@ -508,10 +500,6 @@ export class Card extends LitElement {
       // it will automatically select the configuration settings for the section.
       Store.selectedConfigArea = getConfigAreaForSection(sectionNew);
 
-      //console.log("firstUpdated (card) - default editor configarea set: %s",
-      //  JSON.stringify(Store.selectedConfigArea),
-      //);
-
       // show the rendered section.
       this.section = sectionNew;
       this.store.section = sectionNew;
@@ -519,16 +507,79 @@ export class Card extends LitElement {
 
     } else if (isCardInEditPreview(this)) {
 
-      //console.log("firstUpdated (card) - in edit mode; refreshing due to card size differences for edit mode");
-
       // if in edit mode, then refresh display as card size is different.
       super.requestUpdate();
     }
 
-    //console.log("firstUpdated (card) - first render complete\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section || '*undefined*'),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
+  }
+
+
+  /**
+   * Handles the card configuration editor `EDITOR_CONFIG_AREA_SELECTED` event.
+   * 
+   * This will select a section for display / rendering.
+   * This event should only be fired from the configuration editor instance.
+   * 
+   * @param ev Event definition and arguments.
+  */
+  protected onEditorConfigAreaSelectedEventHandler = (ev: Event) => {
+
+    // map event arguments.
+    const evArgs = (ev as CustomEvent).detail as EditorConfigAreaSelectedEventArgs;
+
+    // is section activated?  if so, then select it.
+    if (this.config.sections?.includes(evArgs.section)) {
+
+      this.section = evArgs.section;
+      this.store.section = this.section;
+
+    } else {
+
+      // section is not activated.
+
+    }
+  }
+
+
+  /**
+   * Handles the footer `show-section` event.
+   * 
+   * This will change the `section` attribute value to the value supplied, which will also force
+   * a refresh of the card and display the selected section.
+   * 
+   * @param args Event arguments that contain the section to show.
+  */
+  protected onFooterShowSection = (args: CustomEvent) => {
+
+    const section = args.detail;
+    if (!this.config.sections || this.config.sections.indexOf(section) > -1) {
+
+      this.section = section;
+      this.store.section = this.section;
+      super.requestUpdate();
+
+    } else {
+
+      // specified section is not active.
+
+    }
+  }
+
+
+  /**
+    * Handles the Media List `item-selected` event.
+    * 
+    * @param args Event arguments (none passed).
+    */
+  protected onMediaListItemSelected = () => {
+
+    // don't need to do anything here, as the section will show the player.
+    // left this code here though, in case we want to do something else after
+    // an item is selected.
+
+    // example: show the card Player section (after a slight delay).
+    //setTimeout(() => (this.SetSection(Section.PLAYER)), 1500);
+
   }
 
 
@@ -538,23 +589,20 @@ export class Card extends LitElement {
    * 
    * This event has no arguments.
   */
-  protected OnProgressEndedEventHandler = () => {
+  protected onProgressEndedEventHandler = () => {
 
     this.cancelLoader = true;
     const duration = Date.now() - this.loaderTimestamp;
 
-    //console.log("OnProgressEndedEventHandler (card) - Hiding progress indicator\n- duration=%s\n- this.showLoader=%s\n- isCardInEditPreview=%s",
-    //  JSON.stringify(duration),
-    //  JSON.stringify(this.showLoader),
-    //  JSON.stringify(isCardInEditPreview(this)),
-    //);
-
+    // is the progress loader icon visible?
     if (this.showLoader) {
+
       if (duration < 1000) {
+        // progress will hide in less than 1 second.
         setTimeout(() => (this.showLoader = false), 1000 - duration);
       } else {
         this.showLoader = false;
-        //console.log("OnProgressEndedEventHandler (card) - progress is hidden");
+        // progress is hidden.
       }
     }
   }
@@ -570,27 +618,12 @@ export class Card extends LitElement {
    * 
    * @param ev Event definition and arguments.
   */
-  protected OnProgressStartedEventHandler = (ev: Event) => {
+  protected onProgressStartedEventHandler = () => {
 
-    // map event arguments.
-    const evArgs = (ev as CustomEvent).detail as ProgressStartedEventArgs;
-
-    //console.log("OnProgressStartedEventHandler() - Event Args:\n%s",
-    //  JSON.stringify(evArgs, null, 2)
-    //);
-
-    //console.log("OnProgressStartedEventHandler (card) - this.showLoader=%s\n- this.config.sections=%s\n- args section=%s\n- this.section=%s\n- isCardInEditPreview=%s",
-    //  JSON.stringify(this.showLoader),
-    //  JSON.stringify(this.config.sections),
-    //  JSON.stringify(evArgs.section),
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(isCardInEditPreview(this)),
-    //);
-
-    if (!this.showLoader && (!this.config.sections || evArgs.section === this.section)) {
+    // is progress bar currently shown? if not, then make it so.
+    if (!this.showLoader) {
 
       this.cancelLoader = false;
-      //console.log("progress is about to show");
 
       // wait just a bit before showing the progress indicator; if the progress done event is received
       // in this delay period, then the progress indicator is not shown.
@@ -598,11 +631,9 @@ export class Card extends LitElement {
         if (!this.cancelLoader) {
           this.showLoader = true;
           this.loaderTimestamp = Date.now();
-          //console.log("OnProgressStartedEventHandler (card) - progress is showing - loaderTimestamp=%s",
-          //  JSON.stringify(this.loaderTimestamp),
-          //);
+          // progress is showing.
         } else {
-          //console.log("OnProgressStartedEventHandler (card) - progress was cancelled before it had to be shown");
+          // progress was cancelled before it had to be shown.
         }
       }, 250);
 
@@ -611,94 +642,71 @@ export class Card extends LitElement {
 
 
   /**
-   * Handles the card configuration editor `EDITOR_CONFIG_AREA_SELECTED` event.
-   * 
-   * This will select a section for display / rendering.
-   * This event should only be fired from the configuration editor instance.
-   * 
+   * Handles the `FILTER_SECTION_MEDIA` event.
+   * This will show the specified section, and apply the specified filter criteria
+   * passed in the event arguments.
+   *
    * @param ev Event definition and arguments.
   */
-  protected OnEditorConfigAreaSelectedEventHandler = (ev: Event) => {
-
-    //console.log("OnEditorConfigAreaSelectedEventHandler (card) - event data:\n%s",
-    //  JSON.stringify(ev),
-    //);
+  protected onFilterSectionMediaEventHandler = (ev: Event) => {
 
     // map event arguments.
-    const evArgs = (ev as CustomEvent).detail as EditorConfigAreaSelectedEventArgs;
+    const evArgs = (ev as CustomEvent).detail as FilterSectionMediaEventArgs;
+
+    // validate section id.
+    const enumValues: string[] = Object.values(Section);
+    if (!enumValues.includes(evArgs.section || "")) {
+      debuglog("%onFilterSectionMediaEventHandler - Ignoring Filter request; section is not a valid Section enum value:\n%s",
+        "color:red",
+        JSON.stringify(evArgs, null, 2),
+      );
+    }
 
     // is section activated?  if so, then select it.
-    if (this.config.sections?.includes(evArgs.section)) {
+    if (this.config.sections?.includes(evArgs.section as Section)) {
 
-      //console.log("OnEditorConfigAreaSelectedEventHandler (card) - editor configarea selected\n- OLD section=%s\n- NEW section=%s\n- store.section=%s",
-      //  JSON.stringify(this.section),
-      //  JSON.stringify(evArgs.section),
-      //  JSON.stringify(this.store.section),
-      //);
-
-      this.section = evArgs.section;
+      // show the search section.
+      this.section = evArgs.section as Section;
       this.store.section = this.section;
+
+      // wait just a bit before executing the search.
+      setTimeout(() => {
+
+        if (debuglog.enabled) {
+          debuglog("onFilterSectionMediaEventHandler - executing filter:\n%s",
+            JSON.stringify(evArgs, null, 2),
+          );
+        }
+
+        // reference the section browser.
+        let browserBase: FavBrowserBase;
+        if (evArgs.section == Section.PANDORA_STATIONS) {
+          browserBase = this.elmPandoraBrowserForm;
+        } else if (evArgs.section == Section.PRESETS) {
+          browserBase = this.elmPresetBrowserForm;
+        } else if (evArgs.section == Section.RECENTS) {
+          browserBase = this.elmRecentBrowserForm;
+        } else if (evArgs.section == Section.SOURCES) {
+          browserBase = this.elmSourceBrowserForm;
+        } else if (evArgs.section == Section.USERPRESETS) {
+          browserBase = this.elmUserPresetBrowserForm;
+        } else {
+          return;
+        }
+
+        // execute the filter.
+        browserBase.filterSectionMedia(evArgs);
+
+      }, 50);
 
     } else {
 
-      //console.log("OnEditorConfigAreaSelectedEventHandler (card) - Section is not active: %s",
-      //  JSON.stringify(evArgs.section)
-      //);
-
+      // section is not activated; cannot search.
+      debuglog("%onFilterSectionMediaEventHandler - Filter section is not enabled; ignoring filter request:\n%s",
+        "color:red",
+        JSON.stringify(evArgs, null, 2),
+      );
     }
-  }
-
-
-  /**
-   * Handles the footer `show-section` event.
-   * 
-   * This will change the `section` attribute value to the value supplied, which will also force
-   * a refresh of the card and display the selected section.
-   * 
-   * @param args Event arguments that contain the section to show.
-  */
-  protected OnFooterShowSection = (args: CustomEvent) => {
-
-    const section = args.detail;
-    if (!this.config.sections || this.config.sections.indexOf(section) > -1) {
-
-      //console.log("OnFooterShowSection (card) - footer show-section event\n- OLD section=%s\n- NEW section=%s",
-      //  JSON.stringify(this.section),
-      //  JSON.stringify(section)
-      //);
-
-      this.section = section;
-      this.store.section = this.section;
-      super.requestUpdate();
-
-    } else {
-
-      //console.log("OnFooterShowSection (card) - footer show-section  event\n- section is not active: %s",
-      //  JSON.stringify(section)
-      //);
-
-    }
-  }
-
-
-  /**
-    * Handles the Media List `item-selected` event.
-    * 
-    * @param args Event arguments (none passed).
-    */
-  protected OnMediaListItemSelected = () => {
-
-    //console.log("OnMediaListItemSelected (card) - media list item selected; showing player\n- section=%s",
-    //  JSON.stringify(this.section)
-    //);
-
-    // don't need to do anything here, as the section will show the player.
-    // left this code here though, in case we want to do something else after
-    // an item is selected.
-
-    // example: show the card Player section (after a slight delay).
-    //setTimeout(() => (this.SetSection(Section.PLAYER)), 1500);
-
   }
 
 
@@ -729,7 +737,6 @@ export class Card extends LitElement {
    */
   public setConfig(config: CardConfig): void {
 
-    //console.log("setConfig (card) - method start");
     //console.log("setConfig (card) - configuration change\n- this.section=%s\n- Store.selectedConfigArea=%s",
     //  JSON.stringify(this.section),
     //  JSON.stringify(Store.selectedConfigArea),
@@ -741,17 +748,19 @@ export class Card extends LitElement {
     // remove any configuration properties that do not have a value set.
     for (const [key, value] of Object.entries(newConfig)) {
       if (Array.isArray(value) && value.length === 0) {
-        //console.log("setConfig (card) - Removing empty config value\n- config key = '%s'", key)
+        // removing empty config value.
         delete newConfig[key];
       }
     }
 
     // default configration values if not set.
-    newConfig.pandoraBrowserItemsPerRow = newConfig.pandoraBrowserItemsPerRow || 9;
+    newConfig.pandoraBrowserItemsPerRow = newConfig.pandoraBrowserItemsPerRow || 4;
     newConfig.pandoraBrowserItemsHideTitle = newConfig.pandoraBrowserItemsHideTitle || false;
 
     newConfig.playerHeaderHide = newConfig.playerHeaderHide || false;
     newConfig.playerHeaderHideProgressBar = newConfig.playerHeaderHideProgressBar || false;
+    newConfig.playerControlsHideFavorites = newConfig.playerControlsHideFavorites || false;
+    newConfig.playerControlsHidePlayQueue = newConfig.playerControlsHidePlayQueue || false;
     newConfig.playerControlsHidePlayPause = newConfig.playerControlsHidePlayPause || false;
     newConfig.playerControlsHideRepeat = newConfig.playerControlsHideRepeat || false;
     newConfig.playerControlsHideShuffle = newConfig.playerControlsHideShuffle || false;
@@ -759,17 +768,17 @@ export class Card extends LitElement {
     newConfig.playerControlsHideTrackPrev = newConfig.playerControlsHideTrackPrev || false;
 
     newConfig.presetBrowserItemsPerRow = newConfig.presetBrowserItemsPerRow || 3;
-    newConfig.presetBrowserItemsHideSource = newConfig.presetBrowserItemsHideSource || false;
+    newConfig.presetBrowserItemsHideSubTitle = newConfig.presetBrowserItemsHideSubTitle || false;
     newConfig.presetBrowserItemsHideTitle = newConfig.presetBrowserItemsHideTitle || false;
 
-    newConfig.recentBrowserItemsPerRow = newConfig.recentBrowserItemsPerRow || 10;
-    newConfig.recentBrowserItemsHideSource = newConfig.recentBrowserItemsHideSource || false;
+    newConfig.recentBrowserItemsPerRow = newConfig.recentBrowserItemsPerRow || 4;
+    newConfig.recentBrowserItemsHideSubTitle = newConfig.recentBrowserItemsHideSubTitle || false;
     newConfig.recentBrowserItemsHideTitle = newConfig.recentBrowserItemsHideTitle || false;
 
-    newConfig.sourceBrowserItemsPerRow = newConfig.sourceBrowserItemsPerRow || 3;
+    newConfig.sourceBrowserItemsPerRow = newConfig.sourceBrowserItemsPerRow || 1;
 
-    newConfig.userPresetBrowserItemsPerRow = newConfig.userPresetBrowserItemsPerRow || 3;
-    newConfig.userPresetBrowserItemsHideSource = newConfig.userPresetBrowserItemsHideSource || false;
+    newConfig.userPresetBrowserItemsPerRow = newConfig.userPresetBrowserItemsPerRow || 4;
+    newConfig.userPresetBrowserItemsHideSubTitle = newConfig.userPresetBrowserItemsHideSubTitle || false;
     newConfig.userPresetBrowserItemsHideTitle = newConfig.userPresetBrowserItemsHideTitle || false;
 
     // if custom imageUrl's are supplied, then remove special characters from each title
@@ -786,7 +795,6 @@ export class Card extends LitElement {
 
     // if no sections are configured then configure the default.
     if (!newConfig.sections || newConfig.sections.length === 0) {
-      //console.log("setConfig (card) - sections not configured, adding PLAYER to config.sections")
       newConfig.sections = [Section.PLAYER];
       Store.selectedConfigArea = ConfigArea.GENERAL;
     }
@@ -802,6 +810,7 @@ export class Card extends LitElement {
     //console.log("setConfig (card) - updated configuration:\n%s",
     //  JSON.stringify(this.config,null,2),
     //);
+
   }
 
 
@@ -820,15 +829,15 @@ export class Card extends LitElement {
    * Returns a custom element for editing the user configuration. 
    * 
    * Home Assistant will display this element in the card editor in the dashboard, along with 
-   * the rendered card (to the right) of the editor.
+   * the rendered card (to the right of the editor).
   */
   public static getConfigElement() {
 
     // initialize what configarea to display on entry - always GENERAL, since this is a static method.
     Store.selectedConfigArea = ConfigArea.GENERAL;
 
-    // clear medialist cache items.
-    Card.mediaListCache = {};
+    // clear card editor first render settings.
+    Store.hasCardEditLoadedMediaList = {};
 
     // get the card configuration editor, and return for display.
     return document.createElement('stpc-editor');
@@ -848,37 +857,40 @@ export class Card extends LitElement {
       sections: [Section.PLAYER, Section.PRESETS, Section.RECENTS, Section.SOURCES, Section.USERPRESETS],
       entity: "",
 
-      playerHeaderTitle: '{player.source_noaccount}',
-      playerHeaderArtistTrack: '{player.media_artist} - {player.media_title}',
-      playerHeaderAlbum: '{player.media_album_name}',
-      playerHeaderNoMediaPlayingText: '"{player.name}" state is "{player.state}"',
-
-      sourceBrowserTitle: '"{player.name}" Sources ({medialist.itemcount} items)',
-      sourceBrowserSubTitle: 'click an item to select the source',
-      sourceBrowserItemsPerRow: 1,
-
-      presetBrowserTitle: '"{player.name}" Device Presets ({medialist.itemcount} items)',
-      presetBrowserSubTitle: "click a tile image to play the content",
-      presetBrowserItemsPerRow: 3,
-      presetBrowserItemsHideTitle: false,
-      presetBrowserItemsHideSource: false,
-
-      recentBrowserTitle: '"{player.name}" Recently Played ({medialist.itemcount} items)',
-      recentBrowserSubTitle: "click a tile image to play the content",
-      recentBrowserItemsPerRow: 4,
-      recentBrowserItemsHideTitle: false,
-      recentBrowserItemsHideSource: false,
-
-      pandoraBrowserTitle: '"{player.name}" My Pandora Stations ({medialist.itemcount} items)',
-      pandoraBrowserSubTitle: "click a tile image to play the content",
+      pandoraBrowserTitle: "Pandora Stations ({medialist.filteritemcount} items, {medialist.lastupdatedon})",
+      pandoraBrowserSubTitle: "click an item to play the content",
       pandoraBrowserItemsPerRow: 4,
       pandoraBrowserItemsHideTitle: false,
+      pandoraBrowserItemsHideSubTitle: true,
 
-      userPresetBrowserTitle: 'User Presets ({medialist.itemcount} items)',
-      userPresetBrowserSubTitle: "click a tile image to play the content",
+      playerHeaderTitle: '{player.source_noaccount}',
+      playerHeaderArtistTrack: "{player.media_artist} - {player.media_title}",
+      playerHeaderAlbum: "{player.media_album_name} {player.sp_playlist_name_title}",
+      playerHeaderNoMediaPlayingText: "\"{player.name}\" state is \"{player.state}\"",
+
+      presetBrowserTitle: "\"{player.name}\" Presets ({medialist.filteritemcount} items, {medialist.lastupdatedon})",
+      presetBrowserSubTitle: "click an item to select preset; click-hold to store preset",
+      presetBrowserItemsPerRow: 3,
+      presetBrowserItemsHideTitle: false,
+      presetBrowserItemsHideSubTitle: false,
+
+      recentBrowserTitle: "Recently Played ({medialist.filteritemcount} items, {medialist.lastupdatedon})",
+      recentBrowserSubTitle: "click an item to play content",
+      recentBrowserItemsPerRow: 4,
+      recentBrowserItemsHideTitle: false,
+      recentBrowserItemsHideSubTitle: false,
+
+      sourceBrowserTitle: "\"{player.name}\" Sources ({medialist.filteritemcount} items)",
+      sourceBrowserSubTitle: "click an item to select source; click-hold for actions",
+      sourceBrowserItemsPerRow: 1,
+      sourceBrowserItemsHideTitle: false,
+      sourceBrowserItemsHideSubTitle: true,
+
+      userPresetBrowserTitle: "User Presets for \"{player.name}\" ({medialist.filteritemcount} items)",
+      userPresetBrowserSubTitle: "click an item to play content; click-hold for actions",
       userPresetBrowserItemsPerRow: 4,
       userPresetBrowserItemsHideTitle: false,
-      userPresetBrowserItemsHideSource: false,
+      userPresetBrowserItemsHideSubTitle: false,
 
       userPresets: [
         {
@@ -912,9 +924,11 @@ export class Card extends LitElement {
       ],
 
       customImageUrls: {
-        "Xdefault": "/local/images/soundtouchplus_card_customimages/default.png",
-        "Xempty preset": "/local/images/soundtouchplus_card_customimages/empty_preset.png",
-        "XDaily Mix 1": "https://brands.home-assistant.io/spotifyplus/icon.png",
+        "X_default": "/local/images/soundtouchplus_card_customimages/default.png",
+        "X_empty preset": "/local/images/soundtouchplus_card_customimages/empty_preset.png",
+        "X_Daily Mix 1": "https://brands.home-assistant.io/soundtouchplus/icon.png",
+        "X_playerOffBackground": "/local/images/soundtouchplus_card_customimages/playerOffBackground.png",
+        "X_playerBackground": "/local/images/soundtouchplus_card_customimages/playerBackground.png",
       }
     }
   }
@@ -922,65 +936,62 @@ export class Card extends LitElement {
 
   /**
    * Style the <ha-card> element.
-   * 
-   * @param height The computed height of the entire card (title, section, footer).
   */
   private styleCard() {
 
-    //console.log("card.styleCard() - configuration values:\nthis.config.width=%s\nthis.config.height=%s", this.config.width, this.config.height);
-
+    // load basic layout settings.
     let cardWidth: string | undefined = undefined;
     let cardHeight: string | undefined = undefined;
     let editTabHeight = '0px';
     let editBottomToolbarHeight = '0px';
+    const cardWaitProgressSliderColor = this.config.cardWaitProgressSliderColor;
 
-    //console.log("styleCard (card) - styling card\n- isCardInEditPreview=%s\n- isCardInDashboardEditor=%s",
-    //  JSON.stringify(isCardInEditPreview(this)),
-    //  JSON.stringify(isCardInDashboardEditor()),
-    //);
+    // build style info object.
+    const styleInfo: StyleInfo = <StyleInfo>{};
+    if (cardWaitProgressSliderColor)
+      styleInfo['--stpc-card-wait-progress-slider-color'] = `${cardWaitProgressSliderColor}`;
 
     // are we previewing the card in the card editor?
     // if so, then we will ignore the configuration dimensions and use constants.
     if (isCardInEditPreview(this)) {
-      //console.log("styleCard (card) - card is in edit preview");
-      cardHeight = CARD_EDIT_PREVIEW_HEIGHT;
-      cardWidth = CARD_EDIT_PREVIEW_WIDTH;
-      return styleMap({
-        '--stpc-card-edit-tab-height': `${editTabHeight}`,
-        '--stpc-card-edit-bottom-toolbar-height': `${editBottomToolbarHeight}`,
-        height: `${cardHeight ? cardHeight : undefined}`,
-        width: `${cardWidth ? cardWidth : undefined}`,
-        'background-repeat': `${!this.playerId ? 'no-repeat' : undefined}`,
-        'background-position': `${!this.playerId ? 'center' : undefined}`,
-        'background-image': `${!this.playerId ? 'url(' + BRAND_LOGO_IMAGE_BASE64 + ')' : undefined}`,
-        'background-size': `${!this.playerId ? BRAND_LOGO_IMAGE_SIZE : undefined}`,
-      });
+
+      // card is in edit preview.
+      styleInfo['--stpc-card-edit-tab-height'] = `${editTabHeight}`;
+      styleInfo['--stpc-card-edit-bottom-toolbar-height'] = `${editBottomToolbarHeight}`;
+      styleInfo['height'] = `${CARD_EDIT_PREVIEW_HEIGHT}`;
+      styleInfo['width'] = `${CARD_EDIT_PREVIEW_WIDTH}`;
+      styleInfo['background-repeat'] = `${!this.playerId ? 'no-repeat' : undefined}`;
+      styleInfo['background-position'] = `${!this.playerId ? 'center' : undefined}`;
+      styleInfo['background-image'] = `${!this.playerId ? 'url(' + BRAND_LOGO_IMAGE_BASE64 + ')' : undefined}`;
+      styleInfo['background-size'] = `${!this.playerId ? BRAND_LOGO_IMAGE_SIZE : undefined}`;
+      return styleMap(styleInfo);
     }
+
 
     // set card picker options.
     if (isCardInPickerPreview(this)) {
-      //console.log("styleCard (card) - card is in pick preview");
-      cardHeight = CARD_PICK_PREVIEW_HEIGHT;
-      cardWidth = CARD_PICK_PREVIEW_WIDTH;
-      return styleMap({
-        '--stpc-card-edit-tab-height': `${editTabHeight}`,
-        '--stpc-card-edit-bottom-toolbar-height': `${editBottomToolbarHeight}`,
-        height: `${cardHeight ? cardHeight : undefined}`,
-        width: `${cardWidth ? cardWidth : undefined}`,
-        'background-repeat': `no-repeat`,
-        'background-position': `center`,
-        'background-image': `url(${BRAND_LOGO_IMAGE_BASE64})`,
-        'background-size': `${BRAND_LOGO_IMAGE_SIZE}`,
-      });
+
+      // card is in pick preview.
+      styleInfo['--stpc-card-edit-tab-height'] = `${editTabHeight}`;
+      styleInfo['--stpc-card-edit-bottom-toolbar-height'] = `${editBottomToolbarHeight}`;
+      styleInfo['height'] = `${CARD_PICK_PREVIEW_HEIGHT}`;
+      styleInfo['width'] = `${CARD_PICK_PREVIEW_WIDTH}`;
+      styleInfo['background-repeat'] = 'no-repeat';
+      styleInfo['background-position'] = 'center';
+      styleInfo['background-image'] = `url(${BRAND_LOGO_IMAGE_BASE64})`;
+      styleInfo['background-size'] = `${BRAND_LOGO_IMAGE_SIZE}`;
+      return styleMap(styleInfo);
     }
 
     // set card editor options.
     // we have to account for various editor toolbars in the height calculations when using 'fill' mode.
     // we do not have to worry about width calculations, as the width is the same with or without edit mode.
     if (isCardInDashboardEditor()) {
-      //console.log("styleCard (card) - width - dashboard is in edit mode");
+
+      // dashboard is in edit mode.
       editTabHeight = EDIT_TAB_HEIGHT;
       editBottomToolbarHeight = EDIT_BOTTOM_TOOLBAR_HEIGHT;
+
     }
 
     // set card width based on configuration.
@@ -1007,33 +1018,28 @@ export class Card extends LitElement {
       cardHeight = CARD_DEFAULT_HEIGHT;
     }
 
-    //console.log("styleCard (card) - calculated dimensions:\ncardWidth=%s\ncardHeight=%s\neditTabHeight=%s\neditBottomToolbarHeight=%s",
+    //console.log("styleCard (card) - calculated dimensions:\n- cardWidth=%s\n- cardHeight=%s\n- editTabHeight=%s\n- editBottomToolbarHeight=%s",
     //  cardWidth,
     //  cardHeight,
     //  editTabHeight,
     //  editBottomToolbarHeight,
     //);
 
-    return styleMap({
-      '--stpc-card-edit-tab-height': `${editTabHeight}`,
-      '--stpc-card-edit-bottom-toolbar-height': `${editBottomToolbarHeight}`,
-      height: `${cardHeight ? cardHeight : undefined}`,
-      width: `${cardWidth ? cardWidth : undefined}`,
-    });
-
+    // build style info object.
+    styleInfo['--stpc-card-edit-tab-height'] = `${editTabHeight}`;
+    styleInfo['--stpc-card-edit-bottom-toolbar-height'] = `${editBottomToolbarHeight}`;
+    styleInfo['height'] = `${cardHeight ? cardHeight : undefined}`;
+    styleInfo['width'] = `${cardWidth ? cardWidth : undefined}`;
+    return styleMap(styleInfo);
   }
 
 
   /**
-   * Style the <spc-card-background-container> element.
+   * Style the card header element.
    */
-  private styleCardFooter() {
+  private styleCardHeader() {
 
-    //console.log("styleCardFooter (card) - styling card footer container:\n- footerBackgroundColor = %s",
-    //  JSON.stringify(this.footerBackgroundColor),
-    //);
-
-    // is player selected, and a footer background color set?
+    // is player selected, and a title set?
     if ((this.section == Section.PLAYER) && (this.footerBackgroundColor)) {
 
       // yes - return vibrant background style.
@@ -1047,6 +1053,37 @@ export class Card extends LitElement {
 
       // no - just return an empty style to let it default to the card background.
       return styleMap({
+      });
+
+    }
+  }
+
+
+  /**
+   * Style the <stpc-card-background-container> element.
+   */
+  private styleCardFooter() {
+
+    // set footer icon size.
+    const footerIconSize = this.config.footerIconSize || FOOTER_ICON_SIZE_DEFAULT;
+
+    // is player selected, and a footer background color set?
+    if ((this.section == Section.PLAYER) && (this.footerBackgroundColor)) {
+
+      // yes - return vibrant background style.
+      return styleMap({
+        '--stpc-footer-icon-size': `${footerIconSize}`,
+        '--stpc-footer-icon-button-size': `var(--stpc-footer-icon-size, ${FOOTER_ICON_SIZE_DEFAULT}) + 0.75rem`,
+        '--stpc-player-footer-bg-color': `${this.footerBackgroundColor || 'transparent'}`,
+      });
+
+    } else {
+
+      // return style map (let background color default to the card background color).
+      return styleMap({
+        '--stpc-footer-icon-size': `${footerIconSize}`,
+        '--stpc-footer-icon-button-size': `var(--stpc-footer-icon-size, ${FOOTER_ICON_SIZE_DEFAULT}) + 0.75rem`,
+        'background': 'unset',
       });
 
     }

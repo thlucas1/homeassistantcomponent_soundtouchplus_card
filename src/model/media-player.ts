@@ -1,9 +1,7 @@
 // our imports.
 import { SoundTouchPlusHassEntity } from '../types/soundtouchplus-hass-entity';
 import { SoundTouchPlusHassEntityAttributes } from '../types/soundtouchplus-hass-entity-attributes';
-import { MediaPlayerEntityFeature } from '../types/media-player-entity-feature';
-
-const { TURN_ON } = MediaPlayerEntityFeature;
+import { MediaPlayerEntityFeature, MediaPlayerState } from '../services/media-control-service';
 
 
 /**
@@ -19,7 +17,7 @@ export class MediaPlayer {
   attributes: SoundTouchPlusHassEntityAttributes;
   id: string;
   name: string;
-  state: string;
+  state: MediaPlayerState;
 
   /**
    * Initializes a new instance of the class.
@@ -30,18 +28,9 @@ export class MediaPlayer {
 
     // initialize storage.
     this.id = hassEntity.entity_id;
-    this.state = hassEntity.state;
+    this.state = hassEntity.state as MediaPlayerState;
     this.attributes = hassEntity.attributes;
     this.name = this.attributes.friendly_name || '';
-  }
-
-
-  /**
-   * Returns a string containing currently playing media track information in the form of:
-   * "<media_artist> - <media_title>"
-   */
-  public getCurrentTrack(): string {
-    return `${this.attributes.media_artist || ''} - ${this.attributes.media_title || ''}`.replace(/^ - | - $/g, '');
   }
 
 
@@ -62,7 +51,7 @@ export class MediaPlayer {
    * otherwise, false.
    */
   public isPlaying() {
-    return this.state === 'playing';
+    return this.state === MediaPlayerState.PLAYING;
   }
 
 
@@ -71,7 +60,7 @@ export class MediaPlayer {
    * otherwise, false.
    */
   public isPoweredOff() {
-    return this.state === 'off';
+    return this.state === MediaPlayerState.OFF;
   }
 
 
@@ -80,7 +69,7 @@ export class MediaPlayer {
    * otherwise, false.
    */
   public isPoweredOffOrUnknown() {
-    return this.state === 'off' || this.state === 'unknown';
+    return this.state === MediaPlayerState.OFF || this.state === MediaPlayerState.UNKNOWN;
   }
 
 
@@ -94,18 +83,11 @@ export class MediaPlayer {
 
 
   /**
-   * Returns true if the player supports TURN_ON feature;
+   * Returns true if the player supports requested feature;
    * otherwise, false.
    */
-  public supportsTurnOn() {
-    return ((this.attributes.supported_features || 0) & TURN_ON) == TURN_ON;
+  public supportsFeature(feature: MediaPlayerEntityFeature) {
+    return ((this.attributes.supported_features || 0) & feature) == feature;
   }
 
 }
-
-
-export const REPEAT_STATE = {
-  OFF: 'off',
-  ALL: 'all',
-  ONE: 'one',
-};

@@ -17,4 +17,5 @@ export function ProgressEndedEvent() {
     composed: true,
     detail: {},
   });
+
 }

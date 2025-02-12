@@ -1,5 +1,6 @@
 // lovelace card imports.
-import { HomeAssistant } from 'custom-card-helpers';
+import { HomeAssistant } from '../types/home-assistant-frontend/home-assistant';
+import { HassEntity } from 'home-assistant-js-websocket';
 
 // our imports.
 import { HassService } from '../services/hass-service';
@@ -10,10 +11,7 @@ import { BaseEditor } from '../editor/base-editor';
 import { CardConfig } from '../types/card-config';
 import { ConfigArea } from '../types/config-area';
 import { Section } from '../types/section';
-import { MediaPlayerEntityFeature } from '../types/media-player-entity-feature';
 import { MediaPlayer } from './media-player';
-
-const { TURN_OFF, TURN_ON } = MediaPlayerEntityFeature;
 
 
 /**
@@ -51,6 +49,9 @@ export class Store {
   /** Currently selected ConfigArea **/
   static selectedConfigArea: ConfigArea = ConfigArea.GENERAL;
 
+  /** card editor render flags for individual sections. */
+  static hasCardEditLoadedMediaList: { [key: string]: boolean } = {};
+
 
   /**
    * Initializes a new instance of the class.
@@ -72,11 +73,12 @@ export class Store {
     this.hass = hass;
     this.config = config;
     this.card = card;
-    this.hassService = new HassService(hass, card, section);
+    this.hassService = new HassService(hass);
     this.mediaControlService = new MediaControlService(this.hassService);
-    this.soundTouchPlusService = new SoundTouchPlusService(hass, card, section);
+    this.soundTouchPlusService = new SoundTouchPlusService(hass, card, config);
     this.player = this.getMediaPlayerObject(playerId);
     this.section = section;
+
   }
 
 
@@ -89,65 +91,50 @@ export class Store {
    */
   public getMediaPlayerObject(entityId: string) {
 
-    // does entity id exist in hass state data?
-    const hassEntity = Object.values(this.hass.states)
+    // has an entity been configured?
+    if ((!this.config) || (!this.config.entity) || (this.config.entity.trim() == "")) {
+
+      // entityId will not be set in the config if coming from the card picker;
+      // this is ok, as we want it to render a "needs configured" card ui.
+      // in this case, we just create an "empty" MediaPlayer instance.
+      return new MediaPlayer({
+        entity_id: "",
+        state: "",
+        last_changed: "",
+        last_updated: "",
+        attributes: {},
+        context: {
+          id: "",
+          user_id: "",
+          parent_id: "",
+        }
+      });
+    }
+
+    // does entity id prefix exist in hass state data?
+    const hassEntitys = Object.values(this.hass.states)
       .filter((ent) => ent.entity_id.match(entityId));
 
     // if not, then it's an error!
-    if (!hassEntity)
+    if (!hassEntitys) {
+      throw new Error("Entity id '" + JSON.stringify(entityId) + "' could not be matched in the state machine");
+    }
+
+    // find the exact matching HA media player entity and create the media player instance.
+    let player: MediaPlayer | null = null;
+    hassEntitys.forEach(item => {
+      const haEntity = item as HassEntity;
+      if (haEntity.entity_id.toLowerCase() == entityId.toLowerCase()) {
+        player = new MediaPlayer(haEntity);
+      }
+    })
+
+    // did we find the player?
+    if (player) {
+      return player;
+    } else {
       throw new Error("Entity id '" + JSON.stringify(entityId) + "' does not exist in the state machine");
-
-    //console.log("getMediaPlayerObject - hassEntity[0]:\n", JSON.stringify(hassEntity[0], null, 2))
-
-    // convert the hass state representation to a media player object.
-    return new MediaPlayer(hassEntity[0]);
-  }
-
-
-  //public getEntityDefinition(entityId: string) {
-
-  //  //          # is the specified entity id in the hass entity registry ?
-  //  //        # it will NOT be in the entity registry if it's deleted.
-  //  //        # it WILL be in the entity registry if it is disabled, with disabled property = True.
-  //  //  entity_registry = er.async_get(self.hass)
-  //  //registry_entry: RegistryEntry = entity_registry.async_get(spotifyMPEntityId)
-  //  //_logsi.LogObject(SILevel.Verbose, "'%s': MediaPlayer RegistryEntry for entity_id: '%s'" % (self.name, spotifyMPEntityId), registry_entry)
-
-  //}
-
-
-  /**
-   * Returns [TURN_ON, TURN_OFF] if the power button should be shown;
-   * otherwise, [].
-   */
-  public showMainPower() {
-
-    // determine if the media player is powered on.
-    const isPoweredOn = (['on', 'idle', 'playing', 'paused', 'standby', 'buffering'].indexOf(this.player.state) >= 0);
-    //console.log("store.showMainPower()\ncurrent state=%s\nisPowerOn=%s", this.player.state, isPoweredOn);
-
-    if (this.config.playerVolumeControlsHidePower || false) {
-      // user disabled power control in configuration.
-      //console.log("hide main power control since user disabled it in config");
-      return [];
     }
-
-    if (!this.player.supportsTurnOn()) {
-      // media player does not support power (TURN_ON, TURN_OFF) features.
-      //console.log("hide main power control since media_player does not support it");
-      return [];
-    }
-
-    if (isPoweredOn == true) {
-      // media player is powered on; hide main power control.
-      // note that a power control is already shown in player controls next to volume.
-      //console.log("hide main power control since media_player is powered on");
-      return [];
-    }
-
-    // media player is powered off; show main power control.
-    //console.log("show main power control");
-    return [TURN_OFF, TURN_ON];
   }
 
 }

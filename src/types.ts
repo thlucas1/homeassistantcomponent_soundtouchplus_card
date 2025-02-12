@@ -1,4 +1,4 @@
-import { HomeAssistant } from 'custom-card-helpers';
+import { HomeAssistant } from './types/home-assistant-frontend/home-assistant';
 
 declare global {
   // noinspection JSUnusedGlobalSymbols

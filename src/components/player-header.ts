@@ -1,10 +1,11 @@
 // lovelace card imports.
 import { css, html, LitElement, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
-import { styleMap } from 'lit-html/directives/style-map.js';
+import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
 
 // our imports.
 import '../components/player-progress';
+import { sharedStylesFavActions } from '../styles/shared-styles-fav-actions.js';
 import { CardConfig } from '../types/card-config';
 import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
@@ -29,8 +30,6 @@ class PlayerHeader extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    //console.log("player-header.render()\n Rendering player header html");
-
     // set common references from application common storage area.
     this.config = this.store.config;
     this.player = this.store.player;
@@ -54,32 +53,59 @@ class PlayerHeader extends LitElement {
       album = undefined;
     }
 
-    //console.log("player-header:\nhideProgress=%s\ntitle=%s\nartistTrack=%s\nalbum=%s\nattributes.media_title=%s", hideProgress, title, JSON.stringify(artistTrack), JSON.stringify(album), JSON.stringify(this.player.attributes.media_title));
-
     // render html.
     return html` 
       <div class="player-header-container" style=${this.styleContainer()}>
         ${!hideProgress ? html`<stpc-player-progress .store=${this.store}></stpc-player-progress>` : html``}
-        <div class="header-title">${title}</div>
-        ${artistTrack ? html`<div class="header-artist-track">${artistTrack}</div>` : html``}
+        ${title ? html`<div class="header-title">${title}</div>` : html``}
+        ${artistTrack ? html`
+          <div class="header-artist-track">${artistTrack}
+          </div>
+        ` : html``}
         ${album ? html`<div class="header-artist-album">${album}</div>` : html``}
       </div>`;
   }
 
+
   /**
-   * Returns an element style for the progress bar portion of the control.
+   * Returns a style map for player header container.
    */
   private styleContainer() {
-    return styleMap({
-    });
+
+    // load card configuration theme settings.
+    const playerHeaderTitle1Color = this.config.playerHeaderTitle1Color;
+    const playerHeaderTitle1FontSize = this.config.playerHeaderTitle1FontSize;
+    const playerHeaderTitle2Color = this.config.playerHeaderTitle2Color;
+    const playerHeaderTitle2FontSize = this.config.playerHeaderTitle2FontSize;
+    const playerHeaderTitle3Color = this.config.playerHeaderTitle3Color;
+    const playerHeaderTitle3FontSize = this.config.playerHeaderTitle3FontSize;
+
+    // build style info object.
+    const styleInfo: StyleInfo = <StyleInfo>{};
+    if (playerHeaderTitle1Color)
+      styleInfo['--stpc-player-header-title1-color'] = `${playerHeaderTitle1Color}`;
+    if (playerHeaderTitle1FontSize)
+      styleInfo['--stpc-player-header-title1-font-size'] = `${playerHeaderTitle1FontSize}`;
+    if (playerHeaderTitle2Color)
+      styleInfo['--stpc-player-header-title2-color'] = `${playerHeaderTitle2Color}`;
+    if (playerHeaderTitle2FontSize)
+      styleInfo['--stpc-player-header-title2-font-size'] = `${playerHeaderTitle2FontSize}`;
+    if (playerHeaderTitle3Color)
+      styleInfo['--stpc-player-header-title3-color'] = `${playerHeaderTitle3Color}`;
+    if (playerHeaderTitle3FontSize)
+      styleInfo['--stpc-player-header-title3-font-size'] = `${playerHeaderTitle3FontSize}`;
+    return styleMap(styleInfo);
+
   }
 
 
   /**
    * style definitions used by this component.
    * */
-static get styles() {
-    return css`
+  static get styles() {
+    return [
+      sharedStylesFavActions,
+      css`
 
       .player-header-container {
         margin: 0.75rem 3.25rem;
@@ -97,41 +123,42 @@ static get styles() {
       .header-title {
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 1rem;
+        font-size: var(--stpc-player-header-title1-font-size, 1.0rem);
+        line-height: var(--stpc-player-header-title1-font-size, 1.0rem);
         font-weight: 500;
         text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
-        //color: var(--secondary-text-color);
-        //color: var(--stpc-player-palette-vibrant);
-        color: var(--stpc-player-header-color);
+        color: var(--stpc-player-header-title1-color, #ffffff);
         white-space: nowrap;
         mix-blend-mode: screen;
         min-height: 0.5rem;
+        padding: 0.2rem;
       }
 
       .header-artist-track {
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 1.15rem;
+        font-size: var(--stpc-player-header-title2-font-size, 1.15rem);
+        line-height: var(--stpc-player-header-title2-font-size, 1.15rem);
         font-weight: 400;
         text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
-        //color: var(--dark-primary-color);
-        //color: var(--stpc-player-palette-vibrant);
-        color: var(--stpc-player-header-color);
+        color: var(--stpc-player-header-title2-color, #ffffff);
         mix-blend-mode: screen;
+        padding: 0.1rem;
       }
 
       .header-artist-album {
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 1rem;
-        font-weight: 300;
+        font-size: var(--stpc-player-header-title3-font-size, 1.0rem);
+        line-height: var(--stpc-player-header-title3-font-size, 1.0rem);
+        font-weight: 400;
         text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
-        //color: var(--secondary-text-color);
-        //color: var(--stpc-player-palette-vibrant);
-        color: var(--stpc-player-header-color);
+        color: var(--stpc-player-header-title3-color, #ffffff);
         mix-blend-mode: screen;
+        padding: 0.1rem;
       }
-    `;
+    `
+    ];
   }
 }
 

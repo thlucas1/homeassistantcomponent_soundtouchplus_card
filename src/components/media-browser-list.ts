@@ -1,31 +1,15 @@
 // lovelace card imports.
-import { css, html, LitElement, TemplateResult } from 'lit';
-import { property, state } from 'lit/decorators.js';
+import { css, html, TemplateResult } from 'lit';
+import { when } from 'lit/directives/when.js';
 
 // our imports.
-import { Store } from '../model/store';
-import { CardConfig } from '../types/card-config';
-import { ContentItemParent } from '../types/soundtouchplus/content-item';
+import { MediaBrowserBase } from './media-browser-base';
 import { Section } from '../types/section';
-import { listStyle, ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD } from '../constants';
+import { listStyle, ITEM_SELECTED } from '../constants';
 import { customEvent } from '../utils/utils';
-import {
-  buildMediaBrowserItems,
-  renderMediaBrowserItem,
-  styleMediaBrowserItemBackgroundImage,
-  styleMediaBrowserItemTitle
-} from '../utils/media-browser-utils';
 
-export class MediaBrowserList extends LitElement {
 
-  @property({ attribute: false }) store!: Store;
-  @property({ attribute: false }) items!: ContentItemParent[];
-
-  @state() mousedownTimestamp!: number;
-
-  private config!: CardConfig;
-  private section!: Section;
-
+export class MediaBrowserList extends MediaBrowserBase {
 
   /**
    * Initializes a new instance of the class.
@@ -34,9 +18,6 @@ export class MediaBrowserList extends LitElement {
 
     // invoke base class method.
     super();
-
-    // initialize storage.
-    this.mousedownTimestamp = 0;
   }
 
 
@@ -47,109 +28,63 @@ export class MediaBrowserList extends LitElement {
   */
   protected render(): TemplateResult | void {
 
-    // set common references from application common storage area.
-    this.config = this.store.config;
-    this.section = this.store.section;
+    // invoke base class method.
+    super.render();
 
-    // set title / source visibility based on selected section.
-    let hideTitle = true;
-    let hideSubTitle = true;
-    let itemsPerRow = 1;
-    let listItemClass = 'button';
-    if (this.section == Section.PANDORA_STATIONS) {
-      itemsPerRow = this.config.pandoraBrowserItemsPerRow || 3;
-      hideTitle = this.config.pandoraBrowserItemsHideTitle || false;
-      hideSubTitle = true;
-    } else if (this.section == Section.PRESETS) {
-      itemsPerRow = this.config.presetBrowserItemsPerRow || 3;
-      hideTitle = this.config.presetBrowserItemsHideTitle || false;
-      hideSubTitle = this.config.presetBrowserItemsHideSource || false;
-    } else if (this.section == Section.RECENTS) {
-      itemsPerRow = this.config.recentBrowserItemsPerRow || 3;
-      hideTitle = this.config.recentBrowserItemsHideTitle || false;
-      hideSubTitle = this.config.recentBrowserItemsHideSource || false;
-    } else if (this.section == Section.SOURCES) {
-      itemsPerRow = this.config.sourceBrowserItemsPerRow || 3;
-      hideTitle = this.config.sourceBrowserItemsHideTitle || false;
-      hideSubTitle = true;
-      // make the source icons half the size of regular list buttons.
-      listItemClass += ' button-source';
-    } else if (this.section == Section.USERPRESETS) {
-      itemsPerRow = this.config.presetBrowserItemsPerRow || 3;
-      hideTitle = this.config.presetBrowserItemsHideTitle || false;
-      hideSubTitle = this.config.presetBrowserItemsHideSource || false;
-    }
-
-    //console.log("%c render (media-browser-list)\n Section %s items:\n%s",
-    //  "color: orange;",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(this.items, null, 2),
-    //);
+    // define control to render - search criteria.
+    const nowPlayingBars = html`
+      <div class="bars" slot="meta">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      `;
 
     // render html.
     return html`
-      <style>
-        :host {
-          --items-per-row: ${itemsPerRow};
-        }
-      </style>
-      <mwc-list multi class="list">
-        ${buildMediaBrowserItems(this.items || [], this.config, this.section).map((item, index) => {
+      <mwc-list multi class="list" style=${this.styleMediaBrowser()}">
+        ${this.buildMediaBrowserItems().map((item, index) => {
           return html`
-            ${styleMediaBrowserItemBackgroundImage(item.media_browser_thumbnail, index, this.section)}
-            <mwc-list-item
-              class="${listItemClass}"
-              @click=${() => this.buttonMediaBrowserItemClick(customEvent(ITEM_SELECTED, item))}
-              @mousedown=${() => this.buttonMediaBrowserItemMouseDown()}
-
-            >
-              <div class="row">${renderMediaBrowserItem(item, !item.media_browser_thumbnail || !hideTitle, !hideSubTitle)}</div>
-            </mwc-list-item>
+            ${this.styleMediaBrowserItemBackgroundImage(item.mbi_item.image_url, index)}
+            ${(() => {
+              if (this.isTouchDevice) {
+                return (html`
+                  <mwc-list-item
+                    hasMeta
+                    class="${this.listItemClass}"
+                    @touchstart=${{ handleEvent: () => this.onMediaBrowserItemTouchStart(customEvent(ITEM_SELECTED, item)), passive: true }}
+                    @touchend=${() => this.onMediaBrowserItemTouchEnd(customEvent(ITEM_SELECTED, item))}
+                  >
+                    <div class="row">${this.renderMediaBrowserItem(item, !item.mbi_item.image_url || !this.hideTitle, !this.hideSubTitle)}</div>
+                    ${when(
+                      item.mbi_item.is_active && this.store.player.isPlaying() && this.section == Section.SOURCES,
+                      () => html`${nowPlayingBars}`,
+                    )}
+                  </mwc-list-item>
+                `);
+              } else {
+                return (html`
+                  <mwc-list-item
+                    hasMeta
+                    class="${this.listItemClass}"
+                    @click=${() => this.onMediaBrowserItemClick(customEvent(ITEM_SELECTED, item))}
+                    @mousedown=${() => this.onMediaBrowserItemMouseDown()}
+                    @mouseup=${() => this.onMediaBrowserItemMouseUp(customEvent(ITEM_SELECTED, item))}
+                  >
+                    <div class="row">${this.renderMediaBrowserItem(item, !item.mbi_item.image_url || !this.hideTitle, !this.hideSubTitle)}</div>
+                    ${when(
+                      item.mbi_item.is_active && this.store.player.isPlaying() && this.section == Section.SOURCES,
+                      () => html`${nowPlayingBars}`,
+                    )}
+                  </mwc-list-item>
+                `);
+              }
+        })()}
           `;
-        })}
+    })}
       </mwc-list>
     `;
-  }
-
-
-  /**
-   * Event fired when a mousedown event takes place for a media browser item button.
-   * In this case, we will store the current time (in milliseconds) so that we can calculate
-   * the duration in the "click" event (occurs after a mouseup event).
-   * 
-   * @param event Event arguments.
-   */
-  private buttonMediaBrowserItemMouseDown(): boolean {
-    //console.log("media-browser-icons.buttonMediaBrowserItemMouseDown()");
-    // store when the mouse down event took place.
-    this.mousedownTimestamp = Date.now();
-    return true;
-  }
-
-
-  /**
-   * Event fired when a click event takes place for a media browser item button.
-   * 
-   * In this case, we are looking to determine how long the mouse button was in the
-   * down position (e.g. the duration).  If the duration was greater than 1500 milliseconds,
-   * then we will treat the event as a "click and hold" operation; otherwise, we will treat
-   * the event as a "click" operation.
-   * 
-   * @param event Event arguments.
-   */
-  private buttonMediaBrowserItemClick(event: CustomEvent): boolean {
-
-    // calculate the duration of the mouse down / up operation.
-    const duration = Date.now() - this.mousedownTimestamp;
-    this.mousedownTimestamp = 0;
-    //console.log("media-browser-icons.buttonClick()\nevent=%s\nmousedown duration=%s", JSON.stringify(event), JSON.stringify(duration));
-    if (duration < 1500) {
-      //console.log("media-browser-icons.buttonClick()\nmousedown duration was less than 1500ms - dispatching ITEM_SELECTED event");
-      return this.dispatchEvent(event);
-    } else {
-      //console.log("media-browser-icons.buttonClick()\nmousedown duration was greater than 1500ms - dispatching ITEM_SELECTED_WITH_HOLD event");
-      return this.dispatchEvent(customEvent(ITEM_SELECTED_WITH_HOLD, event.detail));
-    }
   }
 
 
@@ -168,9 +103,15 @@ export class MediaBrowserList extends LitElement {
           margin: 0.4rem 0.0rem;
         }
 
-        .button-source {
+        .button-device {
           --icon-width: 50px !important;
           margin: 0 !important;
+        }
+
+        .button-track {
+          --icon-width: 80px !important;
+          margin: 0 !important;
+          padding: 0.25rem;
         }
 
         .row {
@@ -183,16 +124,82 @@ export class MediaBrowserList extends LitElement {
           background-size: contain;
           background-repeat: no-repeat;
           background-position: left;
+          mask-repeat: no-repeat;
+          mask-position: left;
           border-radius: 0.5rem;
         }
 
         .title {
-          font-size: 1.1rem;
+          color: var(--stpc-media-browser-items-list-color, var(--stpc-media-browser-items-color, var(--primary-text-color, #ffffff)));
+          font-size: var(--stpc-media-browser-items-title-font-size, 1.1rem);
+          font-weight: normal;
+          padding: 0 0.5rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
           align-self: center;
           flex: 1;
         }
+
+        .title-active {
+          color: var(--stpc-media-browser-items-list-color, var(--stpc-media-browser-items-color, var(--primary-text-color, #ffffff)));
+        }
+
+        .subtitle {
+          font-size: var(--stpc-media-browser-items-subtitle-font-size, 0.8rem);
+          font-weight: normal;
+          line-height: 120%;
+          padding-bottom: 0.25rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          width: 100%;
+        }
+
+        /* *********************************************************** */
+        /* the remaining styles are used for the sound animation icon. */
+        /* *********************************************************** */
+        .bars {
+          height: 30px;
+          left: 50%;
+          margin: -30px 0 0 -20px;
+          position: relative;
+          top: 65%;
+          width: 40px;
+        }
+
+        .bar {
+          background: var(--dark-primary-color);
+          bottom: 1px;
+          height: 3px;
+          position: absolute;
+          width: 3px;      
+          animation: sound 0ms -800ms linear infinite alternate;
+          display: block;
+        }
+
+        @keyframes sound {
+          0% {
+            opacity: .35;
+            height: 3px; 
+          }
+          100% {
+            opacity: 1;       
+            height: 1rem;        
+          }
+        }
+
+        .bar:nth-child(1)  { left: 1px; animation-duration: 474ms; }
+        .bar:nth-child(2)  { left: 5px; animation-duration: 433ms; }
+        .bar:nth-child(3)  { left: 9px; animation-duration: 407ms; }
+        .bar:nth-child(4)  { left: 13px; animation-duration: 458ms; }
+        /*.bar:nth-child(5)  { left: 17px; animation-duration: 400ms; }*/
+        /*.bar:nth-child(6)  { left: 21px; animation-duration: 427ms; }*/
+        /*.bar:nth-child(7)  { left: 25px; animation-duration: 441ms; }*/
+        /*.bar:nth-child(8)  { left: 29px; animation-duration: 419ms; }*/
+        /*.bar:nth-child(9)  { left: 33px; animation-duration: 487ms; }*/
+        /*.bar:nth-child(10) { left: 37px; animation-duration: 442ms; }*/
+
       `,
-      styleMediaBrowserItemTitle,
       listStyle,
     ];
   }

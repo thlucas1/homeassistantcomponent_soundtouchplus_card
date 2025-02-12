@@ -4,7 +4,7 @@ import { css, html, TemplateResult } from 'lit';
 // our imports.
 import { BaseEditor } from './base-editor';
 import { Section } from '../types/section';
-import { PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT } from '../sections/player';
+import { PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT } from '../constants';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
@@ -68,17 +68,12 @@ class PlayerHeaderSettingsEditor extends BaseEditor {
     // ensure store is created.
     super.createStore();
 
-    //console.log("render (player-header-editor) - rendering player header settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
-
     // render html.
     return html`
       <div class="schema-title">
         Player Header Status area settings
       </div>
-      <stpc-editor-form class="stpc-editor-form"
+      <stpc-editor-form
         .schema=${CONFIG_SETTINGS_SCHEMA}
         .section=${Section.PLAYER}
         .store=${this.store}

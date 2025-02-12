@@ -6,6 +6,13 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.12 ] - 2025/02/12
+
+  * Added filter capability to all sections, which allows you to quickly find content within the section tiles.
+  * Added numerous theming options that control font-sizes, control sizes, colors, etc.  Check out the [Theming wiki page](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Themes) for more information.
+  * Added title formatter option `{medialist.filteritemcount}`; Number of filtered items in the media list.
+  * Fixed a bug in all media list rendering controls that was causing the media list not to render for some browser types (Fire HD, iPad Air, etc).
+
 ###### [ 1.0.11 ] - 2024/09/20
 
   * FINALLY got the thing to compile on github build!  Changing to release 1.0.11 to ensure the proper build is picked up.

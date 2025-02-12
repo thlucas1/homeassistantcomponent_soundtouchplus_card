@@ -1,17 +1,13 @@
-// lovelace card imports.
-import { css, html } from 'lit';
+// debug logging.
+//import Debug from 'debug/src/browser.js';
+//import { DEBUG_APP_NAME } from '../constants';
+//const debuglog = Debug(DEBUG_APP_NAME + ":media-browser-utils");
 
 // our imports.
 import { MediaPlayer } from '../model/media-player';
 import { CustomImageUrls } from '../types/custom-image-urls';
 import { CardConfig } from '../types/card-config';
-import { Section } from '../types/section';
-import { formatDateEpochSecondsToLocaleString, formatStringProperCase } from './utils';
-import { ContentItem, ContentItemParent } from '../types/soundtouchplus/content-item';
-import { IMediaBrowserItem } from '../types/imedia-browser-item';
-
-const DEFAULT_MEDIA_IMAGEURL =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAYAAACAvzbMAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw1AUhU9TS0UqDnYQcchQnexiRXQrVSyChdJWaNXB5KV/0KQhSXFxFFwLDv4sVh1cnHV1cBUEwR8QZwcnRRcp8b6k0CLGC4/3cd49h/fuA4RWjalmXxxQNcvIJBNivrAqBl8RgA8hxDAnMVNPZRdz8Kyve+qluovyLO++P2tQKZoM8InEcaYbFvEG8cympXPeJw6ziqQQnxNPGnRB4keuyy6/cS47LPDMsJHLzBOHicVyD8s9zCqGSjxNHFFUjfKFvMsK5y3Oaq3BOvfkLwwVtZUs12mNIYklpJCGCBkNVFGDhSjtGikmMnSe8PCPOv40uWRyVcHIsYA6VEiOH/wPfs/WLMWm3KRQAgi82PbHOBDcBdpN2/4+tu32CeB/Bq60rr/eAmY/SW92tcgRMLQNXFx3NXkPuNwBRp50yZAcyU9LKJWA9zP6pgIwfAsMrLlz65zj9AHI0ayWb4CDQ2CiTNnrHu/u753bvz2d+f0A+AZy3KgprtwAAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfoBQEMNhNCJ/KVAAACg0lEQVR42u3BgQAAAADDoPlTX+EAVQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwG/GFwABsN92WwAAAABJRU5ErkJggg==';
+import { formatDateEpochSecondsToLocaleString } from './utils';
 
 
 /**
@@ -29,11 +25,6 @@ export function removeSpecialChars(str: string) {
 }
 
 
-function hasItemsWithImage(items: ContentItemParent[]) {
-  return items.some((item) => item.ContentItem?.ContainerArt || false);
-}
-
-
 /**
  * Searches the configuration custom ImageUrl's collection for a matching title.
  * The item imageUrl is returned if a match is found; otherwise, undefined.
@@ -43,16 +34,12 @@ function hasItemsWithImage(items: ContentItemParent[]) {
  */
 export function getCustomImageUrl(collection: CustomImageUrls | undefined, title: string) {
 
-  //console.log("getCustomImageUrl - title=%s", title);
-
   // search collection for matching title and return the imageUrl.
   // remove any special characters from the title before comparing.
   // note that we already removed special characters from the collection 
   // in the setConfig() method when the card configuration was loaded.
   for (const itemTitle in collection) {
-    //console.log("STPC - getCustomImageUrl():\n%s = itemTitle\n%s = title", JSON.stringify(itemTitle), JSON.stringify(removeSpecialChars(title)));
     if (itemTitle === removeSpecialChars(title)) {
-      //console.log("getCustomImageUrl():\ntitle '%s' found in customimageurls\nimageurl = %s", JSON.stringify(itemTitle), JSON.stringify(collection[itemTitle]));
       return collection[itemTitle];
     }
   }
@@ -63,41 +50,47 @@ export function getCustomImageUrl(collection: CustomImageUrls | undefined, title
 
 
 /**
- * Gets the image url that will be displayed in the media browser for items that contain a 
- * ContainerArt attribute.
+ * Gets the image url that will be displayed in the media browser for items that contain 
+ * a ContainerArt attribute.
+ * 
+ * @param item media item to render an image for.
+ * @param config card configuration object.
+ * @param hasItemsWithImage true if any items in the parent collection have an image_url assigned; otherwise, false to indicate ALL items have no images.
+ * @param imageUrlDefault default image url to use.
  * 
  * The image to display is resolved in the following sequence:
  * - configuration `customImageUrls` `title` for matching item name (if one exists).
- * - item ContainerArt value (if one exists).
+ * - item image_url value (if one exists).
  * - configuration `customImageUrls` `default` value (if one exists).
  * - hard-coded `default image` data if all else fails.
  * 
- * If the image url is a Home Assistant brands logo, then the brand icon.png image is used instead.
+ * If the image_url is a Home Assistant brands logo, then the brand icon.png image is used instead.
  */
-export function getContentItemImageUrl(item: ContentItem | undefined, config: CardConfig, itemsWithImage: boolean, imageUrlDefault: string) {
+export function getContentItemImageUrl(item: any, config: CardConfig, hasItemsWithImage: boolean, imageUrlDefault: string) {
 
-  //console.log("getContentItemImageUrl - input\n- image_url = %s",
-  //  JSON.stringify(item.image_url),
-  //);
+  // if there are no other items with images then we are done;
+  if (!hasItemsWithImage) {
+    return undefined;
+  }
 
-  // check for a custom imageUrl; if not found, then use the content item image (if supplied).
-  let imageUrl = getCustomImageUrl(config.customImageUrls, item?.Name || '') ?? item?.ContainerArt;
+  // check for a custom imageUrl; if not found, then use the item image_url (if supplied).
+  let imageUrl = getCustomImageUrl(config.customImageUrls, item.ContentItem.Name || '') ?? item.ContentItem.ContainerArt;
 
-  // do we have a custom imageUrl?
+  // did we resolve an image_url?
   if (!imageUrl) {
+
     // no - if there are other items with images, then we will use a default image;
     // otherwise, just return undefined so it doesn't insert a default image.
-    if (itemsWithImage) {
-      imageUrl = config.customImageUrls?.['default'] || imageUrlDefault;
-    }
+    //if (hasItemsWithImage) {
+    imageUrl = config.customImageUrls?.['default'] || imageUrlDefault;
+    //}
+
   }
 
   // if imageUrl is a home assistant brands logo, then use the 'icon.png' image.
   if (imageUrl?.match(/https:\/\/brands\.home-assistant\.io\/.+\/logo.png/)) {
     imageUrl = imageUrl?.replace('logo.png', 'icon.png');
   }
-
-  //console.log("STPC - getContentItemImageUrl():\nfinal imageurl = %s", JSON.stringify(imageUrl));
 
   // return imageUrl to caller.
   return imageUrl || '';
@@ -111,61 +104,29 @@ export function getContentItemImageUrl(item: ContentItem | undefined, config: Ca
  */
 export function getMdiIconImageUrl(mdi_icon: string): string {
 
-  const mdiImageUrl = '\'data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%232196F3" d="' + mdi_icon + '"></path></svg>\'';
+  //// assign default color value, if one is not assigned.
+  //if (!mdi_icon_color) {
+  //  mdi_icon_color = "#2196F3"
+  //}
+  //mdi_icon_color = mdi_icon_color.replace("#", "%23");
+
+  // assign the icon url.
+  const mdiImageUrl = '\'data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="' + mdi_icon + '"></path></svg>\'';
+  //const mdiImageUrl = '\'data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="' + mdi_icon_color + '" d="' + mdi_icon + '"></path></svg>\'';
   return mdiImageUrl
+
 }
-
-
 /**
- * Appends IMediaBrowserItem properties to each item in a collection of items
- * that are destined to be displayed in the media browser.
+ * Returns true if ANY of the items have an ContentItem.ContainerArt specified; 
+ * otherwise, false indicates no ContentItem.ContainerArt's are present in the list.
  * 
- * @items Collection of items to display in the media browser.
- * @config CardConfig object that contains card configuration details.
- * @section Current section that is active.
- * @returns The collection of items, with each item containing IMediaListItem arguments that will be used by the media browser.
+ * @param items List of media content items to check.
+ * @returns true if ANY of the items have an ContentItem.ContainerArt specified; otherwise, false.
  */
-export function buildMediaBrowserItems(items: ContentItemParent[], config: CardConfig, section: Section) {
+export function hasMediaItemImages(items: any[]) {
 
-  // do ANY of the items have images?
-  const itemsWithImage = hasItemsWithImage(items);
+  return items.some((item) => item.ContentItem.ContainerArt);
 
-  // process all items in the collection.
-  return items.map((item) => {
-
-    //console.log("%c buildMediaBrowserItems - media list item:\n%s",
-    //  "color: orange;",
-    //  JSON.stringify(item),
-    //);
-
-    // get image to use as a thumbnail for the item;
-    // if no image can be obtained, then use the default.
-    const media_browser_thumbnail = getContentItemImageUrl(item.ContentItem, config, itemsWithImage, DEFAULT_MEDIA_IMAGEURL);
-    const media_browser_title = item.ContentItem?.Name;
-    const media_browser_subtitle = item.ContentItem?.Source;
-
-    // just to keep the compiler happy ...
-    if (section == Section.PRESETS) {
-    }
-
-    //console.log("%c buildMediaBrowserItems - media browser item:\n%s",
-    //  "color: orange;",
-    //  JSON.stringify({
-    //    ...item,
-    //    media_browser_thumbnail,
-    //    media_browser_title,
-    //    media_browser_subtitle,
-    //  }),
-    //);
-
-    // append media browser arguments to the item.
-    return {
-      ...item,
-      media_browser_thumbnail,
-      media_browser_title,
-      media_browser_subtitle,
-    };
-  });
 }
 
 
@@ -178,6 +139,7 @@ export function buildMediaBrowserItems(items: ContentItemParent[], config: CardC
  * @param player MediaPlayer instance that contains information about the player.
  * @param mediaListLastUpdatedOn Epoch date(in seconds) when the last refresh of the media list took place.  Only used for services that don't have a media player `lastupdatedon` attribute.
  * @param mediaList A media list of content items.
+ * @param filteredList A filtered media list of content items.
  * @returns The text argument with keywords replaced with the equivalent attribute values.
  */
 export function formatTitleInfo(
@@ -186,12 +148,13 @@ export function formatTitleInfo(
   player: MediaPlayer | undefined = undefined,
   mediaListLastUpdatedOn: number | undefined = undefined,
   mediaList: Array<any> | undefined = undefined,
+  filteredList: Array<any> | undefined = undefined,
 ): string | undefined {
 
   // call various formatting methods.
   let result = formatConfigInfo(text, config);
   result = formatPlayerInfo(result, player);
-  result = formatMediaListInfo(result, mediaListLastUpdatedOn, mediaList);
+  result = formatMediaListInfo(result, mediaListLastUpdatedOn, mediaList, filteredList);
   return result;
 }
 
@@ -203,12 +166,14 @@ export function formatTitleInfo(
  * @param text Text string to replace keyword values with.
  * @param mediaListLastUpdatedOn Epoch date(in seconds) when the last refresh of the media list took place.  Only used for services that don't have a media player `lastupdatedon` attribute.
  * @param mediaList A media list of content items.
+ * @param filteredList A filtered media list of content items.
  * @returns The text argument with keywords replaced with media list details.
  */
 export function formatMediaListInfo(
   text: string | undefined,
   mediaListLastUpdatedOn: number | undefined = undefined,
   mediaList: Array<any> | undefined = undefined,
+  filteredList: Array<any> | undefined = undefined,
 ): string | undefined {
 
   // if text not set then don't bother.
@@ -224,6 +189,17 @@ export function formatMediaListInfo(
   if (text.indexOf("{medialist.lastupdatedon}") > -1) {
     const localeDT = formatDateEpochSecondsToLocaleString(mediaListLastUpdatedOn || 0);
     text = text.replace("{medialist.lastupdatedon}", localeDT || '');
+  }
+
+  if (text.indexOf("{medialist.filteritemcount}") > -1) {
+    let count = "";
+    // if filterList not supplied, then use the mediaList item count.
+    if (filteredList) {
+      count = (filteredList || []).length.toString();
+    } else {
+      count = (mediaList || []).length.toString();
+    }
+    text = text.replace("{medialist.filteritemcount}", count);
   }
 
   return text;
@@ -297,8 +273,7 @@ export function formatPlayerInfo(
     //soundtouchplus_tone_bass_level: not capable
     //soundtouchplus_tone_treble_level: not capable
     //device_class: speaker
-    //entity_picture: > -
-    //  /api/media_player_proxy / media_player.bose_st10_1 ? token = f447f9b3fbdb647d9df2f7b0a5a474be9e17ffa51d26eb18f414d5120a2bdeb8 & cache=2a8a6a76b27e209a
+    //entity_picture: /api/media_player_proxy / media_player.bose_st10_1 ? token = f447f9b3fbdb647d9df2f7b0a5a474be9e17ffa51d26eb18f414d5120a2bdeb8 & cache=2a8a6a76b27e209a
     //icon: mdi: speaker
     //supported_features: 1040319
 
@@ -338,58 +313,31 @@ export function formatConfigInfo(
 }
 
 
-/**
- * Style definition used to style a media browser item background image.
- */
-export function styleMediaBrowserItemBackgroundImage(thumbnail: string, index: number, section: Section) {
+export function truncateMediaList(mediaList: any, maxItems: number): string | undefined {
 
-  let bgSize = '100%';
-  if (section == Section.SOURCES) {
-    bgSize = '50%';
+  let result: string | undefined = undefined;
+
+  // if media list exceeds max items, then truncate the list.
+  if ((mediaList?.length || 0) > maxItems) {
+
+    result = "Limited to " + maxItems + " items while editing card configuration.";
+
+    for (let i = 0, l = mediaList?.length || 0; i <= l; i++) {
+      if (i > maxItems)
+        mediaList?.pop()
+    }
   }
 
-  return html`
-    <style>
-      .button:nth-of-type(${index + 1}) .thumbnail {
-        background-image: url(${thumbnail});
-        background-size: ${bgSize};
-      }
-    </style>
-  `;
+  return result;
+
 }
 
 
 /**
- * Style definition used to style a media browser item title.
+ * Opens a new browser tab to the specified link.
+ * 
+ * @param url Link to open.
  */
-export const styleMediaBrowserItemTitle = css`
-  .title {
-    color: var(--secondary-text-color);
-    font-weight: normal;
-    padding: 0 0.5rem;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-`;
-
-
-export function renderMediaBrowserItem(
-  item: IMediaBrowserItem | any,
-  showTitle: boolean = true,
-  showSubTitle: boolean = true
-) {
-
-  //console.log("%c renderMediaBrowserItem\n- IMediaBrowserItem:\n%s",
-  //  "color: orange;",
-  //  JSON.stringify(item, null, 2)
-  //);
-
-  return html`
-    <div class="thumbnail"></div>
-    <div class="title" ?hidden=${!showTitle}>
-      ${item.media_browser_title}
-      <div class="title-source" ?hidden=${!showSubTitle}>${formatStringProperCase(item.media_browser_subtitle || '')}</div>
-    </div>
-  `;
+export function openWindowNewTab(url: string): void {
+  window.open(url, "_blank");
 }
