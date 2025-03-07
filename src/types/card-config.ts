@@ -150,6 +150,12 @@ export interface CardConfig extends LovelaceCardConfig {
   playerHeaderHide?: boolean;
 
   /** 
+   * Hide favorites action button in the controls area of the Player section form.
+   * Default is false.
+   */
+  playerControlsHideFavorites?: boolean;
+
+  /**
    * Hide play / pause button in the controls area of the Player section form.
    * Default is false.
    */
@@ -166,6 +172,12 @@ export interface CardConfig extends LovelaceCardConfig {
    * Default is false.
    */
   playerControlsHideShuffle?: boolean;
+
+  /**
+   * Hide tone controls button in the controls area of the Player section form.
+   * Default is false.
+   */
+  playerControlsHideToneControls?: boolean;
 
   /**
    * Hide next track button in the controls area of the Player section form.

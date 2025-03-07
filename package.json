@@ -1,10 +1,9 @@
 {
   "name": "soundtouchplus-card",
   "version": "",
-  "description": "",
+  "description": "Home Assistant UI card that supports features unique to the SoundTouchPlus custom integration.",
   "main": "src/main.js",
   "module": "src/main.js",
-  "repository": "",
   "author": "Todd Lucas",
   "license": "MIT",
   "dependencies": {
@@ -57,5 +56,16 @@
     "clean": "npm run clean_delfiles && npm run clean_deldirs",
     "clean_delfiles": "del /S /Q \"node_modules\\.cache\\rollup-plugin-typescript2\\*.*\"",
     "clean_deldirs": "for /d %G in (\"node_modules\\.cache\\rollup-plugin-typescript2\\rpt2_*\") do rd /s /q \"%~G\""
-  }
+  },
+  "keywords": [
+    "lovelace"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card"
+  },
+  "bugs": {
+    "url": "https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/issues"
+  },
+  "homepage": "https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki"
 }

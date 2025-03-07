@@ -6,6 +6,16 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.14 ] - 2025/03/07
+
+  * Added `Player` section tone controls information UI that allows tone-related options to be adjusted (based on the device).  For ST-300 devices, this includes audio product tone controls (bass, treble) and audio dsp controls (dialog mode).  For ST-10 devices, this includes bass reduction settings.
+  * Added `playerControlsHideToneControls` config option to enable / disable tone controls information area.
+  * Updated `README.md` documentation for HACS repository.
+
+###### [ 1.0.13 ] - 2025/02/13
+
+  * Documentation updates.
+
 ###### [ 1.0.12 ] - 2025/02/12
 
   * Added filter capability to all sections, which allows you to quickly find content within the section tiles.

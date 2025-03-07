@@ -47,6 +47,12 @@ const CONFIG_SETTINGS_SCHEMA = [
     selector: { boolean: {} },
   },
   {
+    name: 'playerControlsHideToneControls',
+    label: 'Hide tone controls button in the controls area',
+    required: false,
+    selector: { boolean: {} },
+  },
+  {
     name: 'playerControlsHide',
     label: 'Hide controls area of the Player section form',
     required: false,

@@ -26,14 +26,6 @@ import {
 } from '@mdi/js';
 
 // our imports.
-import { MediaPlayer } from '../model/media-player';
-import { getMdiIconImageUrl } from '../utils/media-browser-utils';
-import { CardConfig } from '../types/card-config';
-import { IContentItem } from '../types/soundtouchplus/content-item';
-import { INavigateResponse } from '../types/soundtouchplus/navigate-response';
-import { IPresetList } from '../types/soundtouchplus/preset-list';
-import { IRecentList } from '../types/soundtouchplus/recent-list';
-import { ISourceList } from '../types/soundtouchplus/source-list';
 import {
   DOMAIN_SOUNDTOUCHPLUS,
   DOMAIN_MEDIA_PLAYER
@@ -45,7 +37,21 @@ import {
   SERVICE_VOLUME_MUTE,
   SERVICE_VOLUME_SET
 } from '../services/media-control-service'
-
+import { MediaPlayer } from '../model/media-player';
+import { getMdiIconImageUrl } from '../utils/media-browser-utils';
+import { getUtcNowTimestamp } from '../utils/utils';
+import { CardConfig } from '../types/card-config';
+import { IAudioDspControls } from '../types/soundtouchplus/audio-dsp-controls';
+import { IAudioProductToneControls } from '../types/soundtouchplus/audio-product-tone-controls';
+import { IBass } from '../types/soundtouchplus/bass';
+import { IBassCapabilities } from '../types/soundtouchplus/bass-capabilities';
+import { IContentItem } from '../types/soundtouchplus/content-item';
+import { INavigateResponse } from '../types/soundtouchplus/navigate-response';
+import { IPresetList } from '../types/soundtouchplus/preset-list';
+import { IRecentList } from '../types/soundtouchplus/recent-list';
+import { ISourceList } from '../types/soundtouchplus/source-list';
+import { ISupportedUrls } from '../types/soundtouchplus/supported-urls';
+import { ISoundTouchDevice } from '../types/soundtouchplus/soundtouch-device';
 
 
 /** SoundTouchPlus custom services provider class. */
@@ -163,6 +169,244 @@ export class SoundTouchPlusService {
 
 
   /**
+   * Gets the current audio dsp controls configuration of the device.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @param refresh True to query the device for realtime information and refresh the cache; otherwise, False to just return the cached information.
+   * @returns A IAudioDspControls object.
+  */
+  public async GetAudioDspControls(
+    player: MediaPlayer,
+    refresh: boolean | undefined | null = null,
+  ): Promise<IAudioDspControls> {
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+      };
+
+      // update service data parameters (with optional parameters).
+      if (refresh != null)
+        serviceData['refresh'] = refresh;
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'get_audio_dsp_controls',
+        serviceData: serviceData
+      };
+
+      // call the service, and return the response.
+      const response = await this.CallServiceWithResponse(serviceRequest);
+
+      // convert response to an object type.
+      const responseObj = response as IAudioDspControls;
+
+      // set the LastUpdatedOn value to epoch (number of seconds), as the
+      // service does not provide this field (but we need it for media list processing).
+      responseObj.LastUpdatedOn = Date.now() / 1000
+
+      // return results to caller.
+      return responseObj;
+
+    } finally {
+    }
+  }
+
+
+  /**
+   * Gets the current audio product tone controls configuration of the device.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @param refresh True to query the device for realtime information and refresh the cache; otherwise, False to just return the cached information.
+   * @returns A IAudioProductToneControls object.
+  */
+  public async GetAudioProductToneControls(
+    player: MediaPlayer,
+    refresh: boolean | undefined | null = null,
+  ): Promise<IAudioProductToneControls> {
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+      };
+
+      // update service data parameters (with optional parameters).
+      if (refresh != null)
+        serviceData['refresh'] = refresh;
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'get_audio_product_tone_controls',
+        serviceData: serviceData
+      };
+
+      // call the service, and return the response.
+      const response = await this.CallServiceWithResponse(serviceRequest);
+
+      // convert response to an object type.
+      const responseObj = response as IAudioProductToneControls;
+
+      // set the LastUpdatedOn value to epoch (number of seconds), as the
+      // service does not provide this field (but we need it for media list processing).
+      responseObj.LastUpdatedOn = Date.now() / 1000
+
+      // return results to caller.
+      return responseObj;
+
+    } finally {
+    }
+  }
+
+
+  /**
+   * Gets the current bass capability configuration of the device.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @param refresh True to query the device for realtime information and refresh the cache; otherwise, False to just return the cached information.
+   * @returns A IAudioProductToneControls object.
+  */
+  public async GetBassCapabilities(
+    player: MediaPlayer,
+    refresh: boolean | undefined | null = null,
+  ): Promise<IBassCapabilities> {
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+      };
+
+      // update service data parameters (with optional parameters).
+      if (refresh != null)
+        serviceData['refresh'] = refresh;
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'get_bass_capabilities',
+        serviceData: serviceData
+      };
+
+      // call the service, and return the response.
+      const response = await this.CallServiceWithResponse(serviceRequest);
+
+      // convert response to an object type.
+      const responseObj = response as IBassCapabilities;
+
+      // set the LastUpdatedOn value to epoch (number of seconds), as the
+      // service does not provide this field (but we need it for media list processing).
+      responseObj.LastUpdatedOn = Date.now() / 1000
+
+      // return results to caller.
+      return responseObj;
+
+    } finally {
+    }
+  }
+
+
+  /**
+   * Gets the current bass level configuration of the device.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @param refresh True to query the device for realtime information and refresh the cache; otherwise, False to just return the cached information.
+   * @returns A IBass object.
+  */
+  public async GetBassLevel(
+    player: MediaPlayer,
+    refresh: boolean | undefined | null = null,
+  ): Promise<IBass> {
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+      };
+
+      // update service data parameters (with optional parameters).
+      if (refresh != null)
+        serviceData['refresh'] = refresh;
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'get_bass_level',
+        serviceData: serviceData
+      };
+
+      // call the service, and return the response.
+      const response = await this.CallServiceWithResponse(serviceRequest);
+
+      // convert response to an object type.
+      const responseObj = response as IBass;
+
+      // set the LastUpdatedOn value to epoch (number of seconds), as the
+      // service does not provide this field (but we need it for media list processing).
+      responseObj.LastUpdatedOn = Date.now() / 1000
+
+      // return results to caller.
+      return responseObj;
+
+    } finally {
+    }
+  }
+
+
+  /**
+   * Gets SoundTouch device information.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @returns A ISoundTouchDevice object.
+  */
+  public async GetDeviceInfo(
+    player: MediaPlayer,
+  ): Promise<ISoundTouchDevice> {
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+      };
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'get_device_info',
+        serviceData: serviceData
+      };
+
+      // for testing device info errors.
+      //if (player.id.endsWith("bose_st10_1"))
+      //  throw new Error("TEST TODO REMOVEME GetDeviceInfo main card exception ...")
+
+      // call the service, and return the response.
+      const response = await this.CallServiceWithResponse(serviceRequest);
+
+      // convert response to an object type.
+      const responseObj = response as ISoundTouchDevice;
+
+      // set the LastUpdatedOn value to epoch (number of seconds), as the
+      // service does not provide this field (but we need it for media list processing).
+      responseObj.LastUpdatedOn = Date.now() / 1000
+
+      // return results to caller.
+      return responseObj;
+
+    } finally {
+    }
+  }
+
+
+  /**
    * Retrieves the list of sources defined to the device.
    * 
    * @param player SoundTouchPlus MediaPlayer instance that will process the request.
@@ -244,6 +488,54 @@ export class SoundTouchPlusService {
           JSON.stringify(responseObj, null, 2)
         );
       }
+
+      // return results to caller.
+      return responseObj;
+
+    } finally {
+    }
+  }
+
+
+  /**
+   * Gets the supported urls configuration of the device.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @param refresh True to query the device for realtime information and refresh the cache; otherwise, False to just return the cached information.
+   * @returns A ISupportedUrls object.
+  */
+  public async GetSupportedUrls(
+    player: MediaPlayer,
+    refresh: boolean | undefined | null = null,
+  ): Promise<ISupportedUrls> {
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+      };
+
+      // update service data parameters (with optional parameters).
+      if (refresh != null)
+        serviceData['refresh'] = refresh;
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'get_supported_urls',
+        serviceData: serviceData
+      };
+
+      // call the service, and return the response.
+      const response = await this.CallServiceWithResponse(serviceRequest);
+
+      // convert response to an object type.
+      const responseObj = response as ISupportedUrls;
+
+      // set the LastUpdatedOn value to epoch (number of seconds), as the
+      // service does not provide this field (but we need it for media list processing).
+      responseObj.LastUpdatedOn = getUtcNowTimestamp();
 
       // return results to caller.
       return responseObj;
@@ -545,6 +837,125 @@ export class SoundTouchPlusService {
       };
 
       // call the service.
+      await this.CallService(serviceRequest);
+
+    } finally {
+    }
+  }
+
+
+  /**
+   * Sets the current audio dsp controls configuration of the device.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @param audio_mode Audio mode value (e.g. "AUDIO_MODE_NORMAL", "AUDIO_MODE_DIALOG", etc).
+   * @param video_sync_audio_delay Video syncronization audio delay value (in milliseconds). Suggested range is 0 - 250ms, in increments of 10.
+  */
+  public async SetAudioDspControls(
+    player: MediaPlayer,
+    audio_mode: string | undefined | null = null,
+    video_sync_audio_delay: number | undefined | null = null,
+  ): Promise<void> {
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+      };
+
+      // update service data parameters (with optional parameters).
+      if (audio_mode != null)
+        serviceData['audio_mode'] = audio_mode;
+      if (video_sync_audio_delay != null)
+        serviceData['video_sync_audio_delay'] = video_sync_audio_delay;
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'set_audio_dsp_controls',
+        serviceData: serviceData
+      };
+
+      // call the service (no response).
+      await this.CallService(serviceRequest);
+
+    } finally {
+    }
+  }
+
+
+  /**
+   * Sets the current audio product tone controls configuration of the device.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @param bass_level Bass level to set, usually in the range of -100 (low) to 100 (high).
+   * @param treble_level Treble level to set, usually in the range of -100 (low) to 100 (high).
+  */
+  public async SetAudioProductToneControls(
+    player: MediaPlayer,
+    bass_level: number | undefined | null = null,
+    treble_level: number | undefined | null = null,
+  ): Promise<void> {
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+      };
+
+      // update service data parameters (with optional parameters).
+      if (bass_level != null)
+        serviceData['bass_level'] = bass_level;
+      if (treble_level != null)
+        serviceData['treble_level'] = treble_level;
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'set_audio_product_tone_controls',
+        serviceData: serviceData
+      };
+
+      // call the service (no response).
+      await this.CallService(serviceRequest);
+
+    } finally {
+    }
+  }
+
+
+  /**
+   * Sets the current bass level configuration of the device.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @param level Bass level to set, usually in the range of -9 (low) to 0 (high).
+  */
+  public async SetBassLevel(
+    player: MediaPlayer,
+    level: number | undefined | null = null,
+  ): Promise<void> {
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+      };
+
+      // update service data parameters (with optional parameters).
+      if (level != null)
+        serviceData['level'] = level;
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'set_bass_level',
+        serviceData: serviceData
+      };
+
+      // call the service (no response).
       await this.CallService(serviceRequest);
 
     } finally {

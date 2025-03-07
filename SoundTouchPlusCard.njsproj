@@ -40,13 +40,23 @@
     <Content Include="dist\soundtouchplus-card.js" />
     <Content Include="dist\soundtouchplus-card.js.map" />
     <Content Include="hacs.json" />
-    <Content Include="images\general_editor_options.png" />
-    <Content Include="images\pandora_nofooter_panel.png" />
-    <Content Include="images\player_nofooter_panel.png" />
-    <Content Include="images\presets_device_nofooter_panel.png" />
-    <Content Include="images\presets_user_nofooter_panel.png" />
-    <Content Include="images\recentlyplayed_nofooter_panel.png" />
-    <Content Include="images\sources_nofooter_panel.png" />
+    <Content Include="images\config\cardpicker.png" />
+    <Content Include="images\config\editor_general.png" />
+    <Content Include="images\ui\card_footer.png" />
+    <Content Include="images\ui\card_header.png" />
+    <Content Include="images\ui\masonry\device_presets.png" />
+    <Content Include="images\ui\masonry\pandora_stations.png" />
+    <Content Include="images\ui\masonry\player_customimages_background_static.png" />
+    <Content Include="images\ui\masonry\player_customimages_state_off.png" />
+    <Content Include="images\ui\masonry\player_track.png" />
+    <Content Include="images\ui\masonry\recents.png" />
+    <Content Include="images\ui\masonry\sources.png" />
+    <Content Include="images\ui\masonry\userpresets.png" />
+    <Content Include="images\ui\masonry\userpresets_actions.png" />
+    <Content Include="images\ui\player_body.png" />
+    <Content Include="images\ui\player_controls.png" />
+    <Content Include="images\ui\player_header.png" />
+    <Content Include="images\ui\player_volume.png" />
     <Content Include="LICENSE" />
     <Content Include="package-lock.json" />
     <Content Include="package.json" />
@@ -86,6 +96,9 @@
     <Folder Include=".vscode\" />
     <Folder Include="dist" />
     <Folder Include="images\" />
+    <Folder Include="images\config\" />
+    <Folder Include="images\ui\" />
+    <Folder Include="images\ui\masonry\" />
     <Folder Include="src" />
     <Folder Include="src\components" />
     <Folder Include="src\editor" />
@@ -101,11 +114,17 @@
     <Folder Include="src\utils" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="src\sections\alert-updates-base.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\components\fav-actions-base.ts" />
     <TypeScriptCompile Include="src\components\media-browser-base.ts" />
     <TypeScriptCompile Include="src\components\media-browser-icons.ts" />
     <TypeScriptCompile Include="src\components\media-browser-list.ts" />
-    <TypeScriptCompile Include="src\components\player-body.ts">
+    <TypeScriptCompile Include="src\components\player-body-base.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\components\player-body-tone-controls.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="src\components\player-controls.ts" />
@@ -145,17 +164,52 @@
     <TypeScriptCompile Include="src\types\config-area.ts" />
     <TypeScriptCompile Include="src\types\custom-image-urls.ts" />
     <TypeScriptCompile Include="src\types\hass-entity-attributes-media-player.ts" />
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\device-registry-entry.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\entity-registry-entry.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\types\home-assistant-frontend\fire-event.ts" />
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\ha-utils.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\types\home-assistant-frontend\home-assistant.ts" />
     <TypeScriptCompile Include="src\types\home-assistant-frontend\lovelace-card-config.ts" />
+    <TypeScriptCompile Include="src\types\home-assistant-frontend\registry-entry.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\types\home-assistant-frontend\service-call-request.ts" />
     <TypeScriptCompile Include="src\types\home-assistant-frontend\service-call-response.ts" />
     <TypeScriptCompile Include="src\types\home-assistant-frontend\service-validation-error.ts" />
-    <TypeScriptCompile Include="src\types\playerAlerts.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus-hass-entity.ts" />
     <TypeScriptCompile Include="src\types\media-browser-item.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\audio-dsp-controls.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\soundtouchplus\audio-product-tone-controls.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\soundtouchplus\bass-capabilities.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\soundtouchplus\bass.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\soundtouchplus\component.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\soundtouchplus\control-level-info.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\soundtouchplus\information-network-info.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\types\soundtouchplus\navigate-response.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\navigate-item.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\soundtouch-device.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\types\soundtouchplus\source-item.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\recent.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\source-list.ts" />
@@ -165,6 +219,12 @@
     <TypeScriptCompile Include="src\types\soundtouchplus\preset-list.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\preset.ts" />
     <TypeScriptCompile Include="src\types\soundtouchplus\content-item.ts" />
+    <TypeScriptCompile Include="src\types\soundtouchplus\supported-url.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="src\types\soundtouchplus\supported-urls.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\types\soundtouchplus\user-preset.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>

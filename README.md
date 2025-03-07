@@ -23,26 +23,29 @@ with more to come!
 
 Here's a quick overview on what the card can look like.  The card is highly customizable when it comes to the information displayed.  Check out the [UI Dashboards wiki](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/UI-Dashboards) page for more examples and YAML configuration.
 
-#### Media Player Control (Panel Mode)  
-![player_nofooter_panel](./images/player_nofooter_panel.png?v01_20240919) 
+#### Media Player Control (Masonry Mode)  
+![masonry_player_track](./images/ui/masonry/player_track.png?v20241024) 
 
-#### SoundTouch Recently Played (Panel Mode)  
-![recentlyplayed_nofooter_panel](./images/recentlyplayed_nofooter_panel.png?v01_20240919) 
+#### SoundTouch Sources (Masonry Mode)  
+![masonry_sources](./images/ui/masonry/sources.png?v20241024) 
 
-#### User-Defined Presets (Panel Mode)  
-![presets_user_nofooter_panel](./images/presets_user_nofooter_panel.png?v01_20240919) 
+#### SoundTouch Device Presets (Masonry Mode)  
+![masonry_device_presets](./images/ui/masonry/device_presets.png?v20241024) 
 
-#### SoundTouch Device Presets (Panel Mode)  
-![presets_device_nofooter_panel](./images/presets_device_nofooter_panel.png?v01_20240919) 
+#### User-defined Presets (Masonry Mode)  
+![masonry_userpresets](./images/ui/masonry/userpresets.png?v20241024) 
 
-#### SoundTouch Sources (Panel Mode)  
-![sources_nofooter_panel](./images/sources_nofooter_panel.png?v01_20240919) 
+#### Recently Played (Masonry Mode)  
+![masonry_recently_played](./images/ui/masonry/recents.png?v20241024) 
 
-#### Pandora Stations (Panel Mode)  
-![pandora_nofooter_panel](./images/pandora_nofooter_panel.png?v01_20240919) 
+#### Pandora Stations (Masonry Mode)  
+![masonry_pandora_stations](./images/ui/masonry/pandora_stations.png?v20241024) 
 
-#### Editor UI, General Options  
-![general_editor_options](./images/general_editor_options.png?v01_20240919) 
+#### Editor UI  
+![config_editor_general](./images/config/editor_general.png?v20241024) 
+
+#### Card Picker
+![config_cardpicker](./images/config/cardpicker.png?v20241024) 
 
 
 ## HACS Installation Instructions (recommended)
@@ -64,8 +67,8 @@ Here's a quick overview on what the card can look like.  The card is highly cust
 - on your dashboard click on the icon at the right top corner then on Edit dashboard.
 - click again on that icon and then on Manage resources.
 - click on Add resource.
-- copy and paste this: `/local/soundtouchplus-card.js?v=1`.
-- click on JavaScript Module then Create.
+- copy and paste this: `/local/soundtouchplus-card.js?v=1.0.12` (change version number to match what was downloaded).
+- click on `JavaScript Module` then Create.
 - go back and refresh your page.
 - you can now click on Add card in the bottom right corner and search for "Custom: SoundTouchPlus Card".
 - after any update of the file you will have to edit `/local/soundtouchplus-card.js?v=1` and change the version (e.g. `v=1`) to any higher number (e.g. `v=1.2`).
@@ -88,7 +91,7 @@ Submit a [Bug Report](https://github.com/thlucas1/homeassistantcomponent_soundto
 
 ## Request a New Feature
 
-Do you have an idea for a new feature that could be added to the integration?  Submit a [Feature Request](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/issues/new?assignees=&labels=Feature%2BRequest&projects=&template=feature_request.yml) to get your idea into the queue. I receive a notification when a new request is opened, and will do my best to turn your idea into the latest and greatest feature.
+Do you have an idea for a new feature that could be added to the integration?  Submit a [Feature Request](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.yml) to get your idea into the queue. I receive a notification when a new request is opened, and will do my best to turn your idea into the latest and greatest feature.
 
 ***
 

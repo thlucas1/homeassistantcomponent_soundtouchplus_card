@@ -4,7 +4,7 @@ import { DEBUG_APP_NAME } from '../constants';
 const debuglog = Debug(DEBUG_APP_NAME + ":player");
 
 // lovelace card imports.
-import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
+import { css, html, PropertyValues, TemplateResult } from 'lit';
 import { customElement, property, state } from "lit/decorators.js";
 import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
 
@@ -16,7 +16,7 @@ import Vibrant from 'node-vibrant/dist/vibrant';
 
 // our imports.
 import '../components/player-header';
-import '../components/player-body';
+import '../components/player-body-tone-controls';
 import '../components/player-controls';
 import '../components/player-volume';
 import { CardConfig } from '../types/card-config';
@@ -24,25 +24,22 @@ import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
 import { Palette } from '@vibrant/color';
 import { isCardInEditPreview } from '../utils/utils';
-import { playerAlerts } from '../types/playerAlerts';
 import {
   BRAND_LOGO_IMAGE_BASE64,
   BRAND_LOGO_IMAGE_SIZE,
   PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT,
   PLAYER_CONTROLS_ICON_SIZE_DEFAULT
 } from '../constants';
+import { AlertUpdatesBase } from './alert-updates-base';
 
 
 @customElement("stpc-player")
-export class Player extends LitElement implements playerAlerts {
+export class Player extends AlertUpdatesBase {
 
   // public state properties.
-  @property({ attribute: false }) store!: Store;
   @property({ attribute: false }) mediaContentId!: string;
 
   // private storage.
-  @state() private alertError?: string;
-  @state() private alertInfo?: string;
   @state() private config!: CardConfig;
   @state() private playerImage?: string;
   @state() private _colorPaletteVibrant?: string;
@@ -79,7 +76,23 @@ export class Player extends LitElement implements playerAlerts {
             ${this.alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this.alertErrorClear}>${this.alertError}</ha-alert>` : ""}
             ${this.alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this.alertInfoClear}>${this.alertInfo}</ha-alert>` : ""}
           </div>
-          <div class="player-section-body-content"></div>
+          ${(() => {
+            // if favorites disabled then we don't need to display anything in the body.
+            // not using this feature for now - maybe later?
+            if ((this.config.playerControlsHideFavorites || false) == true) {
+              return (html`<div class="player-section-body-content"></div>`);
+            } else {
+              return (html`<div class="player-section-body-content"></div>`);
+            }
+          })()}
+          ${(() => {
+            // if tone controls disabled then we don't need to display anything in the body.
+            if ((this.config.playerControlsHideToneControls || false) == true) {
+              return (html`<div class="player-section-body-tone-controls"></div>`);
+            } else {
+              return (html`<stpc-player-body-tone-controls class="player-section-body-tone-controls" .store=${this.store} .mediaContentId=${this.mediaContentId} id="elmPlayerBodyToneControls"></stpc-player-body-tone-controls>`);
+            }
+          })()}
         </div>
         <stpc-player-controls style=${this.stylePlayerControls()}
           class="player-section-controls"
@@ -153,7 +166,7 @@ export class Player extends LitElement implements playerAlerts {
         transition-behavior: allow-discrete;    /* Note: be sure to write this after the shorthand */
       }
 
-      .player-section-body-queue {
+      .player-section-body-tone-controls {
         /* border: 1px solid yellow;   /* FOR TESTING CONTROL LAYOUT CHANGES */
         height: inherit;
         background: transparent;
@@ -308,42 +321,6 @@ export class Player extends LitElement implements playerAlerts {
     return styleMap({
     });
 
-  }
-
-
-  /**
-   * Clears the error alert text.
-   */
-  public alertErrorClear(): void {
-    this.alertError = undefined;
-  }
-
-
-  /**
-   * Clears the informational alert text.
-   */
-  public alertInfoClear(): void {
-    this.alertInfo = undefined;
-  }
-
-
-  /**
-   * Sets the alert info message.
-   * 
-   * @param message alert message text.
-   */
-  public alertInfoSet(message: string): void {
-    this.alertInfo = message;
-  }
-
-
-  /**
-   * Sets the alert error message.
-   * 
-   * @param message alert message text.
-   */
-  public alertErrorSet(message: string): void {
-    this.alertError = message;
   }
 
 

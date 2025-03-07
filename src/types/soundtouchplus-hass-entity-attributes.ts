@@ -20,4 +20,5 @@ export declare type SoundTouchPlusHassEntityAttributes = HassEntityAttributesMed
   soundtouchplus_tone_bass_level?: string;
   soundtouchplus_tone_treble_level?: string;
   stp_nowplaying_image_url?: string;
+  stp_config_state?: string;
 };

@@ -4,7 +4,7 @@ import { DEBUG_APP_NAME } from './constants';
 const debuglog = Debug(DEBUG_APP_NAME + ":card");
 
 // lovelace card imports.
-import { css, html, LitElement, PropertyValues, TemplateResult } from 'lit';
+import { css, html, PropertyValues, TemplateResult } from 'lit';
 import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { choose } from 'lit/directives/choose.js';
@@ -22,6 +22,19 @@ import './components/footer';
 import './editor/editor';
 
 // our imports.
+import {
+  BRAND_LOGO_IMAGE_BASE64,
+  BRAND_LOGO_IMAGE_SIZE,
+  FOOTER_ICON_SIZE_DEFAULT
+} from './constants';
+import {
+  getConfigAreaForSection,
+  getSectionForConfigArea,
+  isCardInDashboardEditor,
+  isCardInPickerPreview,
+  isNumber,
+  getHomeAssistantErrorMessage,
+} from './utils/utils';
 import { EDITOR_CONFIG_AREA_SELECTED, EditorConfigAreaSelectedEventArgs } from './events/editor-config-area-selected';
 import { FILTER_SECTION_MEDIA, FilterSectionMediaEventArgs } from './events/filter-section-media';
 import { PROGRESS_STARTED } from './events/progress-started';
@@ -38,19 +51,9 @@ import { RecentBrowser } from './sections/recent-browser';
 import { SourceBrowser } from './sections/source-browser';
 import { UserPresetBrowser } from './sections/userpreset-browser';
 import { formatTitleInfo, removeSpecialChars } from './utils/media-browser-utils';
-import {
-  BRAND_LOGO_IMAGE_BASE64,
-  BRAND_LOGO_IMAGE_SIZE,
-  FOOTER_ICON_SIZE_DEFAULT
-} from './constants';
-import {
-  getConfigAreaForSection,
-  getSectionForConfigArea,
-  isCardInEditPreview,
-  isCardInDashboardEditor,
-  isCardInPickerPreview,
-  isNumber,
-} from './utils/utils';
+import { ISoundTouchDevice } from './types/soundtouchplus/soundtouch-device';
+import { MediaPlayer } from './model/media-player';
+import { AlertUpdatesBase } from './sections/alert-updates-base';
 
 
 const HEADER_HEIGHT = 2;
@@ -70,7 +73,7 @@ const EDIT_BOTTOM_TOOLBAR_HEIGHT = '59px';
 
 
 @customElement("soundtouchplus-card")
-export class Card extends LitElement {
+export class Card extends AlertUpdatesBase {
 
   /** 
    * Home Assistant will update the hass property of the config element on state changes, and 
@@ -84,12 +87,15 @@ export class Card extends LitElement {
    * manually, like so:
    *  `this._hass = hass;`
    * */
+
+  // public state properties.
   @property({ attribute: false }) public hass!: HomeAssistant;
   @property({ attribute: false }) config!: CardConfig;
   @property({ attribute: false }) footerBackgroundColor?: string;
+  @property({ attribute: false }) public soundTouchDevice!: ISoundTouchDevice | undefined;
 
+  // private state properties.
   @state() section!: Section;
-  @state() store!: Store;
   @state() showLoader!: boolean;
   @state() loaderTimestamp!: number;
   @state() cancelLoader!: boolean;
@@ -107,6 +113,9 @@ export class Card extends LitElement {
 
   /** Indicates if createStore method is executing for the first time (true) or not (false). */
   private isFirstTimeSetup: boolean = true;
+
+  /** Indicates if GetDeviceInfo call was made (true) or not (false). */
+  private isGetDeviceInfoCalled: boolean = false;
 
 
   /**
@@ -142,7 +151,6 @@ export class Card extends LitElement {
 
     // if no sections are configured then configure the default.
     if (!this.config.sections || this.config.sections.length === 0) {
-      //console.log("render (card) - sections not configured, adding PLAYER to config.sections")
       this.config.sections = [Section.PLAYER];
       Store.selectedConfigArea = ConfigArea.GENERAL;
     }
@@ -168,9 +176,10 @@ export class Card extends LitElement {
           <ha-circular-progress indeterminate></ha-circular-progress>
         </div>
         ${title ? html`<div class="stpc-card-header" style=${this.styleCardHeader()}>${title}</div>` : ""}
+        ${this.alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this.alertErrorClear}>${this.alertError}</ha-alert>` : ""}
+        ${this.alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this.alertInfoClear}>${this.alertInfo}</ha-alert>` : ""}
         <div class="stpc-card-content-section">
-          ${
-              this.playerId
+          ${this.store.player.id != ""
               ? choose(this.section, [
                 [Section.PANDORA_STATIONS, () => html` <stpc-pandora-browser .store=${this.store} id="elmPandoraBrowserForm" @item-selected=${this.onMediaListItemSelected}></stp-pandora-browser>`],
                 [Section.PLAYER, () => html`<stpc-player id="spcPlayer" .store=${this.store}></stpc-player>`],
@@ -178,13 +187,15 @@ export class Card extends LitElement {
                 [Section.RECENTS, () => html` <stpc-recent-browser .store=${this.store} id="elmRecentBrowserForm" @item-selected=${this.onMediaListItemSelected}></stp-recents-browser>`],
                 [Section.SOURCES, () => html` <stpc-source-browser .store=${this.store} id="elmSourceBrowserForm" @item-selected=${this.onMediaListItemSelected}></stp-source-browser>`],
                 [Section.USERPRESETS, () => html` <stpc-userpreset-browser .store=${this.store} id="elmUserPresetBrowserForm" @item-selected=${this.onMediaListItemSelected}></stp-userpresets-browser>`],
-                [Section.UNDEFINED, () => html`<div class="stpc-not-configured">SoundTouchPlus card configuration error.<br/>Please configure section(s) to display.</div>`],
               ])
-              : html`<div class="stpc-initial-config">Welcome to the SoundTouchPlus media player card.<br/>Start by configuring a media player entity.</div>`
-          //    : choose(this.section, [
-          //      [Section.INITIAL_CONFIG, () => html`<div class="stpc-initial-config">Welcome to the SoundTouchPlus media player card.<br/>Please start by configuring the card.</div>`],
-          //      [Section.UNDEFINED, () => html`<div class="stpc-not-configured">SoundTouchPlus card configuration error.<br/>Please check the card configuration.</div>`],
-          //    ]) 
+              : html`
+                  <div class="stpc-initial-config">
+                    Welcome to the SoundTouchPlus media player card.<br/>
+                    Start by editing the card configuration media player "entity" value.<br/>
+                    <div class="stpc-not-configured">
+                      ${this.store.player.attributes.stp_config_state}
+                    </div>
+                  </div>`
           }
         </div>
         ${when(showFooter, () =>
@@ -310,7 +321,8 @@ export class Card extends LitElement {
 
       .stpc-not-configured {
         text-align: center;
-        margin-top: 1rem;
+        margin: 1rem;
+        color: #fa2643;
       }
 
       .stpc-initial-config {
@@ -339,11 +351,29 @@ export class Card extends LitElement {
   private createStore() {
 
     // create the store.
-    this.store = new Store(this.hass, this.config, this, this.section, this.config.entity);
+    this.store = new Store(this.hass, this.config, this, this.section);
 
     // have we set the player id yet?  if not, then make it so.
     if (!this.playerId) {
       this.playerId = this.config.entity;
+    }
+
+    // was the player resolved to an entity? if so, then load device information.
+    if ((!this.soundTouchDevice) && (this.store.player) && (this.store.player.id != "")) {
+
+      //debuglog("createStore - player was resolved to an entity\n- this.isGetDeviceInfoCalled = %s\n- stp_config_state = %s",
+      //  JSON.stringify(this.isGetDeviceInfoCalled),
+      //  JSON.stringify(this.store.player.attributes.stp_config_state),
+      //);
+
+      if (!this.isGetDeviceInfoCalled) {
+
+        // we only want to get device information if there are no config errors;
+        // otherwise, it's a continuous loop!
+        if (this.store.player.attributes.stp_config_state || "" == "") {
+          this.updateSoundTouchDevice(this.store.player);
+        }
+      }
     }
 
     // is this the first time executing?
@@ -351,8 +381,7 @@ export class Card extends LitElement {
 
       // if there are things that you only want to happen one time when the configuration
       // is initially loaded, then do them here.
-
-      //console.log("createStore (card) - isFirstTimeSetup logic invoked");
+      debuglog("createStore - isFirstTimeSetup logic invoked; creating store area");
 
       // set the initial section reference; if none defined, then default;
       if ((!this.config.sections) || (this.config.sections.length == 0)) {
@@ -412,13 +441,16 @@ export class Card extends LitElement {
     // invoke base class method.
     super.connectedCallback();
 
+    // determine if card configuration is being edited.
+    //this.isCardInEditPreview = isCardInEditPreview(this);
+
     // add card level event listeners.
     this.addEventListener(PROGRESS_ENDED, this.onProgressEndedEventHandler);
     this.addEventListener(PROGRESS_STARTED, this.onProgressStartedEventHandler);
     this.addEventListener(FILTER_SECTION_MEDIA, this.onFilterSectionMediaEventHandler);
 
     // only add the following events if card configuration is being edited.
-    if (isCardInEditPreview(this)) {
+    if (this.isCardInEditPreview) {
 
       // add document level event listeners.
       document.addEventListener(EDITOR_CONFIG_AREA_SELECTED, this.onEditorConfigAreaSelectedEventHandler);
@@ -467,9 +499,11 @@ export class Card extends LitElement {
     // invoke base class method.
     super.firstUpdated(changedProperties);
 
-    //console.log("firstUpdated (card) - 1st render complete - changedProperties keys:\n- %s",
-    //  JSON.stringify(Array.from(changedProperties.keys())),
-    //);
+    if (debuglog.enabled) {
+      debuglog("firstUpdated (card) - 1st render complete - changedProperties keys:\n%s",
+        JSON.stringify(Array.from(changedProperties.keys())),
+      );
+    }
 
     // if there are things that you only want to happen one time when the configuration
     // is initially loaded, then do them here.
@@ -505,7 +539,7 @@ export class Card extends LitElement {
       this.store.section = sectionNew;
       super.requestUpdate();
 
-    } else if (isCardInEditPreview(this)) {
+    } else if (this.isCardInEditPreview) {
 
       // if in edit mode, then refresh display as card size is different.
       super.requestUpdate();
@@ -656,7 +690,7 @@ export class Card extends LitElement {
     // validate section id.
     const enumValues: string[] = Object.values(Section);
     if (!enumValues.includes(evArgs.section || "")) {
-      debuglog("%onFilterSectionMediaEventHandler - Ignoring Filter request; section is not a valid Section enum value:\n%s",
+      debuglog("%conFilterSectionMediaEventHandler - Ignoring Filter request; section is not a valid Section enum value:\n%s",
         "color:red",
         JSON.stringify(evArgs, null, 2),
       );
@@ -748,7 +782,6 @@ export class Card extends LitElement {
     // remove any configuration properties that do not have a value set.
     for (const [key, value] of Object.entries(newConfig)) {
       if (Array.isArray(value) && value.length === 0) {
-        // removing empty config value.
         delete newConfig[key];
       }
     }
@@ -760,10 +793,10 @@ export class Card extends LitElement {
     newConfig.playerHeaderHide = newConfig.playerHeaderHide || false;
     newConfig.playerHeaderHideProgressBar = newConfig.playerHeaderHideProgressBar || false;
     newConfig.playerControlsHideFavorites = newConfig.playerControlsHideFavorites || false;
-    newConfig.playerControlsHidePlayQueue = newConfig.playerControlsHidePlayQueue || false;
     newConfig.playerControlsHidePlayPause = newConfig.playerControlsHidePlayPause || false;
     newConfig.playerControlsHideRepeat = newConfig.playerControlsHideRepeat || false;
     newConfig.playerControlsHideShuffle = newConfig.playerControlsHideShuffle || false;
+    newConfig.playerControlsHideToneControls = newConfig.playerControlsHideToneControls || false;
     newConfig.playerControlsHideTrackNext = newConfig.playerControlsHideTrackNext || false;
     newConfig.playerControlsHideTrackPrev = newConfig.playerControlsHideTrackPrev || false;
 
@@ -802,15 +835,10 @@ export class Card extends LitElement {
     // store configuration so other card sections can access them.
     this.config = newConfig;
 
-    //console.log("setConfig (card) - configuration changes applied\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
-
-    //console.log("setConfig (card) - updated configuration:\n%s",
-    //  JSON.stringify(this.config,null,2),
-    //);
-
+    debuglog("%csetConfig - Configuration changes stored\n%s",
+      "color:orange",
+      JSON.stringify(newConfig, null, 2),
+    );
   }
 
 
@@ -953,7 +981,7 @@ export class Card extends LitElement {
 
     // are we previewing the card in the card editor?
     // if so, then we will ignore the configuration dimensions and use constants.
-    if (isCardInEditPreview(this)) {
+    if (this.isCardInEditPreview) {
 
       // card is in edit preview.
       styleInfo['--stpc-card-edit-tab-height'] = `${editTabHeight}`;
@@ -1085,6 +1113,105 @@ export class Card extends LitElement {
         '--stpc-footer-icon-button-size': `var(--stpc-footer-icon-size, ${FOOTER_ICON_SIZE_DEFAULT}) + 0.75rem`,
         'background': 'unset',
       });
+
+    }
+  }
+
+
+  /**
+   * Updates the SoundTouchDevice state.
+   */
+  private updateSoundTouchDevice(player: MediaPlayer): boolean {
+
+    // check if update is already in progress.
+    // this method is called from `render`, which could fire multiple times!
+    if (!this.isUpdateInProgress) {
+      this.isUpdateInProgress = true;
+      this.isGetDeviceInfoCalled = true
+    } else {
+      return false;
+    }
+
+    if (debuglog.enabled) {
+      debuglog("updateSoundTouchDevice - updating SoundTouch device information");
+    }
+
+    // clear alerts.
+    this.alertClear();
+
+    try {
+
+      // we use the `Promise.allSettled` approach here, so that we can easily 
+      // add promises if more data gathering is needed in the future.
+      const promiseRequests = new Array<Promise<unknown>>();
+
+      // create promise - get media list.
+      const promiseGetDeviceInfo = new Promise((resolve, reject) => {
+
+        // call the service to retrieve the device info.
+        this.store.soundTouchPlusService.GetDeviceInfo(player)
+          .then(result => {
+
+            // load media list results.
+            this.soundTouchDevice = result;
+
+            if (debuglog.enabled) {
+              debuglog("%cupdateSoundTouchDevice - soundTouchDevice was updated from GetDeviceInfo service",
+                "color: gold;",
+              );
+            }
+
+            // resolve the promise.
+            resolve(true);
+
+          })
+          .catch(error => {
+
+            // clear results, and reject the promise.
+            this.soundTouchDevice = undefined;
+
+            // call base class method, indicating media list update failed.
+            this.alertErrorSet("Get SoundTouch Device Info failed: " + getHomeAssistantErrorMessage(error));
+
+            // reject the promise.
+            reject(error);
+
+          })
+      });
+
+      promiseRequests.push(promiseGetDeviceInfo);
+
+      // show visual progress indicator.
+      this.progressShow();
+
+      // execute all promises, and wait for all of them to settle.
+      // we use `finally` logic so we can clear the progress indicator.
+      // any exceptions raised should have already been handled in the 
+      // individual promise definitions; nothing else to do at this point.
+      Promise.allSettled(promiseRequests).finally(() => {
+
+        // clear the progress indicator.
+        this.progressHide();
+
+      });
+
+      return true;
+
+    }
+    catch (error) {
+
+      // clear the progress indicator.
+      this.progressHide();
+
+      // clear informational alerts.
+      this.alertInfoClear();
+
+      // set alert error message.
+      this.alertErrorSet("Device refresh failed: " + getHomeAssistantErrorMessage(error));
+      return true;
+
+    }
+    finally {
 
     }
   }

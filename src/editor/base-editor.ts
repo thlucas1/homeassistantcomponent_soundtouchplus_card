@@ -15,6 +15,7 @@ import { dispatch, getObjectDifferences, getSectionForConfigArea } from '../util
 import { CONFIG_UPDATED } from '../constants';
 import { EditorConfigAreaSelectedEvent } from '../events/editor-config-area-selected';
 import { ISourceList } from '../types/soundtouchplus/source-list';
+import { ISoundTouchDevice } from '../types/soundtouchplus/soundtouch-device';
 
 
 export abstract class BaseEditor extends LitElement {
@@ -24,6 +25,9 @@ export abstract class BaseEditor extends LitElement {
   @property({ attribute: false }) store!: Store;
   @property({ attribute: true }) section!: Section;
   @property({ attribute: false }) footerBackgroundColor?: string;
+  @property({ attribute: false }) public soundTouchDevice!: ISoundTouchDevice | undefined;
+
+  //@state() protected soundTouchDevice!: ISoundTouchDevice | undefined;
 
   /** MediaPlayer instance created from the configuration entity id. */
   public player!: MediaPlayer;
@@ -229,7 +233,7 @@ export abstract class BaseEditor extends LitElement {
     }
 
     // create the store.
-    this.store = new Store(this.hass, this.config, this, configAreaSection, this.config.entity);
+    this.store = new Store(this.hass, this.config, this, configAreaSection);
 
     // set other references obtained from the store.
     this.player = this.store.player;

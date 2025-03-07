@@ -1,4 +1,4 @@
-import { HomeAssistant } from './types/home-assistant-frontend/home-assistant';
+//import { HomeAssistant } from './types/home-assistant-frontend/home-assistant';
 
 declare global {
   // noinspection JSUnusedGlobalSymbols
@@ -22,12 +22,12 @@ export interface TemplateResult {
   result: string[];
 }
 
-interface HassEntityExtended {
-  platform: string;
-}
+//interface HassEntityExtended {
+//  platform: string;
+//}
 
-export interface HomeAssistantWithEntities extends HomeAssistant {
-  entities: {
-    [entity_id: string]: HassEntityExtended;
-  };
-}
+//export interface HomeAssistantWithEntities extends HomeAssistant {
+//  entities: {
+//    [entity_id: string]: HassEntityExtended;
+//  };
+//}

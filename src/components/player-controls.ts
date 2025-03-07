@@ -1,13 +1,14 @@
-//// debug logging.
-//import Debug from 'debug/src/browser.js';
-//import { DEBUG_APP_NAME } from '../constants';
-//const debuglog = Debug(DEBUG_APP_NAME + ":player-controls");
+// debug logging.
+import Debug from 'debug/src/browser.js';
+import { DEBUG_APP_NAME } from '../constants';
+const debuglog = Debug(DEBUG_APP_NAME + ":player-controls");
 
 // lovelace card imports.
-import { css, html, LitElement, TemplateResult, nothing } from 'lit';
-import { property } from 'lit/decorators.js';
+import { css, html, TemplateResult, nothing, PropertyValues } from 'lit';
+import { property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit-html/directives/style-map.js';
 import {
+  mdiInformationSlabBoxOutline,
   mdiPause,
   mdiPlay,
   mdiPower,
@@ -18,29 +19,36 @@ import {
   mdiShuffleDisabled,
   mdiSkipNext,
   mdiSkipPrevious,
+  mdiTuneVertical,
 } from '@mdi/js';
 
 // our imports.
+import {
+  PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT
+} from '../constants';
 import { CardConfig } from '../types/card-config';
-import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
 import { MediaPlayerEntityFeature, MediaPlayerState, RepeatMode } from '../services/media-control-service';
 import { MediaControlService } from '../services/media-control-service';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
-import { ProgressEndedEvent } from '../events/progress-ended';
-import { ProgressStartedEvent } from '../events/progress-started';
-import { closestElement, getHomeAssistantErrorMessage, isCardInEditPreview } from '../utils/utils';
+import { closestElement, getHomeAssistantErrorMessage } from '../utils/utils';
 import { Player } from '../sections/player';
-import { PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT } from '../constants';
+import { PlayerBodyToneControls } from './player-body-tone-controls';
+import { AlertUpdatesBase } from '../sections/alert-updates-base';
 
 const { NEXT_TRACK, PAUSE, PLAY, PREVIOUS_TRACK, REPEAT_SET, SHUFFLE_SET, TURN_OFF, TURN_ON } = MediaPlayerEntityFeature;
+const ACTION_FAVES = 900000000000;    // not using this feature for now - maybe later?
+const TONE_CONTROLS = 990000000000;
 
 
-class PlayerControls extends LitElement {
+class PlayerControls extends AlertUpdatesBase {
 
   // public state properties.
-  @property({ attribute: false }) store!: Store;
   @property({ attribute: false }) mediaContentId!: string;
+
+  // private state properties.
+  @state() private isActionFavoritesVisible?: boolean;
+  @state() private isToneControlsVisible?: boolean;
 
   /** Card configuration data. */
   private config!: CardConfig;
@@ -53,9 +61,6 @@ class PlayerControls extends LitElement {
 
   /** SpotifyPlus services instance. */
   protected soundTouchPlusService!: SoundTouchPlusService;
-
-  /** True if the card is in edit preview mode (e.g. being edited); otherwise, false. */
-  protected isCardInEditPreview!: boolean;
 
 
   /**
@@ -75,10 +80,12 @@ class PlayerControls extends LitElement {
     const idle = [MediaPlayerState.IDLE].includes(this.player.state) && nothing;
 
     // set button color based on selected option.
+    const colorActionFavorites = (this.isActionFavoritesVisible);
     const colorRepeat = [RepeatMode.ONE, RepeatMode.ALL].includes(this.player.attributes.repeat || RepeatMode.OFF);
     const colorShuffle = (this.player.attributes.shuffle);
     const colorPlay = (this.player.state == MediaPlayerState.PAUSED);
     const colorPower = (this.player.state == MediaPlayerState.OFF);
+    const colorToneControls = (this.isToneControlsVisible);
 
     // render html.
     // note that the "TURN_ON" feature will only be displayed if the player is off AND if
@@ -87,12 +94,14 @@ class PlayerControls extends LitElement {
       <div class="player-controls-container" style=${this.styleContainer()}>
           <div class="icons" hide=${stopped}>
               <div class="flex-1"></div>
+              <ha-icon-button @click=${() => this.onClickAction(ACTION_FAVES)}   hide=${this.hideFeature(ACTION_FAVES)}   .path=${mdiInformationSlabBoxOutline} label="More Information" style=${this.styleIcon(colorActionFavorites)} ></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(SHUFFLE_SET)}    hide=${this.hideFeature(SHUFFLE_SET)}    .path=${this.getShuffleIcon()} label="Shuffle" style=${this.styleIcon(colorShuffle)}></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(PREVIOUS_TRACK)} hide=${this.hideFeature(PREVIOUS_TRACK)} .path=${mdiSkipPrevious} label="Previous Track"></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(PLAY)}           hide=${this.hideFeature(PLAY)}           .path=${mdiPlay} label="Play" style=${this.styleIcon(colorPlay)}></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(PAUSE)}          hide=${this.hideFeature(PAUSE)}          .path=${mdiPause} label="Pause"></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(NEXT_TRACK)}     hide=${this.hideFeature(NEXT_TRACK)}     .path=${mdiSkipNext} label="Next Track"></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(REPEAT_SET)}     hide=${this.hideFeature(REPEAT_SET)}     .path=${this.getRepeatIcon()} label="Repeat" style=${this.styleIcon(colorRepeat)} ></ha-icon-button>
+              <ha-icon-button @click=${() => this.onClickAction(TONE_CONTROLS)}  hide=${this.hideFeature(TONE_CONTROLS)}  .path=${mdiTuneVertical} label="Tone Controls" style=${this.styleIcon(colorToneControls)} ></ha-icon-button>
           </div>
           <div class="iconsPower" hide=${idle}>
               <ha-icon-button @click=${() => this.onClickAction(PLAY)}           hide=${this.hideFeature(PLAY)}           .path=${mdiPlay} label="Play" style=${this.styleIcon(true)}></ha-icon-button>
@@ -158,6 +167,23 @@ class PlayerControls extends LitElement {
     `;
   }
 
+
+  // bound event listeners for event handlers that need access to "this" object.
+  private onKeyDown_EventListenerBound;
+
+  /**
+   * Initializes a new instance of the class.
+   */
+  constructor() {
+
+    // invoke base class method.
+    super();
+
+    // create bound event listeners for event handlers that need access to "this" object.
+    this.onKeyDown_EventListenerBound = this.onKeyDown.bind(this);
+  }
+
+
   /**
    * Invoked when the component is added to the document's DOM.
    *
@@ -171,8 +197,8 @@ class PlayerControls extends LitElement {
     // invoke base class method.
     super.connectedCallback();
 
-    // determine if card configuration is being edited.
-    this.isCardInEditPreview = isCardInEditPreview(this.store.card);
+    // add document level event listeners.
+    document.addEventListener("keydown", this.onKeyDown_EventListenerBound);
 
   }
 
@@ -189,8 +215,119 @@ class PlayerControls extends LitElement {
    */
   public disconnectedCallback() {
 
+    // remove document level event listeners.
+    document.removeEventListener("keydown", this.onKeyDown_EventListenerBound);
+
     // invoke base class method.
     super.disconnectedCallback();
+  }
+
+
+  /**
+   * Updates the element. This method reflects property values to attributes.
+   * It can be overridden to render and keep updated element DOM.
+   * Setting properties inside this method will *not* trigger
+   * another update.
+   *
+   * @param changedProperties Map of changed properties with old values
+   */
+  protected override update(changedProperties: PropertyValues): void {
+
+    // invoke base class method.
+    super.update(changedProperties);
+
+    // get list of changed property keys.
+    const changedPropKeys = Array.from(changedProperties.keys())
+
+    //// if first render has not happened yet then we will wait for it first.
+    //if (!this.hasUpdated) {
+    //  return;
+    //}
+
+    //// if card is being edited, then we are done since actions cannot be displayed
+    //// while editing the card configuration.
+    //if (this.isCardInEditPreview) {
+    //  return;
+    //}
+
+    //if (debuglog.enabled) {
+    //  debuglog("%cupdate - changed properties: %s",
+    //    "color: gold;",
+    //    JSON.stringify(changedPropKeys),
+    //  );
+    //}
+
+    // if media content id changed, then refresh tone controls body (if visible).
+    if (changedPropKeys.includes('mediaContentId')) {
+
+      // refresh all body actions.
+      setTimeout(() => {
+        this.toggleDisplayPlayerBodyToneControls();
+      }, 50);
+
+    }
+
+  }
+
+
+  /**
+   * Toggle action visibility - action favorites body.
+   */
+  private toggleDisplayActionFavorites(): void {
+
+    // toggle action visibility - action favorites.
+    const elmBody = this.parentElement?.querySelector(".player-section-body-content") as HTMLElement;
+    if (elmBody) {
+      elmBody.style.display = (this.isActionFavoritesVisible) ? "block" : "none";
+      elmBody.style.opacity = (this.isActionFavoritesVisible) ? "1" : "0";
+    }
+
+  }
+
+
+  /**
+   * Toggle action visibility - tone controls body.
+   */
+  private toggleDisplayPlayerBodyToneControls(): void {
+
+    // toggle action visibility - tone controls.
+    const elmBody = this.parentElement?.querySelector("#elmPlayerBodyToneControls") as PlayerBodyToneControls;
+    if (elmBody) {
+      elmBody.style.display = (this.isToneControlsVisible) ? "block" : "none";
+      elmBody.style.opacity = (this.isToneControlsVisible) ? "1" : "0";
+
+      // if body is displayed, then request a tone controls refresh.
+      if (this.isToneControlsVisible) {
+        debuglog("toggleDisplayPlayerBodyToneControls - calling for refresh of tone controls");
+        elmBody.refreshToneControls();
+      } else {
+        debuglog("toggleDisplayPlayerBodyToneControls - tone controls not visible; isToneControlsVisible = %s",
+          JSON.stringify(this.isToneControlsVisible),
+        );
+      }
+    } else {
+      debuglog("toggleDisplayPlayerBodyToneControls - could not find tone controls #elmPlayerBodyToneControls selector!");
+    }
+
+  }
+
+
+  /**
+   * KeyDown event handler.
+   * 
+   * @ev Event arguments.
+   */
+  private onKeyDown(ev: KeyboardEvent) {
+
+    // if ESC pressed, then hide the actions section if it's visible.
+    if (ev.key === "Escape") {
+      if (this.isActionFavoritesVisible) {
+        this.onClickAction(ACTION_FAVES);
+      } else if (this.isToneControlsVisible) {
+        this.onClickAction(TONE_CONTROLS);
+      }
+    }
+
   }
 
 
@@ -202,6 +339,76 @@ class PlayerControls extends LitElement {
   private async onClickAction(action: any): Promise<boolean> {
 
     try {
+
+      // handle action(s) that don't require a progress indicator.
+      if (action == ACTION_FAVES) {
+
+        // if we are editing the card configuration, then we don't want to allow this.
+        // this is because the `firstUpdated` method will fire every time the configuration 
+        // changes (e.g. every keypress) and action status is lost.
+        if (this.isCardInEditPreview) {
+          this.alertInfoSet("Action Favorites cannot be displayed while editing card configuration");
+          return true;
+        }
+
+        // toggle action favorites visibility.
+        this.isActionFavoritesVisible = !this.isActionFavoritesVisible;
+        if (debuglog.enabled) {
+          debuglog("update - action favorites toggled - isActionFavoritesVisible = %s",
+            JSON.stringify(this.isActionFavoritesVisible),
+          );
+        }
+
+        if (this.isToneControlsVisible) {
+          debuglog("update - tone controls visible; imediately closing tone controls, and delay opening action favorites");
+          // close the tone controls body.
+          this.isToneControlsVisible = false;
+          this.toggleDisplayPlayerBodyToneControls();
+          // give the tone controls body time to close, then show the action favorites body.
+          setTimeout(() => {
+            this.toggleDisplayActionFavorites();
+          }, 250);
+        } else {
+          debuglog("update - tone controls not visible; immediately toggling action favorites");
+          // show the action favorites body, since the tone controls is closed.
+          this.toggleDisplayActionFavorites();
+        }
+        return true;
+
+      } else if (action == TONE_CONTROLS) {
+
+        // if we are editing the card configuration, then we don't want to allow this.
+        // this is because the `firstUpdated` method will fire every time the configuration 
+        // changes (e.g. every keypress) and action status is lost.
+        if (this.isCardInEditPreview) {
+          this.alertInfoSet("Tone Controls cannot be displayed while editing card configuration");
+          return true;
+        }
+
+        // toggle tone controls visibility.
+        this.isToneControlsVisible = !this.isToneControlsVisible;
+        if (debuglog.enabled) {
+          debuglog("update - tone controls toggled - isToneControlsVisible = %s",
+            JSON.stringify(this.isToneControlsVisible),
+          );
+        }
+
+        if (this.isActionFavoritesVisible) {
+          debuglog("update - action favorites visible; imediately closing action favorites, and delay opening tone controls");
+          // close the action favorites body.
+          this.isActionFavoritesVisible = false;
+          this.toggleDisplayActionFavorites();
+          // give the action favorites body time to close, then show the tone controls body.
+          setTimeout(() => {
+            this.toggleDisplayPlayerBodyToneControls();
+          }, 250);
+        } else {
+          debuglog("update - action favorites not visible; immediately opening tone controls");
+          // show the tone controls, since the action favorites body is closed.
+          this.toggleDisplayPlayerBodyToneControls();
+        }
+        return true;
+      }
 
       // show progress indicator.
       this.progressShow();
@@ -336,6 +543,16 @@ class PlayerControls extends LitElement {
       if (this.player.supportsFeature(SHUFFLE_SET))
         return this.config.playerControlsHideShuffle || nothing;
 
+    } else if (feature == ACTION_FAVES) {
+
+      // not using this feature for now - maybe later?
+      //return this.config.playerControlsHideFavorites || nothing;
+      return true; // hide icon
+
+    } else if (feature == TONE_CONTROLS) {
+
+      return this.config.playerControlsHideToneControls || nothing;
+
     } else if (feature == TURN_ON) {
 
       if (this.player.supportsFeature(TURN_ON)) {
@@ -364,41 +581,25 @@ class PlayerControls extends LitElement {
 
 
   /**
-   * Hide visual progress indicator.
+   * Sets the alert info message in the parent player.
    */
-  private progressHide(): void {
-    this.store.card.dispatchEvent(ProgressEndedEvent());
+  public override alertInfoSet(message: string): void {
+
+    // find the parent player reference, and update the message.
+    // we have to do it this way due to the shadowDOM between this 
+    // element and the player element.
+    const spcPlayer = closestElement('#spcPlayer', this) as Player;
+    if (spcPlayer) {
+      spcPlayer.alertInfoSet(message);
+    }
+
   }
-
-
-  /**
-   * Show visual progress indicator.
-   */
-  private progressShow(): void {
-    this.store.card.dispatchEvent(ProgressStartedEvent());
-  }
-
-
-  ///**
-  // * Sets the alert info message in the parent player.
-  // */
-  //private alertInfoSet(message: string): void {
-
-  //  // find the parent player reference, and update the message.
-  //  // we have to do it this way due to the shadowDOM between this 
-  //  // element and the player element.
-  //  const spcPlayer = closestElement('#spcPlayer', this) as Player;
-  //  if (spcPlayer) {
-  //    spcPlayer.alertInfoSet(message);
-  //  }
-
-  //}
 
 
   /**
    * Sets the alert error message in the parent player.
    */
-  private alertErrorSet(message: string): void {
+  public override alertErrorSet(message: string): void {
 
     // find the parent player reference, and update the message.
     // we have to do it this way due to the shadowDOM between this 
