@@ -4,15 +4,19 @@ import { DEBUG_APP_NAME } from '../constants';
 const debuglog = Debug(DEBUG_APP_NAME + ":media-browser-base");
 
 // lovelace card imports.
-import { html, LitElement, TemplateResult } from 'lit';
+import { html, LitElement, TemplateResult, unsafeCSS } from 'lit';
 import { eventOptions, property } from 'lit/decorators.js';
 import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
 
 // our imports.
+import {
+  ITEM_SELECTED,
+  ITEM_SELECTED_WITH_HOLD,
+  PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT
+} from '../constants';
 import { Store } from '../model/store';
 import { CardConfig } from '../types/card-config';
 import { Section } from '../types/section';
-import { ITEM_SELECTED, ITEM_SELECTED_WITH_HOLD } from '../constants';
 import { closestElement, customEvent, formatStringProperCase, isTouchDevice } from '../utils/utils';
 import { getContentItemImageUrl, hasMediaItemImages } from '../utils/media-browser-utils';
 import { IMediaBrowserInfo, IMediaBrowserItem } from '../types/media-browser-item';
@@ -415,7 +419,7 @@ export class MediaBrowserBase extends LitElement {
         .button:nth-of-type(${index + 1}) .thumbnail {
           mask-image: url(${thumbnail});
           mask-size: ${bgSize};
-          background-color: var(--stpc-media-browser-items-svgicon-color, #2196F3);
+          background-color: var(--stpc-media-browser-items-svgicon-color, ${unsafeCSS(PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT)});
         }
       </style>
     `;

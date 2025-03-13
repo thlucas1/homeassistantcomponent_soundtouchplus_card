@@ -22,7 +22,7 @@ import { MediaPlayer } from '../model/media-player';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { storageService } from '../decorators/storage';
 import { truncateMediaList } from '../utils/media-browser-utils';
-import { getHomeAssistantErrorMessage, loadHaFormLazyControls } from '../utils/utils';
+import { getHomeAssistantErrorMessage, isCardInEditPreview, loadHaFormLazyControls } from '../utils/utils';
 import { FilterSectionMediaEventArgs } from '../events/filter-section-media';
 import { DOMAIN_SOUNDTOUCHPLUS } from '../constants';
 import { AlertUpdatesBase } from './alert-updates-base';
@@ -142,6 +142,9 @@ export class FavBrowserBase extends AlertUpdatesBase {
     this.config = this.store.config;
     this.player = this.store.player;
     this.soundTouchPlusService = this.store.soundTouchPlusService;
+
+    // set card editor indicator.
+    this.isCardInEditPreview = isCardInEditPreview(this.store.card);
 
     // set scroll position (if needed).
     this.setScrollPosition();

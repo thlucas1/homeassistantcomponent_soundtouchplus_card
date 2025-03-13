@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.15 ] - 2025/03/13
+
+  * Added `playerMinimizeOnIdle` config option to minimize player card height when player state goes to idle (or off) AND height is not set to `fill`.
+
 ###### [ 1.0.14 ] - 2025/03/07
 
   * Added `Player` section tone controls information UI that allows tone-related options to be adjusted (based on the device).  For ST-300 devices, this includes audio product tone controls (bass, treble) and audio dsp controls (dialog mode).  For ST-10 devices, this includes bass reduction settings.

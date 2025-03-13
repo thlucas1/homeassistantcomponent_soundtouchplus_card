@@ -1,12 +1,13 @@
 // debug logging.
 import Debug from 'debug/src/browser.js';
-import { DEBUG_APP_NAME, DOMAIN_SOUNDTOUCHPLUS } from '../constants';
+import { DEBUG_APP_NAME } from '../constants';
 const debuglog = Debug(DEBUG_APP_NAME + ":store");
 
 // lovelace card imports.
 import { HomeAssistant } from '../types/home-assistant-frontend/home-assistant';
 
 // our imports.
+import { DOMAIN_SOUNDTOUCHPLUS } from '../constants';
 import { HassService } from '../services/hass-service';
 import { MediaControlService } from '../services/media-control-service';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
@@ -112,7 +113,7 @@ export class Store {
         break;
       }
 
-      // does an ACTIVE SoundTouchPlus entity id exist in hass entities data?
+      // does an ACTIVE entity id exist in hass entities data for our domain?
       // if not, then it's an error!
       const hassEntity = getEntityRegistryDisplayEntry_ByEntityId(this.hass, playerEntityId);
       if (hassEntity) {

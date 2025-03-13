@@ -4,9 +4,9 @@ import { DEBUG_APP_NAME } from '../constants';
 const debuglog = Debug(DEBUG_APP_NAME + ":player-controls");
 
 // lovelace card imports.
-import { css, html, TemplateResult, nothing, PropertyValues } from 'lit';
+import { css, html, TemplateResult, nothing, PropertyValues, unsafeCSS } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import { styleMap } from 'lit-html/directives/style-map.js';
+import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
 import {
   mdiInformationSlabBoxOutline,
   mdiPause,
@@ -24,6 +24,7 @@ import {
 
 // our imports.
 import {
+  PLAYER_CONTROLS_ICON_SIZE_DEFAULT,
   PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT
 } from '../constants';
 import { CardConfig } from '../types/card-config';
@@ -78,6 +79,7 @@ class PlayerControls extends AlertUpdatesBase {
 
     const stopped = [MediaPlayerState.ON, MediaPlayerState.PLAYING, MediaPlayerState.PAUSED, MediaPlayerState.BUFFERING].includes(this.player.state) && nothing;
     const idle = [MediaPlayerState.IDLE].includes(this.player.state) && nothing;
+    const isOff = [MediaPlayerState.OFF].includes(this.player.state) && nothing;
 
     // set button color based on selected option.
     const colorActionFavorites = (this.isActionFavoritesVisible);
@@ -88,10 +90,12 @@ class PlayerControls extends AlertUpdatesBase {
     const colorToneControls = (this.isToneControlsVisible);
 
     // render html.
-    // note that the "TURN_ON" feature will only be displayed if the player is off AND if
-    // the device supports the TURN_ON feature.
+    // hide / display controls based on player state:
+    // - if powered off, enable TURN_ON button, and hide volume controls;
+    // - if idle, enable TURN_OFF and PLAY buttons, and hide volume controls;
+    // - for everything else, enable all deck controls and volume controls.
     return html`
-      <div class="player-controls-container" style=${this.styleContainer()}>
+      <div class="player-controls-container" style=${this.styleContainer(idle, isOff)}>
           <div class="icons" hide=${stopped}>
               <div class="flex-1"></div>
               <ha-icon-button @click=${() => this.onClickAction(ACTION_FAVES)}   hide=${this.hideFeature(ACTION_FAVES)}   .path=${mdiInformationSlabBoxOutline} label="More Information" style=${this.styleIcon(colorActionFavorites)} ></ha-icon-button>
@@ -103,14 +107,14 @@ class PlayerControls extends AlertUpdatesBase {
               <ha-icon-button @click=${() => this.onClickAction(REPEAT_SET)}     hide=${this.hideFeature(REPEAT_SET)}     .path=${this.getRepeatIcon()} label="Repeat" style=${this.styleIcon(colorRepeat)} ></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(TONE_CONTROLS)}  hide=${this.hideFeature(TONE_CONTROLS)}  .path=${mdiTuneVertical} label="Tone Controls" style=${this.styleIcon(colorToneControls)} ></ha-icon-button>
           </div>
+          <div class="iconsPower" hide=${isOff}>
+              <ha-icon-button @click=${() => this.onClickAction(TURN_ON)}        hide=${this.hideFeature(TURN_ON)}        .path=${mdiPower} label="Turn On" style=${this.styleIcon(colorPower)}></ha-icon-button>
+          </div>
           <div class="iconsPower" hide=${idle}>
+              <ha-icon-button @click=${() => this.onClickAction(TURN_OFF)}       hide=${this.hideFeature(TURN_OFF)}       .path=${mdiPower} label="Turn Off"></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(PLAY)}           hide=${this.hideFeature(PLAY)}           .path=${mdiPlay} label="Play" style=${this.styleIcon(true)}></ha-icon-button>
           </div>
           <stpc-player-volume hide=${stopped} .store=${this.store} .player=${this.player} class="player-volume-container"></stpc-player-volume>
-          <div class="iconsPower">
-              <ha-icon-button @click=${() => this.onClickAction(TURN_ON)}        hide=${this.hideFeature(TURN_ON)}        .path=${mdiPower} label="Turn On" style=${this.styleIcon(colorPower)}></ha-icon-button>
-              <ha-icon-button @click=${() => this.onClickAction(TURN_OFF)}       hide=${this.hideFeature(TURN_OFF)}       .path=${mdiPower} label="Turn Off"></ha-icon-button>
-          </div>
       </div>
   `;
   }
@@ -142,7 +146,7 @@ class PlayerControls extends AlertUpdatesBase {
         overflow: hidden;
         color: var(--stpc-player-controls-icon-color, #ffffff);
         --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);
-        --mdc-icon-size: var(--stpc-player-controls-icon-size, 2.0rem);
+        --mdc-icon-size: var(--stpc-player-controls-icon-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_SIZE_DEFAULT)});
         text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
         mix-blend-mode: screen;
       }
@@ -153,8 +157,8 @@ class PlayerControls extends AlertUpdatesBase {
         align-items: center;
         overflow: hidden;
         color: var(--stpc-player-controls-icon-color, #ffffff);
-        --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 3.25rem);
-        --mdc-icon-size: var(--stpc-player-controls-icon-size, 2.5rem);
+        --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);
+        --mdc-icon-size: var(--stpc-player-controls-icon-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_SIZE_DEFAULT)});
       }
 
       *[hide] {
@@ -645,10 +649,18 @@ class PlayerControls extends AlertUpdatesBase {
   /**
    * Returns an element style for the progress bar portion of the control.
    */
-  private styleContainer() {
-    return styleMap({
-      'margin-bottom': '0px;',  // cannot place this in class (player-controls-container), must be placed here!
-    });
+  private styleContainer(idle: boolean | typeof nothing, isOff: boolean | typeof nothing) {
+
+    const styleInfo: StyleInfo = <StyleInfo>{};
+    styleInfo['margin-bottom'] = `0px`; // cannot place this in class (player-controls-container), must be placed here!
+
+    // for minimized height, only bunch the icons if player state is IDLE or OFF.
+    if ((this.config.playerMinimizeOnIdle) && (idle || isOff)) {
+      styleInfo['margin'] = `0px`;
+      styleInfo['padding'] = `2px`;
+    }
+
+    return styleMap(styleInfo);
   }
 
 
@@ -657,14 +669,17 @@ class PlayerControls extends AlertUpdatesBase {
    * 
    * @param isToggled True if the icon is in a toggle state; otherwise false if icon is in a non-toggled state.
    */
-  private styleIcon(isToggled: boolean | undefined): string | undefined {
+  private styleIcon(isToggled: boolean | undefined) {
+
+    const styleInfo: StyleInfo = <StyleInfo>{};
 
     // if button is toggled, then use the icon toggle color; 
     // otherwise, default to regular icon color.
     if (isToggled) {
-      return `color: var(--stpc-player-controls-icon-toggle-color, ${PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT});`;
+      styleInfo['color'] = `var(--stpc-player-controls-icon-toggle-color, ${PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT})`;
     }
-    return undefined;
+
+    return styleMap(styleInfo);
   }
 
 }

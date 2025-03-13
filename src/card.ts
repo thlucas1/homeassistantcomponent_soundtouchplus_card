@@ -4,7 +4,7 @@ import { DEBUG_APP_NAME } from './constants';
 const debuglog = Debug(DEBUG_APP_NAME + ":card");
 
 // lovelace card imports.
-import { css, html, PropertyValues, TemplateResult } from 'lit';
+import { css, html, PropertyValues, TemplateResult, unsafeCSS } from 'lit';
 import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { choose } from 'lit/directives/choose.js';
@@ -25,7 +25,8 @@ import './editor/editor';
 import {
   BRAND_LOGO_IMAGE_BASE64,
   BRAND_LOGO_IMAGE_SIZE,
-  FOOTER_ICON_SIZE_DEFAULT
+  FOOTER_ICON_SIZE_DEFAULT,
+  PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT
 } from './constants';
 import {
   getConfigAreaForSection,
@@ -34,6 +35,7 @@ import {
   isCardInPickerPreview,
   isNumber,
   getHomeAssistantErrorMessage,
+  isCardInEditPreview,
 } from './utils/utils';
 import { EDITOR_CONFIG_AREA_SELECTED, EditorConfigAreaSelectedEventArgs } from './events/editor-config-area-selected';
 import { FILTER_SECTION_MEDIA, FilterSectionMediaEventArgs } from './events/filter-section-media';
@@ -95,11 +97,11 @@ export class Card extends AlertUpdatesBase {
   @property({ attribute: false }) public soundTouchDevice!: ISoundTouchDevice | undefined;
 
   // private state properties.
-  @state() section!: Section;
-  @state() showLoader!: boolean;
-  @state() loaderTimestamp!: number;
-  @state() cancelLoader!: boolean;
-  @state() playerId!: string;
+  @state() private section!: Section;
+  @state() private showLoader!: boolean;
+  @state() private loaderTimestamp!: number;
+  @state() private cancelLoader!: boolean;
+  @state() private playerId!: string;
 
   // card section references.
   @query("#elmPandoraBrowserForm", false) private elmPandoraBrowserForm!: PandoraBrowser;
@@ -178,7 +180,7 @@ export class Card extends AlertUpdatesBase {
         ${title ? html`<div class="stpc-card-header" style=${this.styleCardHeader()}>${title}</div>` : ""}
         ${this.alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this.alertErrorClear}>${this.alertError}</ha-alert>` : ""}
         ${this.alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this.alertInfoClear}>${this.alertInfo}</ha-alert>` : ""}
-        <div class="stpc-card-content-section">
+        <div class="stpc-card-content-section" style=${this.styleCardContent()}>
           ${this.store.player.id != ""
               ? choose(this.section, [
                 [Section.PANDORA_STATIONS, () => html` <stpc-pandora-browser .store=${this.store} id="elmPandoraBrowserForm" @item-selected=${this.onMediaListItemSelected}></stp-pandora-browser>`],
@@ -316,7 +318,7 @@ export class Card extends AlertUpdatesBase {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        --mdc-theme-primary: var(--stpc-card-wait-progress-slider-color, var(--dark-primary-color, #2196F3));
+        --mdc-theme-primary: var(--stpc-card-wait-progress-slider-color, var(--dark-primary-color, ${unsafeCSS(PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT)}));
       }
 
       .stpc-not-configured {
@@ -336,7 +338,7 @@ export class Card extends AlertUpdatesBase {
       }
 
       ha-circular-progress {
-        --md-sys-color-primary: var(--stpc-card-wait-progress-slider-color, var(--dark-primary-color, #2196F3));
+        --md-sys-color-primary: var(--stpc-card-wait-progress-slider-color, var(--dark-primary-color, ${unsafeCSS(PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT)}));
       }
     `;
   }
@@ -352,6 +354,9 @@ export class Card extends AlertUpdatesBase {
 
     // create the store.
     this.store = new Store(this.hass, this.config, this, this.section);
+
+    // set card editor indicator.
+    this.isCardInEditPreview = isCardInEditPreview(this);
 
     // have we set the player id yet?  if not, then make it so.
     if (!this.playerId) {
@@ -440,9 +445,6 @@ export class Card extends AlertUpdatesBase {
 
     // invoke base class method.
     super.connectedCallback();
-
-    // determine if card configuration is being edited.
-    //this.isCardInEditPreview = isCardInEditPreview(this);
 
     // add card level event listeners.
     this.addEventListener(PROGRESS_ENDED, this.onProgressEndedEventHandler);
@@ -955,8 +957,9 @@ export class Card extends AlertUpdatesBase {
         "X_default": "/local/images/soundtouchplus_card_customimages/default.png",
         "X_empty preset": "/local/images/soundtouchplus_card_customimages/empty_preset.png",
         "X_Daily Mix 1": "https://brands.home-assistant.io/soundtouchplus/icon.png",
-        "X_playerOffBackground": "/local/images/soundtouchplus_card_customimages/playerOffBackground.png",
         "X_playerBackground": "/local/images/soundtouchplus_card_customimages/playerBackground.png",
+        "X_playerIdleBackground": "/local/images/soundtouchplus_card_customimages/playerIdleBackground.png",
+        "X_playerOffBackground": "/local/images/soundtouchplus_card_customimages/playerOffBackground.png",
       }
     }
   }
@@ -967,15 +970,15 @@ export class Card extends AlertUpdatesBase {
   */
   private styleCard() {
 
+    // build style info object.
+    const styleInfo: StyleInfo = <StyleInfo>{};
+
     // load basic layout settings.
-    let cardWidth: string | undefined = undefined;
-    let cardHeight: string | undefined = undefined;
     let editTabHeight = '0px';
     let editBottomToolbarHeight = '0px';
     const cardWaitProgressSliderColor = this.config.cardWaitProgressSliderColor;
 
-    // build style info object.
-    const styleInfo: StyleInfo = <StyleInfo>{};
+    // set css variables that affect multiple sections of the card.
     if (cardWaitProgressSliderColor)
       styleInfo['--stpc-card-wait-progress-slider-color'] = `${cardWaitProgressSliderColor}`;
 
@@ -992,11 +995,20 @@ export class Card extends AlertUpdatesBase {
       styleInfo['background-position'] = `${!this.playerId ? 'center' : undefined}`;
       styleInfo['background-image'] = `${!this.playerId ? 'url(' + BRAND_LOGO_IMAGE_BASE64 + ')' : undefined}`;
       styleInfo['background-size'] = `${!this.playerId ? BRAND_LOGO_IMAGE_SIZE : undefined}`;
+
+      // adjust css styling for minimized player format.
+      if (this.config.playerMinimizeOnIdle && (this.section == Section.PLAYER) && this.store.player.isPoweredOffOrIdle()) {
+        if (this.config.height != 'fill') {
+          styleInfo['height'] = `unset !important`;
+          styleInfo['min-height'] = `unset !important`;
+        }
+      }
+
       return styleMap(styleInfo);
     }
 
-
-    // set card picker options.
+    // are we selecting the card in the card picker?
+    // if so, then we will ignore the configuration dimensions and use constants.
     if (isCardInPickerPreview(this)) {
 
       // card is in pick preview.
@@ -1027,11 +1039,11 @@ export class Card extends AlertUpdatesBase {
     // - if number value specified, then use as width (in rem units).
     // - if no value specified, then use default.
     if (this.config.width == 'fill') {
-      cardWidth = '100%';
+      styleInfo['width'] = '100%';
     } else if (isNumber(String(this.config.width))) {
-      cardWidth = String(this.config.width) + 'rem';
+      styleInfo['width'] = String(this.config.width) + 'rem';
     } else {
-      cardWidth = CARD_DEFAULT_WIDTH;
+      styleInfo['width'] = CARD_DEFAULT_WIDTH;
     }
 
     // set card height based on configuration.
@@ -1039,11 +1051,19 @@ export class Card extends AlertUpdatesBase {
     // - if number value specified, then use as height (in rem units).
     // - if no value specified, then use default.
     if (this.config.height == 'fill') {
-      cardHeight = 'calc(100vh - var(--stpc-card-footer-height) - var(--stpc-card-edit-tab-height) - var(--stpc-card-edit-bottom-toolbar-height))';
+      styleInfo['height'] = 'calc(100vh - var(--stpc-card-footer-height) - var(--stpc-card-edit-tab-height) - var(--stpc-card-edit-bottom-toolbar-height))';
     } else if (isNumber(String(this.config.height))) {
-      cardHeight = String(this.config.height) + 'rem';
+      styleInfo['height'] = String(this.config.height) + 'rem';
     } else {
-      cardHeight = CARD_DEFAULT_HEIGHT;
+      styleInfo['height'] = CARD_DEFAULT_HEIGHT;
+    }
+
+    // adjust css styling for minimized player format.
+    if (this.config.playerMinimizeOnIdle && (this.section == Section.PLAYER) && this.store.player.isPoweredOffOrIdle()) {
+      if (this.config.height != 'fill') {
+        styleInfo['height'] = `unset !important`;
+        styleInfo['min-height'] = `unset !important`;
+      }
     }
 
     //console.log("styleCard (card) - calculated dimensions:\n- cardWidth=%s\n- cardHeight=%s\n- editTabHeight=%s\n- editBottomToolbarHeight=%s",
@@ -1053,11 +1073,9 @@ export class Card extends AlertUpdatesBase {
     //  editBottomToolbarHeight,
     //);
 
-    // build style info object.
     styleInfo['--stpc-card-edit-tab-height'] = `${editTabHeight}`;
     styleInfo['--stpc-card-edit-bottom-toolbar-height'] = `${editBottomToolbarHeight}`;
-    styleInfo['height'] = `${cardHeight ? cardHeight : undefined}`;
-    styleInfo['width'] = `${cardWidth ? cardWidth : undefined}`;
+
     return styleMap(styleInfo);
   }
 
@@ -1067,54 +1085,68 @@ export class Card extends AlertUpdatesBase {
    */
   private styleCardHeader() {
 
+    // build style info object.
+    const styleInfo: StyleInfo = <StyleInfo>{};
+
     // is player selected, and a title set?
+    // if so, then return a vibrant background style;
+    // otherwise, return an empty style to let it default to the card background.
     if ((this.section == Section.PLAYER) && (this.footerBackgroundColor)) {
-
-      // yes - return vibrant background style.
-      return styleMap({
-        '--stpc-player-footer-bg-color': `${this.footerBackgroundColor || 'transparent'}`,
-        'background-color': 'var(--stpc-player-footer-bg-color)',
-        'background-image': 'linear-gradient(rgba(0, 0, 0, 1.6), rgba(0, 0, 0, 0.6))',
-      });
-
-    } else {
-
-      // no - just return an empty style to let it default to the card background.
-      return styleMap({
-      });
-
+      styleInfo['--stpc-player-footer-bg-color'] = `${this.footerBackgroundColor || 'transparent'}`;
+      styleInfo['background-color'] = `var(--stpc-player-footer-bg-color)`;
+      styleInfo['background-image'] = `linear-gradient(rgba(0, 0, 0, 1.6), rgba(0, 0, 0, 0.6))`;
     }
+
+    return styleMap(styleInfo);
+
   }
 
 
   /**
-   * Style the <stpc-card-background-container> element.
+   * Style the card content element.
+   */
+  private styleCardContent() {
+
+    // build style info object.
+    const styleInfo: StyleInfo = <StyleInfo>{};
+
+    // adjust css styling for minimized player format.
+    if (this.config.playerMinimizeOnIdle && (this.section == Section.PLAYER) && this.store.player.isPoweredOffOrIdle()) {
+      if (this.config.height != 'fill') {
+        styleInfo['height'] = `unset !important`;
+      }
+    }
+
+    return styleMap(styleInfo);
+
+  }
+
+
+  /**
+   * Style the card footer element.
    */
   private styleCardFooter() {
 
+    // build style info object.
+    const styleInfo: StyleInfo = <StyleInfo>{};
+
     // set footer icon size.
-    const footerIconSize = this.config.footerIconSize || FOOTER_ICON_SIZE_DEFAULT;
+    if (this.config.footerIconSize) {
+      styleInfo['--stpc-footer-icon-size'] = `${this.config.footerIconSize}`;
+      styleInfo['--stpc-footer-icon-button-size'] = `var(--stpc-footer-icon-size, ${FOOTER_ICON_SIZE_DEFAULT}) + 0.75rem`;
+    }
 
     // is player selected, and a footer background color set?
+    // if so, then return vibrant background style;
+    // otherwise, let background color default to the card background color.
     if ((this.section == Section.PLAYER) && (this.footerBackgroundColor)) {
-
-      // yes - return vibrant background style.
-      return styleMap({
-        '--stpc-footer-icon-size': `${footerIconSize}`,
-        '--stpc-footer-icon-button-size': `var(--stpc-footer-icon-size, ${FOOTER_ICON_SIZE_DEFAULT}) + 0.75rem`,
-        '--stpc-player-footer-bg-color': `${this.footerBackgroundColor || 'transparent'}`,
-      });
-
+      styleInfo['--stpc-player-footer-bg-color'] = `${this.footerBackgroundColor || 'transparent'}`;
     } else {
-
-      // return style map (let background color default to the card background color).
-      return styleMap({
-        '--stpc-footer-icon-size': `${footerIconSize}`,
-        '--stpc-footer-icon-button-size': `var(--stpc-footer-icon-size, ${FOOTER_ICON_SIZE_DEFAULT}) + 0.75rem`,
-        'background': 'unset',
-      });
-
+      styleInfo['background'] = `unset`;
     }
+
+    return styleMap(styleInfo);
+
   }
 
 

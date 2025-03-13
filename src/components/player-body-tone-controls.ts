@@ -4,10 +4,11 @@ import { DEBUG_APP_NAME } from '../constants';
 const debuglog = Debug(DEBUG_APP_NAME + ":player-body-tone-controls");
 
 // lovelace card imports.
-import { css, html, TemplateResult } from 'lit';
+import { css, html, TemplateResult, unsafeCSS } from 'lit';
 import { state } from 'lit/decorators.js';
 
 // our imports.
+import { PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT } from '../constants';
 import { sharedStylesGrid } from '../styles/shared-styles-grid.js';
 import { sharedStylesMediaInfo } from '../styles/shared-styles-media-info.js';
 import { sharedStylesFavActions } from '../styles/shared-styles-fav-actions.js';
@@ -215,7 +216,7 @@ export class PlayerBodyToneControls extends PlayerBodyBase {
         }
 
         ha-control-slider {
-          --control-slider-color: var(--stpc-player-tone-slider-color, var(--stpc-player-controls-color, var(--dark-primary-color, #2196F3)));
+          --control-slider-color: var(--stpc-player-tone-slider-color, var(--stpc-player-controls-color, var(--dark-primary-color, ${unsafeCSS(PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT)})));
           --control-slider-thickness: 1rem;
           border: 1px solid rgba(255, 255, 255, 0.10);
           box-sizing: border-box;
@@ -262,7 +263,7 @@ export class PlayerBodyToneControls extends PlayerBodyBase {
           text-align: right;
           font-weight: normal;
           font-size: 10px;
-          color: var(--stpc-player-tone-slider-color, var(--stpc-player-controls-color, var(--dark-primary-color, #2196F3)));
+          color: var(--stpc-player-tone-slider-color, var(--stpc-player-controls-color, var(--dark-primary-color, ${unsafeCSS(PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT)})));
         }
 
         .tone-level-max {

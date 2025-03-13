@@ -386,7 +386,7 @@ export class SoundTouchPlusService {
 
       // for testing device info errors.
       //if (player.id.endsWith("bose_st10_1"))
-      //  throw new Error("TEST TODO REMOVEME GetDeviceInfo main card exception ...")
+      //  throw new Error("TEST TODO GetDeviceInfo main card exception ...")
 
       // call the service, and return the response.
       const response = await this.CallServiceWithResponse(serviceRequest);

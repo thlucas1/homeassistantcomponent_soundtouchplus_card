@@ -114,6 +114,9 @@
     <Folder Include="src\utils" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="src\components\player-body-idle.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="src\sections\alert-updates-base.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>

@@ -47,6 +47,24 @@ export class MediaPlayer {
 
 
   /**
+   * Returns true if the player is currently idle (e.g. state = 'idle'|'unknown'); 
+   * otherwise, false.
+   */
+  public isIdle() {
+    return this.state === MediaPlayerState.IDLE || this.state === MediaPlayerState.UNKNOWN;
+  }
+
+
+  /**
+   * Returns true if the player state is currently 'idle' or 'unknown'; 
+   * otherwise, false.
+   */
+  public isIdleOrUnknown() {
+    return this.state === MediaPlayerState.IDLE || this.state === MediaPlayerState.UNKNOWN;
+  }
+
+
+  /**
    * Returns true if the player is currently playing something (e.g. state = 'playing'); 
    * otherwise, false.
    */
@@ -61,6 +79,15 @@ export class MediaPlayer {
    */
   public isPoweredOff() {
     return this.state === MediaPlayerState.OFF;
+  }
+
+
+  /**
+   * Returns true if the player is currently powered off (e.g. state = 'off'|'idle'|'unknown'); 
+   * otherwise, false.
+   */
+  public isPoweredOffOrIdle() {
+    return this.state === MediaPlayerState.OFF || this.state === MediaPlayerState.IDLE || this.state === MediaPlayerState.UNKNOWN;
   }
 
 
