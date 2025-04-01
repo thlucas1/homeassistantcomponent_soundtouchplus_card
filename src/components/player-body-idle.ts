@@ -72,11 +72,11 @@ export class PlayerBodyIdle extends PlayerBodyBase {
         .title {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: var(--stpc-player-header-title1-font-size, 1.0rem);
-          line-height: var(--stpc-player-header-title1-font-size, 1.0rem);
+          font-size: var(--stpc-player-minimized-title-font-size, 1.0rem);
+          line-height: var(--stpc-player-minimized-title-font-size, 1.3rem);
           font-weight: 500;
-          text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
-          color: var(--stpc-player-header-title1-color, #ffffff);
+          text-shadow: 0 0 2px;
+          color: var(--stpc-player-minimized-title-color, #ffffff);
           white-space: nowrap;
           mix-blend-mode: screen;
           min-height: 0.5rem;

@@ -562,4 +562,14 @@ export interface CardConfig extends LovelaceCardConfig {
    */
   playerHeaderTitle3FontSize?: string;
 
+  /**
+   * Player minimized title text color (in #xxxxxx hex format).
+   */
+  playerMinimizedTitleColor?: string;
+
+  /**
+   * Player minimized title text font-size (in 'rem' units).
+   */
+  playerMinimizedTitleFontSize?: string;
+
 }

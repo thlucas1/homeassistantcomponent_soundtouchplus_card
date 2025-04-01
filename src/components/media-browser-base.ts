@@ -10,6 +10,7 @@ import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
 
 // our imports.
 import {
+  EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW,
   ITEM_SELECTED,
   ITEM_SELECTED_WITH_HOLD,
   PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT
@@ -91,15 +92,15 @@ export class MediaBrowserBase extends LitElement {
 
     // set item control properties from configuration settings.
     if (this.mediaItemType == Section.PANDORA_STATIONS) {
-      this.itemsPerRow = this.config.pandoraBrowserItemsPerRow || 4;
+      this.itemsPerRow = this.config.pandoraBrowserItemsPerRow || EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW;
       this.hideTitle = this.config.pandoraBrowserItemsHideTitle || false;
       this.hideSubTitle = true;
     } else if (this.mediaItemType == Section.PRESETS) {
-      this.itemsPerRow = this.config.presetBrowserItemsPerRow || 3;
+      this.itemsPerRow = this.config.presetBrowserItemsPerRow || EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW;
       this.hideTitle = this.config.presetBrowserItemsHideTitle || false;
       this.hideSubTitle = this.config.presetBrowserItemsHideSubTitle || false;
     } else if (this.mediaItemType == Section.RECENTS) {
-      this.itemsPerRow = this.config.recentBrowserItemsPerRow || 4;
+      this.itemsPerRow = this.config.recentBrowserItemsPerRow || EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW;
       this.hideTitle = this.config.recentBrowserItemsHideTitle || false;
       this.hideSubTitle = this.config.recentBrowserItemsHideSubTitle || false;
     } else if (this.mediaItemType == Section.SOURCES) {
@@ -109,7 +110,7 @@ export class MediaBrowserBase extends LitElement {
       // for sources, make the source icons half the size of regular list buttons.
       this.listItemClass += ' button-device';
     } else if (this.mediaItemType == Section.USERPRESETS) {
-      this.itemsPerRow = this.config.userPresetBrowserItemsPerRow || 4;
+      this.itemsPerRow = this.config.userPresetBrowserItemsPerRow || EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW;
       this.hideTitle = this.config.userPresetBrowserItemsHideTitle || false;
       this.hideSubTitle = this.config.userPresetBrowserItemsHideSubTitle || false;
     }

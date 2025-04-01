@@ -6,6 +6,7 @@ import { BaseEditor } from './base-editor';
 import { Section } from '../types/section';
 import { CardConfig } from '../types/card-config';
 import { EditorPandoraAccountChangedEvent } from '../events/editor-pandora-account-changed';
+import { EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW } from '../constants';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
@@ -43,7 +44,7 @@ const CONFIG_SETTINGS_SCHEMA = [
     help: 'use 1 for list format',
     required: true,
     type: 'integer',
-    default: 3,
+    default: EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW,
     valueMin: 1,
     valueMax: 12,
   },

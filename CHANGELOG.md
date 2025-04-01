@@ -6,8 +6,14 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.16 ] - 2025/03/30
+
+  * Added theme variable `--spc-player-minimized-title-color` and `playerMinimizedTitleColor` card configuration option for styling minimized player title text color.
+  * Added theme variable `--spc-player-minimized-title-font-size` and `playerMinimizedTitleFontSize` card configuration option for styling minimized player title text font size.
+
 ###### [ 1.0.15 ] - 2025/03/13
 
+  * This release requires the SoundTouchPlus Integration v1.0.106+ release; please make sure you update the SoundTouchPlus Integration prior to updating this SoundTouchPlus Card release.
   * Added `playerMinimizeOnIdle` config option to minimize player card height when player state goes to idle (or off) AND height is not set to `fill`.
 
 ###### [ 1.0.14 ] - 2025/03/07
