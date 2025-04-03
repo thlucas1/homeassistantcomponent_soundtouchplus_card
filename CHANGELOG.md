@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.17 ] - 2025/04/01
+
+  * Cleaned up the minimized player card, as well as added vibrant color processing for customimageurl images.
+
 ###### [ 1.0.16 ] - 2025/03/30
 
   * Added theme variable `--spc-player-minimized-title-color` and `playerMinimizedTitleColor` card configuration option for styling minimized player title text color.

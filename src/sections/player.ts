@@ -1,18 +1,7 @@
-// debug logging.
-import Debug from 'debug/src/browser.js';
-import { DEBUG_APP_NAME } from '../constants';
-const debuglog = Debug(DEBUG_APP_NAME + ":player");
-
 // lovelace card imports.
-import { css, html, PropertyValues, TemplateResult } from 'lit';
+import { css, html, TemplateResult } from 'lit';
 import { customElement, property, state } from "lit/decorators.js";
 import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
-
-// ** IMPORTANT - Vibrant notes:
-// ensure that you have "compilerOptions"."lib": [ ... , "WebWorker" ] specified
-// in your tsconfig.json!  If not, the Vibrant module will not initialize correctly
-// and you will tear your hair out trying to figure out why it doesn't work!!!
-import Vibrant from 'node-vibrant/dist/vibrant';
 
 // our imports - card components.
 import '../components/player-header';
@@ -29,9 +18,7 @@ import {
   PLAYER_CONTROLS_ICON_SIZE_DEFAULT
 } from '../constants';
 import { CardConfig } from '../types/card-config';
-import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
-import { Palette } from '@vibrant/color';
 import { AlertUpdatesBase } from './alert-updates-base';
 
 
@@ -43,13 +30,6 @@ export class Player extends AlertUpdatesBase {
 
   // private storage.
   @state() private config!: CardConfig;
-  @state() private playerImage?: string;
-  @state() private _colorPaletteVibrant?: string;
-  @state() private _colorPaletteMuted?: string;
-  @state() private _colorPaletteDarkVibrant?: string;
-  @state() private _colorPaletteDarkMuted?: string;
-  @state() private _colorPaletteLightVibrant?: string;
-  @state() private _colorPaletteLightMuted?: string;
 
   /** MediaPlayer instance created from the configuration entity id. */
   private player!: MediaPlayer;
@@ -205,6 +185,9 @@ export class Player extends AlertUpdatesBase {
    */
   private stylePlayerSection() {
 
+    // build style info object.
+    const styleInfo: StyleInfo = <StyleInfo>{};
+
     // get default player background size.
     let backgroundSize: string | undefined;
 
@@ -224,11 +207,18 @@ export class Player extends AlertUpdatesBase {
     const configImagePlayerOffBg = this.config.customImageUrls?.['playerOffBackground'];
     const configImageDefault = this.config.customImageUrls?.['default'];
 
-    // if player is off | idle | unknown, then reset the playerImage value so that one
-    // of the default images is selected below.
-    if (this.player.isPoweredOffOrIdle()) {
-      this.playerImage = undefined;
-      this.store.card.footerBackgroundColor = undefined;
+    // get current media player image and media content id values.
+    // we use the `stp_nowplaying_image_url` custom attribute for the image.
+    // note that we cannot use the `media_image_url`, `entity_picture`, nor
+    // `entity_picture_local` attributes for various reasons found in testing.
+    let playerMediaContentId: string | undefined = undefined;
+    let playerImage: string | undefined = undefined;
+    if (this.store.player) {
+      playerMediaContentId = this.store.player.attributes.media_content_id;
+      playerImage = this.store.player.attributes.stp_nowplaying_image_url;
+    //  if (playerImage) {
+    //    playerImage = this.store.hass.hassUrl(playerImage);
+    //  }
     }
 
     const isOff = this.player.isPoweredOffOrUnknown();
@@ -238,7 +228,7 @@ export class Player extends AlertUpdatesBase {
     //  "color:red",
     //  JSON.stringify(isOff),
     //  JSON.stringify(isIdle),
-    //  JSON.stringify(this.playerImage),
+    //  JSON.stringify(playerImage),
     //  JSON.stringify(this.config.playerMinimizeOnIdle),
     //  JSON.stringify(configImagePlayerIdleBg),
     //  JSON.stringify(configImagePlayerOffBg),
@@ -251,57 +241,66 @@ export class Player extends AlertUpdatesBase {
     let headerBackgroundColor = 'transparent';
     let controlsBackgroundColor = 'transparent';
 
-    if (isIdle && this.config.playerMinimizeOnIdle) {
-
-      // no background image if player is minimized.
-
-    } else if (isIdle && configImagePlayerIdleBg) {
+    if (isIdle && configImagePlayerIdleBg) {
 
       // use configured player idle background image.
+      this.store.card.playerMediaContentId = "configImagePlayerIdleBg"
       imageUrl = configImagePlayerIdleBg;
       if ((imageUrl + "").toLowerCase() == "none") {
         imageUrl = "";
       }
-
-    } else if (isOff && this.config.playerMinimizeOnIdle) {
-
-      // no background image if player is minimized.
+      if (this.config.playerMinimizeOnIdle) {
+        backgroundSize = "cover";
+      }
 
     } else if (isOff && configImagePlayerOffBg) {
 
       // use configured player off background image.
+      this.store.card.playerMediaContentId = "configImagePlayerOffBg"
       imageUrl = configImagePlayerOffBg;
       if ((imageUrl + "").toLowerCase() == "none") {
         imageUrl = "";
+      }
+      if (this.config.playerMinimizeOnIdle) {
+        backgroundSize = "cover";
       }
 
     } else if (configImagePlayerBg) {
 
       // use configured player background image (static image, does not change).
+      this.store.card.playerMediaContentId = "configImagePlayerBg"
       imageUrl = configImagePlayerBg;
       headerBackgroundColor = this.config.playerHeaderBackgroundColor || PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT;
       controlsBackgroundColor = this.config.playerControlsBackgroundColor || PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT;
 
-    } else if (this.playerImage) {
+    } else if (playerImage) {
 
       // use currently playing artwork background image; image changes with the track.
-      imageUrl = this.playerImage;
+      this.store.card.playerMediaContentId = playerMediaContentId;
+      imageUrl = playerImage || "";
       headerBackgroundColor = this.config.playerHeaderBackgroundColor || PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT;
       controlsBackgroundColor = this.config.playerControlsBackgroundColor || PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT;
 
     } else if (configImageDefault) {
 
       // use configured default background image.
+      this.store.card.playerMediaContentId = "configImageDefault"
       imageUrl = configImageDefault;
       backgroundSize = BRAND_LOGO_IMAGE_SIZE;
-      this.store.card.footerBackgroundColor = undefined;
 
     } else {
 
-      // use hard-coded default background image.
-      imageUrl = BRAND_LOGO_IMAGE_BASE64;
-      backgroundSize = BRAND_LOGO_IMAGE_SIZE;
-      this.store.card.footerBackgroundColor = undefined;
+      this.store.card.playerMediaContentId = "BRAND_LOGO_IMAGE_BASE64"
+
+      // if minimized and we are idle | off then do not use the brand logo.
+      if (this.config.playerMinimizeOnIdle && (isIdle || isOff)) {
+        imageUrl = "";
+        backgroundSize = undefined;
+      } else {
+        // use hard-coded default background image.
+        imageUrl = BRAND_LOGO_IMAGE_BASE64;
+        backgroundSize = BRAND_LOGO_IMAGE_SIZE;
+      }
 
     }
 
@@ -324,8 +323,8 @@ export class Player extends AlertUpdatesBase {
     const playerVolumeLabelColor = this.config.playerVolumeLabelColor;
 
     // build style info object.
-    const styleInfo: StyleInfo = <StyleInfo>{};
     styleInfo['background-image'] = `url(${imageUrl})`;
+    this.store.card.playerImage = imageUrl;
     if (backgroundSize)
       styleInfo['--stpc-player-background-size'] = `${backgroundSize}`;
     styleInfo['--stpc-player-header-bg-color'] = `${headerBackgroundColor}`;
@@ -363,13 +362,6 @@ export class Player extends AlertUpdatesBase {
       styleInfo['--stpc-player-volume-label-color'] = `${playerVolumeLabelColor}`;
     if (playerVolumeSliderColor)
       styleInfo['--stpc-player-volume-slider-color'] = `${playerVolumeSliderColor}`;
-
-    styleInfo['--stpc-player-palette-vibrant'] = `${this._colorPaletteVibrant}`;
-    styleInfo['--stpc-player-palette-muted'] = `${this._colorPaletteMuted}`;
-    styleInfo['--stpc-player-palette-darkvibrant'] = `${this._colorPaletteDarkVibrant}`;
-    styleInfo['--stpc-player-palette-darkmuted'] = `${this._colorPaletteDarkMuted}`;
-    styleInfo['--stpc-player-palette-lightvibrant'] = `${this._colorPaletteLightVibrant}`;
-    styleInfo['--stpc-player-palette-lightmuted'] = `${this._colorPaletteLightMuted}`;
 
     return styleMap(styleInfo);
 
@@ -422,177 +414,5 @@ export class Player extends AlertUpdatesBase {
   }
 
 
-  /**
-   * Invoked before `update()` to compute values needed during the update.
-   * 
-   * We will check for changes in the media player background image.  If a
-   * change is being made, then we will analyze the new image for the vibrant
-   * color palette.  We will then set some css variables with those values for
-   * use by the different player sections (header, progress, volume, etc). 
-   */
-  protected willUpdate(changedProperties: PropertyValues): void {
-
-    // invoke base class method.
-    super.willUpdate(changedProperties);
-
-    // get list of changed property keys.
-    const changedPropKeys = Array.from(changedProperties.keys())
-
-    //if (debuglog.enabled) {
-    //  debuglog("willUpdate - changed property keys:\n",
-    //    JSON.stringify(changedPropKeys),
-    //  );
-    //}
-
-    // we only care about "store" property changes at this time, as it contains a
-    // reference to the "hass" property.  we are looking for background image changes.
-    if (!changedPropKeys.includes('store')) {
-      return;
-    }
-
-    let oldImage: string | undefined = undefined;
-    let newImage: string | undefined = undefined;
-
-    // get the old property reference.
-    const oldStore = changedProperties.get('store') as Store;
-    if (oldStore) {
-
-      // if a media player was assigned to the store, then get the player image.
-      // we use the `stp_nowplaying_image_url` custom attribute for the image.
-      // note that we cannot use the `media_image_url`, `entity_picture`, nor
-      // `entity_picture_local` attributes for various reasons found in testing.
-      const oldPlayer = oldStore.player;
-      if (oldPlayer) {
-        oldImage = oldPlayer.attributes.stp_nowplaying_image_url;
-      }
-    }
-
-    //console.log("willUpdate (player) - oldPlayer image:\n%s",
-    //  JSON.stringify(oldImage),
-    //);
-
-    // check if the player reference is set (in case it was set to undefined).
-    if (this.store.player) {
-
-      // get the current media player image.
-      // if image not set, then there's nothing left to do.
-      newImage = this.store.player.attributes.stp_nowplaying_image_url;
-      if (newImage) {
-        this.playerImage = newImage;
-      } else {
-        return;
-      }
-    }
-
-    // did the image change?  if so, then extract the color differences from the associated image.
-    // if we are editing the card, then we don't care about vibrant colors.
-    // note that we cannot compare entity_picture here, as it's a cached value and the `cache`
-    // portion of the image url could change even though it's the same content that's playing!
-    if ((oldImage != newImage) && (!this.isCardInEditPreview)) {
-
-      if (debuglog.enabled) {
-        debuglog("willUpdate - player content changed:\n- OLD IMAGE = %s\n- NEW IMAGE = %s",
-          JSON.stringify(oldImage),
-          JSON.stringify(newImage),
-        );
-      }
-
-      // extract the color differences from the new image and set the player colors.
-      this._extractColors();
-
-      // store the new media id in the exposed property so that other forms
-      // are informed of the change.
-      this.mediaContentId = newImage || "";
-
-    }
-  }
-
-
-  /**
-   * Extracts color compositions from the background image, which will be used for 
-   * rendering controls that are displayed on top of the background image.
-   * 
-   * Good resource on the Vibrant package parameters, examples, and other info:
-   * https://github.com/Vibrant-Colors/node-vibrant
-   * https://kiko.io/post/Get-and-use-a-dominant-color-that-matches-the-header-image/
-   * https://jariz.github.io/vibrant.js/
-   * https://github.com/Vibrant-Colors/node-vibrant/issues/44
-   */
-  private async _extractColors(): Promise<void> {
-
-    //console.log("_extractColors TODO TEST - extracting vibrant colors from image:\n- playerImage = %s",
-    //  JSON.stringify(this.playerImage),
-    //);
-
-    //console.log("_extractColors (player) - colors before extract:\n- Vibrant      = %s\n- Muted        = %s\n- DarkVibrant  = %s\n- DarkMuted    = %s\n- LightVibrant = %s\n- LightMuted   = %s",
-    //  this._colorPaletteVibrant,
-    //  this._colorPaletteMuted,
-    //  this._colorPaletteDarkVibrant,
-    //  this._colorPaletteDarkMuted,
-    //  this._colorPaletteLightVibrant,
-    //  this._colorPaletteLightMuted,
-    //);
-
-    if (this.playerImage) {
-
-      // set options for vibrant call.
-      const vibrantOptions = {
-        "colorCount": 64, // amount of colors in initial palette from which the swatches will be generated.
-        "quality": 3,     // quality. 0 is highest, but takes way more processing.
-        //  "quantizer": 'mmcq',
-        //  "generators": ['default'],
-        //  "filters": ['default'],
-      }
-
-      // create vibrant instance with our desired options.
-      const vibrant: Vibrant = new Vibrant(this.playerImage || '', vibrantOptions);
-
-      // get the color palettes for the player background image.
-      await vibrant.getPalette().then(
-        (palette: Palette) => {
-
-          //console.log("_extractColors (player) - colors found by getPalette:\n- Vibrant      = %s\n- Muted        = %s\n- DarkVibrant  = %s\n- DarkMuted    = %s\n- LightVibrant = %s\n- LightMuted   = %s",
-          //  (palette['Vibrant']?.hex) || 'undefined',
-          //  (palette['Muted']?.hex) || 'undefined',
-          //  (palette['DarkVibrant']?.hex) || 'undefined',
-          //  (palette['DarkMuted']?.hex) || 'undefined',
-          //  (palette['LightVibrant']?.hex) || 'undefined',
-          //  (palette['LightMuted']?.hex) || 'undefined',
-          //);
-
-          // set player color palette values.
-          this._colorPaletteVibrant = (palette['Vibrant']?.hex) || undefined;
-          this._colorPaletteMuted = (palette['Muted']?.hex) || undefined;
-          this._colorPaletteDarkVibrant = (palette['DarkVibrant']?.hex) || undefined;
-          this._colorPaletteDarkMuted = (palette['DarkMuted']?.hex) || undefined;
-          this._colorPaletteLightVibrant = (palette['LightVibrant']?.hex) || undefined;
-          this._colorPaletteLightMuted = (palette['LightMuted']?.hex) || undefined;
-
-          // set card footer background color.
-          this.store.card.footerBackgroundColor = this._colorPaletteVibrant;
-
-        },
-        (_reason: string) => {
-
-          if (debuglog.enabled) {
-            debuglog("_extractColors - Could not retrieve color palette info for player background image\nreason = %s",
-              JSON.stringify(_reason),
-            );
-          }
-
-          // reset player color palette values.
-          this._colorPaletteVibrant = undefined;
-          this._colorPaletteMuted = undefined;
-          this._colorPaletteDarkVibrant = undefined;
-          this._colorPaletteDarkMuted = undefined;
-          this._colorPaletteLightVibrant = undefined;
-          this._colorPaletteLightMuted = undefined;
-
-          // set card footer background color.
-          this.store.card.footerBackgroundColor = this._colorPaletteVibrant;
-
-        }
-      );
-    }
-  }
+  
 }
