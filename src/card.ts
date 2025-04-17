@@ -317,9 +317,8 @@ export class Card extends AlertUpdatesBase {
         display: flex;
         align-items: center;
         background-repeat: no-repeat;
-        color: var(--stpc-card-footer-color, inherit);
-        background-color: var(--stpc-card-footer-background-color, var(--stpc-player-footer-bg-color, var(--card-background-color, transparent)));
-        background-image: var(--stpc-card-footer-background-image, linear-gradient(rgba(0, 0, 0, 0.6), rgb(0, 0, 0)));
+        background-color: var(--stpc-footer-background-color, var(--stpc-player-footer-bg-color, var(--card-background-color, transparent)));
+        background-image: var(--stpc-footer-background-image, linear-gradient(rgba(0, 0, 0, 0.6), rgb(0, 0, 0)));
       }
 
       .stpc-card-footer {
@@ -1176,19 +1175,35 @@ export class Card extends AlertUpdatesBase {
       }
     }
 
-    // set footer icon size.
-    if (this.config.footerIconSize) {
-      styleInfo['--stpc-footer-icon-size'] = `${this.config.footerIconSize}`;
+    // load basic layout settings.
+    const footerBackgroundColor = this.config.footerBackgroundColor;
+    const footerBackgroundImage = this.config.footerBackgroundImage;
+    const footerIconColor = this.config.footerIconColor;
+    const footerIconColorSelected = this.config.footerIconColorSelected;
+    const footerIconSize = this.config.footerIconSize;
+
+    // set css variables that affect the card footer.
+    if (footerIconColor)
+      styleInfo['--stpc-footer-icon-color'] = `${footerIconColor}`;
+    if (footerIconColorSelected)
+      styleInfo['--stpc-footer-icon-color-selected'] = `${footerIconColorSelected}`;
+    if (footerIconSize) {
+      styleInfo['--stpc-footer-icon-size'] = `${footerIconSize}`;
       styleInfo['--stpc-footer-icon-button-size'] = `var(--stpc-footer-icon-size, ${FOOTER_ICON_SIZE_DEFAULT}) + 0.75rem`;
     }
-
-    // is player selected, and a footer background color set?
-    // if so, then return vibrant background style;
-    // otherwise, let background color default to the card background color.
-    if ((this.section == Section.PLAYER) && (this.footerBackgroundColor)) {
-      styleInfo['--stpc-player-footer-bg-color'] = `${this.footerBackgroundColor || 'transparent'}`;
+    if (footerBackgroundImage)
+      styleInfo['--stpc-footer-background-image'] = `${footerBackgroundImage}`;
+    if (footerBackgroundColor) {
+      styleInfo['--stpc-footer-background-color'] = `${footerBackgroundColor}`;
     } else {
-      styleInfo['background'] = `unset`;
+      // is player selected, and a footer background color set?
+      // if so, then return vibrant background style;
+      // otherwise, let background color default to the card background color.
+      if ((this.section == Section.PLAYER) && (this.vibrantColorVibrant)) {
+        styleInfo['--stpc-player-footer-bg-color'] = `${this.footerBackgroundColor || 'transparent'}`;
+      } else {
+        styleInfo['background'] = `unset`;
+      }
     }
 
     return styleMap(styleInfo);

@@ -403,7 +403,6 @@ class Volume extends AlertUpdatesBase {
         align-items: center;
         mix-blend-mode: screen;
         overflow: hidden;
-        text-shadow: 0 0 2px var(--stpc-player-palette-vibrant);
         color: var(--stpc-player-controls-icon-color, #ffffff);
         width: 100%;
         --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);

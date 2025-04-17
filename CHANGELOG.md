@@ -6,14 +6,25 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
-###### [ 1.0.17 ] - 2025/04/01
+###### [ 1.0.18 ] - 2025/04/17
+
+  * Added theme variable `--stpc-footer-background-color` and `footerBackgroundColor` card configuration option for styling footer background color.
+  * Added theme variable `--stpc-footer-background-image` and `footerBackgroundImage` card configuration option for styling footer background gradient.
+  * Added theme variable `--stpc-footer-icon-color` and `footerIconColor` card configuration option for styling footer icons color.
+  * Added theme variable `--stpc-footer-icon-color-selected` and `footerIconColorSelected` card configuration option for styling footer selected icon color.
+  * Added theme variable `--stpc-footer-icon-size` for styling footer icon size; note that the configuration option (`footerIconSize`) for this theme variable already exists.
+  * Removed theme variable `--stpc-card-footer-color`; use `--stpc-footer-icon-color` instead.
+  * Removed theme variable `--stpc-card-footer-background-color`; use `--stpc-footer-background-color` instead.
+  * Removed theme variable `--stpc-card-footer-background-image`; use `--stpc-footer-background-image` instead.
+
+###### [ 1.0.17 ] - 2025/04/03
 
   * Cleaned up the minimized player card, as well as added vibrant color processing for customimageurl images.
 
 ###### [ 1.0.16 ] - 2025/03/30
 
-  * Added theme variable `--spc-player-minimized-title-color` and `playerMinimizedTitleColor` card configuration option for styling minimized player title text color.
-  * Added theme variable `--spc-player-minimized-title-font-size` and `playerMinimizedTitleFontSize` card configuration option for styling minimized player title text font size.
+  * Added theme variable `--stpc-player-minimized-title-color` and `playerMinimizedTitleColor` card configuration option for styling minimized player title text color.
+  * Added theme variable `--stpc-player-minimized-title-font-size` and `playerMinimizedTitleFontSize` card configuration option for styling minimized player title text font size.
 
 ###### [ 1.0.15 ] - 2025/03/13
 
