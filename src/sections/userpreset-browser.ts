@@ -77,7 +77,7 @@ export class UserPresetBrowser extends FavBrowserBase {
           ${(() => {
             // if actions are not visbile, then render the media list.
             if (!this.isActionsVisible) {
-              if (this.config.userPresetBrowserItemsPerRow === 1) {
+              if ((this.config.userPresetBrowserItemsPerRow || 1) === 1) {
                 return (
                   html`<stpc-media-browser-list 
                         class="media-browser-list"

@@ -84,7 +84,7 @@ export class SourceBrowser extends FavBrowserBase {
           ${this.alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this.alertErrorClear}>${this.alertError}</ha-alert>` : ""}
           ${this.alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this.alertInfoClear}>${this.alertInfo}</ha-alert>` : ""}
           ${(() => {
-            if (this.config.sourceBrowserItemsPerRow === 1) {
+            if ((this.config.sourceBrowserItemsPerRow || 1) === 1) {
               return (
                 html`<stpc-media-browser-list
                       class="media-browser-list"

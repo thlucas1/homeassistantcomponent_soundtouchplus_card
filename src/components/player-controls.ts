@@ -8,6 +8,7 @@ import { css, html, TemplateResult, nothing, PropertyValues, unsafeCSS } from 'l
 import { property, state } from 'lit/decorators.js';
 import { styleMap, StyleInfo } from 'lit-html/directives/style-map.js';
 import {
+  mdiAudioInputRca,
   mdiInformationSlabBoxOutline,
   mdiPause,
   mdiPlay,
@@ -36,10 +37,12 @@ import { closestElement, getHomeAssistantErrorMessage } from '../utils/utils';
 import { Player } from '../sections/player';
 import { PlayerBodyToneControls } from './player-body-tone-controls';
 import { AlertUpdatesBase } from '../sections/alert-updates-base';
+import { Section } from '../types/section';
 
 const { NEXT_TRACK, PAUSE, PLAY, PREVIOUS_TRACK, REPEAT_SET, SHUFFLE_SET, TURN_OFF, TURN_ON } = MediaPlayerEntityFeature;
 const ACTION_FAVES = 900000000000;    // not using this feature for now - maybe later?
 const TONE_CONTROLS = 990000000000;
+const SOURCES = 999000000000;
 
 
 class PlayerControls extends AlertUpdatesBase {
@@ -109,10 +112,12 @@ class PlayerControls extends AlertUpdatesBase {
           </div>
           <div class="iconsPower" hide=${isOff}>
               <ha-icon-button @click=${() => this.onClickAction(TURN_ON)}        hide=${this.hideFeature(TURN_ON)}        .path=${mdiPower} label="Turn On" style=${this.styleIcon(colorPower)}></ha-icon-button>
+              <ha-icon-button @click=${() => this.onClickAction(SOURCES)}        hide=${this.hideFeature(SOURCES)}        .path=${mdiAudioInputRca} label="Sources"></ha-icon-button>
           </div>
           <div class="iconsPower" hide=${idle}>
               <ha-icon-button @click=${() => this.onClickAction(TURN_OFF)}       hide=${this.hideFeature(TURN_OFF)}       .path=${mdiPower} label="Turn Off"></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(PLAY)}           hide=${this.hideFeature(PLAY)}           .path=${mdiPlay} label="Play" style=${this.styleIcon(true)}></ha-icon-button>
+              <ha-icon-button @click=${() => this.onClickAction(SOURCES)}        hide=${this.hideFeature(SOURCES)}        .path=${mdiAudioInputRca} label="Sources"></ha-icon-button>
           </div>
           <stpc-player-volume hide=${stopped} .store=${this.store} .player=${this.player} class="player-volume-container"></stpc-player-volume>
       </div>
@@ -378,6 +383,11 @@ class PlayerControls extends AlertUpdatesBase {
         }
         return true;
 
+      } else if (action == SOURCES) {
+
+        // show sources section.
+        this.store.card.SetSection(Section.SOURCES);
+
       } else if (action == TONE_CONTROLS) {
 
         // if we are editing the card configuration, then we don't want to allow this.
@@ -573,6 +583,15 @@ class PlayerControls extends AlertUpdatesBase {
           return (this.config.playerVolumeControlsHidePower) ? true : nothing;
         }
         return true; // hide icon
+      }
+
+    } else if (feature == SOURCES) {
+
+      // show button if player is minimized and sources section enabled.
+      if (this.config.playerMinimizeOnIdle) {
+        if (this.config.sections?.includes(Section.SOURCES)) {
+          return nothing;
+        }
       }
 
     }

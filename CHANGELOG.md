@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.19 ] - 2025/04/28
+
+  * Added sources button to minimized player so that a source can be selected prior to power on / resuming play.
+
 ###### [ 1.0.18 ] - 2025/04/17
 
   * Added theme variable `--stpc-footer-background-color` and `footerBackgroundColor` card configuration option for styling footer background color.
