@@ -8,7 +8,6 @@ import {
   CARD_VERSION,
   DOMAIN_MEDIA_PLAYER,
   DOMAIN_SOUNDTOUCHPLUS,
-  FOOTER_ICON_SIZE_DEFAULT
 } from '../constants';
 
 
@@ -52,14 +51,6 @@ const CONFIG_SETTINGS_SCHEMA = [
     type: 'string',
   },
   {
-    name: 'footerIconSize',
-    label: 'Size of the icons in the Footer area.',
-    help: 'default is "' + FOOTER_ICON_SIZE_DEFAULT + '"',
-    required: false,
-    type: 'string',
-    default: FOOTER_ICON_SIZE_DEFAULT,
-  },
-  {
     name: 'width',
     label: 'Width of the card',
     help: 'in rem units; or "fill" for 100% width',
@@ -74,6 +65,21 @@ const CONFIG_SETTINGS_SCHEMA = [
     required: false,
     type: 'string',
     default: 35.15,
+  },
+  {
+    name: 'sectionDefault',
+    label: 'Default card section to display',
+    required: false,
+    type: 'select',
+    options: [
+      /* the following must match defined names in `secion.ts` */
+      ['player', 'Player'],                       /* Section.PLAYER */
+      ['sources', 'Sources'],                     /* Section.SOURCES */
+      ['presets', 'Device Presets'],              /* Section.PRESETS */
+      ['userpresets', 'User Presets'],            /* Section.USERPRESETS */
+      ['recents', 'Recently Played'],             /* Section.RECENTS */
+      ['pandorastations', 'Pandora Stations'],    /* Section.PANDORA_STATIONS */
+    ],
   },
   {
     name: 'touchSupportDisabled',
