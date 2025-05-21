@@ -6,6 +6,13 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.21 ] - 2025/05/20
+
+  * Added theme variable `stpc-player-background-image-off`; Background image to use for the player section when the player state is off; default value is none.
+  * Added theme variable `stpc-player-background-image-idle`; Background image to use for the player section when the player state is idle; default value is none.
+  * Added theme variable `stpc-player-background-image`; Background image to use for the player section when the player state is playing; default value is to use currently playing content cover art.
+  * Removed card `min-height` value, which allows you to resize the card to any minimum height you wish.
+
 ###### [ 1.0.20 ] - 2025/04/30
 
   * Added `sectionDefault` config option to display the specified section of the card by default.  Check out the [Configuration Options wiki document](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#sectiondefault) for more information.
