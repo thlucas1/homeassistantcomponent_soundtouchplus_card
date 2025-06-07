@@ -663,6 +663,63 @@ export class FavBrowserBase extends AlertUpdatesBase {
 
 
   /**
+   * Calls the SoundTouchPlusService PlayUrlDlna method to play media.
+   * 
+   * @param url The url to play; value must start with http.
+   * @param artist The message text that will appear in the NowPlaying Artist node; if omitted, default is "Unknown Artist".
+   * @param album The message text that will appear in the NowPlaying Album node; if omitted, default is "Unknown Album".
+   * @param track The message text that will appear in the NowPlaying Track node; if omitted, default is "Unknown Track".
+   * @param art_url A url link to the art image of the station (if present).
+   */
+  protected async PlayUrlDlna(
+    url: string,
+    artist: string | undefined,
+    album: string | undefined,
+    track: string | undefined,
+    art_url: string | undefined,
+    ): Promise<void> {
+
+    try {
+
+      // show progress indicator.
+      this.progressShow();
+
+      if (debuglog.enabled) {
+        debuglog("PlayUrlDlna \n- shuffleOnPlay = %s\n- player.attributes.shuffle = %s",
+          JSON.stringify(this.shuffleOnPlay),
+          JSON.stringify(this.player.attributes.shuffle),
+        );
+      }
+
+      // enable shuffle prior to play if section is configured to do so and shuffle is currently false.
+      if ((this.shuffleOnPlay) && (!this.player.attributes.shuffle)) {
+        await this.store.mediaControlService.shuffle_set(this.player, true);
+      }
+
+      // play media item.
+      await this.soundTouchPlusService.PlayUrlDlna(this.player, url, artist, album, track, art_url);
+
+      // show player section.
+      this.store.card.SetSection(Section.PLAYER);
+
+    }
+    catch (error) {
+
+      // set error message and reset scroll position to zero so the message is displayed.
+      this.alertErrorSet("Could not play media item.  " + getHomeAssistantErrorMessage(error));
+      this.mediaBrowserContentElement.scrollTop = 0;
+
+    }
+    finally {
+
+      // hide progress indicator.
+      this.progressHide();
+
+    }
+  }
+
+
+  /**
    * Sets the scroll position on the media list content container.
    */
   protected setScrollPosition() {

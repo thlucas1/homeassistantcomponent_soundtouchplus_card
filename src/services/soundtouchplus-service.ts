@@ -659,6 +659,74 @@ export class SoundTouchPlusService {
 
 
   /**
+   * Calls the SoundTouchPlusService PlayUrlDlna method to play media.
+   * 
+   * @param player SoundTouchPlus MediaPlayer instance that will process the request.
+   * @param url The url to play; value must start with http.
+   * @param artist The message text that will appear in the NowPlaying Artist node; if omitted, default is "Unknown Artist".
+   * @param album The message text that will appear in the NowPlaying Album node; if omitted, default is "Unknown Album".
+   * @param track The message text that will appear in the NowPlaying Track node; if omitted, default is "Unknown Track".
+   * @param art_url A url link to the art image of the station (if present).
+   */
+  public async PlayUrlDlna(
+    player: MediaPlayer,
+    url: string,
+    artist: string | undefined | null,
+    album: string | undefined | null,
+    track: string | undefined | null,
+    art_url: string | undefined | null,
+  ): Promise<void> {
+
+    // validations.
+    if (!player) {
+      throw new Error("Media player argument was not supplied to the PlayUrlDlna service.")
+    }
+    if (!url) {
+      throw new Error("url argument was not supplied to the PlayUrlDlna service.");
+    }
+
+    try {
+
+      // create service data (with required parameters).
+      const serviceData: { [key: string]: any } = {
+        entity_id: player.id,
+        url: url,
+        update_now_playing_status: true,
+        delay: 1,
+      };
+
+        //vol.Optional("delay", default=1): vol.All(vol.Range(min=0,max=10))
+
+      // update service data parameters (with optional parameters).
+      if (artist)
+        serviceData['artist'] = artist;
+      if (album)
+        serviceData['album'] = album;
+      if (track)
+        serviceData['track'] = track;
+      if (art_url)
+        serviceData['art_url'] = art_url;
+
+      // create service request.
+      const serviceRequest: ServiceCallRequest = {
+        domain: DOMAIN_SOUNDTOUCHPLUS,
+        service: 'play_url_dlna',
+        serviceData: serviceData
+      };
+
+      // call the service.
+      await this.CallService(serviceRequest);
+
+    }
+    catch (error) {
+
+      throw new Error("Cannot play url DLNA item: " + (error as Error).message);
+
+    }
+  }
+
+
+  /**
    * Retrieves the list of presets defined to the device.
    * 
    * @param player SoundTouchPlus MediaPlayer instance that will process the request.

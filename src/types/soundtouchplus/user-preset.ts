@@ -8,6 +8,16 @@ import { IContentItem } from "./content-item";
 */
 export interface IUserPreset {
 
+  /**
+   * Text that will appear in the NowPlaying Artist node; if omitted, default is "Unknown Artist".
+   */
+  artist_name?: string;
+
+  /**
+   * Text that will appear in the NowPlaying Album node; if omitted, default is "Unknown Album".
+   */
+  album_name?: string;
+
   /** ContentItem object. */
   ContentItem?: IContentItem;
 
@@ -15,7 +25,6 @@ export interface IUserPreset {
    * Origin location of the content item (e.g. `config`, `file`).
    */
   origin?: string | null;
-
 
   /**
    * Filter criteria that will be applied to the specified filter section.
@@ -32,7 +41,7 @@ export interface IUserPreset {
   filter_section?: string | null;
 
   /**
-   * Item type (e.g. "filtersection", etc).
+   * Item type (e.g. "filtersection", "dlnaurl", etc).
    */
   type: string | null;
 

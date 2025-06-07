@@ -49,20 +49,40 @@ class UserPresetActions extends FavActionsBase {
           <div class="img" style="background:url(${this.mediaItem.ContentItem?.ContainerArt});"></div>
           <div class="media-info-details">
             <div class="grid userpreset-info-grid">
-              <div class="grid-action-info-hdr-s">Name</div>
-              <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.Name}</div>
 
-              <div class="grid-action-info-hdr-s">Source</div>
-              <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.Source}</div>
+              ${!this.mediaItem.type || this.mediaItem.type == "filtersection" ? html`
+                <div class="grid-action-info-hdr-s">Name</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.Name}</div>
+                <div class="grid-action-info-hdr-s">Source</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.Source}</div>
+                <div class="grid-action-info-hdr-s">Source Account</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.SourceAccount}</div>
+                <div class="grid-action-info-hdr-s">Location</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.Location}</div>
+                <div class="grid-action-info-hdr-s">Type</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.TypeValue}</div>
+              ` : html``}
 
-              <div class="grid-action-info-hdr-s">Source Account</div>
-              <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.SourceAccount}</div>
+              ${this.mediaItem.type == "dlnaurl" ? html`
+                <div class="grid-action-info-hdr-s">URL</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.Location}</div>
+                <div class="grid-action-info-hdr-s">Artist</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.artist_name}</div>
+                <div class="grid-action-info-hdr-s">Album</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.album_name}</div>
+                <div class="grid-action-info-hdr-s">Track</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.Name}</div>
+              ` : html``}
 
-              <div class="grid-action-info-hdr-s">Location</div>
-              <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.Location}</div>
+              ${this.mediaItem.type == "filtersection" ? html`
+                <div class="grid-action-info-hdr-s">Filter Section</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.filter_section}</div>
+                <div class="grid-action-info-hdr-s">Filter Criteria</div>
+                <div class="grid-action-info-text-s">${this.mediaItem.filter_criteria}</div>
+              ` : html``}
 
-              <div class="grid-action-info-hdr-s">Type</div>
-              <div class="grid-action-info-text-s">${this.mediaItem.ContentItem?.TypeValue}</div>
+              <div class="grid-action-info-hdr-s">Preset Type</div>
+              <div class="grid-action-info-text-s">${this.mediaItem.type || "contentitem"}</div>
 
               <div class="grid-action-info-hdr-s">Origin</div>
               <div class="grid-action-info-text-s">${this.mediaItem.origin}</div>

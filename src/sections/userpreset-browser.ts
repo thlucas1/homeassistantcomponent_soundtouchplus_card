@@ -130,13 +130,25 @@ export class UserPresetBrowser extends FavBrowserBase {
       // validate filter section name.
       const enumValues: string[] = Object.values(Section);
       if (!enumValues.includes(preset.filter_section || "")) {
-        //if (Object.values(Section) as string[]).includes(preset.filter_section || "") {
         this.alertErrorSet("Preset filter_section \"" + preset.filter_section + "\" is not a valid section identifier.");
         return;
       }
 
       // fire event.
       this.dispatchEvent(FilterSectionMediaEvent(preset.filter_section, preset.filter_criteria));
+
+      // is this a dlna url type?
+    } else if (args.detail.type == "dlnaurl") {
+
+      // play url DLNA media.
+      const preset = args.detail as IUserPreset;
+      super.PlayUrlDlna(
+        preset.ContentItem?.Location || "",
+        preset.artist_name,
+        preset.album_name,
+        preset.ContentItem?.Name,
+        preset.ContentItem?.ContainerArt
+      );
 
     } else {
 
