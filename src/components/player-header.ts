@@ -10,6 +10,7 @@ import { CardConfig } from '../types/card-config';
 import { Store } from '../model/store';
 import { MediaPlayer } from '../model/media-player';
 import { formatTitleInfo } from '../utils/media-browser-utils';
+import { PlayerBodyToneControls } from './player-body-tone-controls';
 
 class PlayerHeader extends LitElement {
 
@@ -45,6 +46,25 @@ class PlayerHeader extends LitElement {
     // just in case nothing is playing, get rid of any ' - ' sequences.
     if (artistTrack) {
       artistTrack = artistTrack.replace(/^ - | - $/g, '');
+    }
+
+    // only need to do this if media is playing.
+    if (this.player.isPlaying()) {
+
+      // find body content element; this could be any of the following:
+      // STPC-PLAYER-BODY-TONE-CONTROLS.
+      const elmBody = this.parentElement?.querySelector(".player-section-body-content") as HTMLElement;
+      if (elmBody) {
+
+        const tagName = elmBody.tagName.toLowerCase();
+
+        // if currently playing track info changed then gather various details
+        // and update the player mediaContentId value so overlay content is updated on next render.
+        if (tagName == ("stpc-player-body-tone-controls")) {
+          const elmPlayerBodyToneControls = elmBody as PlayerBodyToneControls
+          elmPlayerBodyToneControls.mediaContentId = this.player.attributes.media_content_id;
+        }
+      }
     }
 
     // if nothing is playing then display configured 'no media playing' text.

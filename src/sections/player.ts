@@ -76,7 +76,7 @@ export class Player extends AlertUpdatesBase {
             } else if ((this.config.playerControlsHideToneControls || false) == true) {
               return (html``); // if tone controls disabled then we don't need to display anything in the body.
             } else {
-              return (html`<stpc-player-body-tone-controls class="player-section-body-tone-controls" .store=${this.store} .mediaContentId=${this.mediaContentId} id="elmPlayerBodyToneControls"></stpc-player-body-tone-controls>`);
+              return (html`<stpc-player-body-tone-controls class="player-section-body-content" .store=${this.store} .mediaContentId=${this.mediaContentId} id="elmPlayerBodyToneControls"></stpc-player-body-tone-controls>`);
             }
           })()}
         </div>
@@ -142,17 +142,6 @@ export class Player extends AlertUpdatesBase {
       }
 
       .player-section-body-content {
-        /* border: 1px solid yellow;   /* FOR TESTING CONTROL LAYOUT CHANGES */
-        height: inherit;
-        background: transparent;
-        overflow: hidden;
-        display: none;              /* don't display initially */
-        /* for fade-in, fade-out support */
-        transition: opacity 0.25s, display 0.25s;
-        transition-behavior: allow-discrete;    /* Note: be sure to write this after the shorthand */
-      }
-
-      .player-section-body-tone-controls {
         /* border: 1px solid yellow;   /* FOR TESTING CONTROL LAYOUT CHANGES */
         height: inherit;
         background: transparent;

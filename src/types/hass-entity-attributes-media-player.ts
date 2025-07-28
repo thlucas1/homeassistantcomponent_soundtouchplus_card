@@ -30,7 +30,7 @@ export declare type HassEntityAttributesMediaPlayer = HassEntityAttributeBase & 
   media_season?: string;
   media_series_title?: string;
   media_title?: string;
-  media_track?: number;
+  media_track?: string;
   repeat?: RepeatMode;
   shuffle?: boolean;
   sound_mode_list?: [string];

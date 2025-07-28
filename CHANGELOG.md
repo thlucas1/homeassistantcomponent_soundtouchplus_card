@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.23 ] - 2025/07/28
+
+  * Fixed a bug in the player section that was causing overlay information details to not update when a media content id change occurred.
+
 ###### [ 1.0.22 ] - 2025/06/06
 
   * Added DLNA URL User Presets that allow DLNA content to be selected for playing.  Note that these are not SoundTouch device presets, but user-defined presets.  They can be added in the card configuration, or a specified as a JSON data file (for sharing among multiple card instances). Check out the [Configuration Options wiki](https://github.com/thlucas1/homeassistantcomponent_soundtouchplus_card/wiki/Configuration-Options#userpresets-dlna-url) for more information.
