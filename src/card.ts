@@ -1343,8 +1343,12 @@ export class Card extends AlertUpdatesBase {
           //  "filters": ['default'],
         }
 
+        // use "entity_picture" attribute value, as the "stp_nowplaying_image_url" may 
+        // cause a CORS (Cross-Origin Resource Sharing) restriction.
+        const tempImage = this.store.player.attributes.entity_picture || playerImageSaved
+
         // create vibrant instance with our desired options.
-        const vibrant: Vibrant = new Vibrant(playerImageSaved || '', vibrantOptions);
+        const vibrant: Vibrant = new Vibrant(tempImage || '', vibrantOptions);
 
         // get the color palettes for the player background image.
         vibrant.getPalette()
