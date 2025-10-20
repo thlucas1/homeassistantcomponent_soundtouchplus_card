@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.26 ] - 2025/10/19
+
+  * Removed `{player.sp_playlist_name_title}` from album title field; copied thetre by mistake from my SpotifyPlus Card code.
+
 ###### [ 1.0.25 ] - 2025/10/18
 
   * Fixed vibrant `getPalette method failed` errors when trying to load images from DLNA sources.  This was due to CORS (Cross-Origin Resource Sharing) restrictions when accessing images that referenced a direct IP address that was different than the HA server instance.

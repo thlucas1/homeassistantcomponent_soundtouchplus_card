@@ -941,7 +941,7 @@ export class Card extends AlertUpdatesBase {
 
       playerHeaderTitle: '{player.source_noaccount}',
       playerHeaderArtistTrack: "{player.media_artist} - {player.media_title}",
-      playerHeaderAlbum: "{player.media_album_name} {player.sp_playlist_name_title}",
+      playerHeaderAlbum: "{player.media_album_name}",
       playerHeaderNoMediaPlayingText: "\"{player.name}\" state is \"{player.state}\"",
 
       presetBrowserTitle: "\"{player.name}\" Presets ({medialist.filteritemcount} items, {medialist.lastupdatedon})",
