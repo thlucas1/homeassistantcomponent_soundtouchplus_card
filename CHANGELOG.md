@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.28 ] - 2025/10/29
+  
+  * Fixed vibrant CORS errors being generated for DLNA server images.
+
 ###### [ 1.0.27 ] - 2025/10/28
   
   * Removed vibrant error dialog in the card player section display.  Error details are still logged to the browser console.
