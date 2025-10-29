@@ -1476,7 +1476,8 @@ export class Card extends AlertUpdatesBase {
     }
 
     // set alert status text.
-    this.alertErrorSet(alertErrorMessage || "Unknown Error");
+    // disable alert status, as there is nothing we can do about it.
+    //this.alertErrorSet(alertErrorMessage || "Unknown Error");
 
   }
 

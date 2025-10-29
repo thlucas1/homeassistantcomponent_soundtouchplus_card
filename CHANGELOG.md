@@ -6,9 +6,13 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.27 ] - 2025/10/28
+  
+  * Removed vibrant error dialog in the card player section display.  Error details are still logged to the browser console.
+
 ###### [ 1.0.26 ] - 2025/10/19
 
-  * Removed `{player.sp_playlist_name_title}` from album title field; copied thetre by mistake from my SpotifyPlus Card code.
+  * Removed `{player.sp_playlist_name_title}` from album title field; copied there by mistake from my SpotifyPlus Card code.
 
 ###### [ 1.0.25 ] - 2025/10/18
 
