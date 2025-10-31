@@ -47,11 +47,11 @@ export class MediaPlayer {
 
 
   /**
-   * Returns true if the player is currently idle (e.g. state = 'idle'|'unknown'); 
+   * Returns true if the player state is currently 'idle';
    * otherwise, false.
    */
   public isIdle() {
-    return this.state === MediaPlayerState.IDLE || this.state === MediaPlayerState.UNKNOWN;
+    return this.state === MediaPlayerState.IDLE;
   }
 
 
@@ -92,7 +92,7 @@ export class MediaPlayer {
 
 
   /**
-   * Returns true if the player is currently powered off (e.g. state = 'off'); 
+   * Returns true if the player is currently powered off (e.g. state = 'off'|'unknown'); 
    * otherwise, false.
    */
   public isPoweredOffOrUnknown() {
@@ -114,7 +114,7 @@ export class MediaPlayer {
    * otherwise, false.
    */
   public supportsFeature(feature: MediaPlayerEntityFeature) {
-    return ((this.attributes.supported_features || 0) & feature) == feature;
+    return ((this.attributes.supported_features || 0) & feature) !== 0;
   }
 
 }

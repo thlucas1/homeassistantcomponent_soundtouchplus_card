@@ -3,15 +3,15 @@ import { HassService } from './hass-service';
 import { ServiceCallRequest } from '../types/home-assistant-frontend/service-call-request';
 
 // our imports.
+import { DOMAIN_MEDIA_PLAYER } from '../constants';
 import { MediaPlayerItem } from '../types';
 import { MediaPlayer } from '../model/media-player';
-import { DOMAIN_MEDIA_PLAYER } from '../constants';
 
 // media player services.
 export const SERVICE_TURN_ON = "turn_on";
 export const SERVICE_TURN_OFF = "turn_off";
-//const SERVICE_VOLUME_UP = "volume_up";
-//const SERVICE_VOLUME_DOWN = "volume_down";
+export const SERVICE_VOLUME_DOWN = "volume_down";
+export const SERVICE_VOLUME_UP = "volume_up";
 export const SERVICE_VOLUME_MUTE = "volume_mute";
 export const SERVICE_VOLUME_SET = "volume_set";
 export const SERVICE_MEDIA_PLAY_PAUSE = "media_play_pause";
@@ -478,6 +478,48 @@ export class MediaControlService {
     await this.hassService.CallService(serviceRequest);
   }
 
+
+  /**
+   * Turn volume down for media player.
+   * 
+   * @param player MediaPlayer object to control.
+   */
+  public async volume_down(player: MediaPlayer) {
+
+    // create service request.
+    const serviceRequest: ServiceCallRequest = {
+      domain: DOMAIN_MEDIA_PLAYER,
+      service: SERVICE_VOLUME_DOWN,
+      serviceData: {
+        entity_id: player.id,
+      }
+    };
+
+    // call the service.
+    await this.hassService.CallService(serviceRequest);
+  }
+
+
+  /**
+   * Turn volume up for media player.
+   * 
+   * @param player MediaPlayer object to control.
+   */
+  public async volume_up(player: MediaPlayer) {
+
+    // create service request.
+    const serviceRequest: ServiceCallRequest = {
+      domain: DOMAIN_MEDIA_PLAYER,
+      service: SERVICE_VOLUME_UP,
+      serviceData: {
+        entity_id: player.id,
+      }
+    };
+
+    // call the service.
+    await this.hassService.CallService(serviceRequest);
+  }
+
 }
 
 
@@ -505,7 +547,7 @@ export enum MediaPlayerEntityFeature {
   TURN_ON = 128,
   TURN_OFF = 256,
   PLAY_MEDIA = 512,
-  VOLUME_BUTTONS = 1024,
+  VOLUME_STEP = 1024,
   SELECT_SOURCE = 2048,
   STOP = 4096,
   CLEAR_PLAYLIST = 8192,

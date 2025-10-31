@@ -1,3 +1,8 @@
+// debug logging.
+import Debug from 'debug/src/browser.js';
+import { DEBUG_APP_NAME } from '../constants';
+const debuglog = Debug(DEBUG_APP_NAME + ":card");
+
 // lovelace card imports.
 import { css, LitElement } from 'lit';
 import { property, state } from 'lit/decorators.js';
@@ -5,6 +10,7 @@ import { HomeAssistant } from '../types/home-assistant-frontend/home-assistant';
 import { fireEvent } from '../types/home-assistant-frontend/fire-event';
 
 // our imports.
+import { CONFIG_UPDATED } from '../constants';
 import { CardConfig } from '../types/card-config';
 import { Store } from '../model/store';
 import { ConfigArea } from '../types/config-area';
@@ -12,7 +18,6 @@ import { Section } from '../types/section';
 import { MediaPlayer } from '../model/media-player';
 import { SoundTouchPlusService } from '../services/soundtouchplus-service';
 import { dispatch, getObjectDifferences, getSectionForConfigArea } from '../utils/utils';
-import { CONFIG_UPDATED } from '../constants';
 import { EditorConfigAreaSelectedEvent } from '../events/editor-config-area-selected';
 import { ISourceList } from '../types/soundtouchplus/source-list';
 import { ISoundTouchDevice } from '../types/soundtouchplus/soundtouch-device';
@@ -35,11 +40,11 @@ export abstract class BaseEditor extends LitElement {
   /** MediaPlayer instance created from the configuration entity id. */
   public player!: MediaPlayer;
 
-  /** SoundTouchPlus services instance. */
-  public soundTouchPlusService!: SoundTouchPlusService;
-
   /** SoundTouchPlus device source list. */
   public sourceList!: ISourceList;
+
+  /** SoundTouchPlus services instance. */
+  public soundTouchPlusService!: SoundTouchPlusService;
 
 
   /**
@@ -154,6 +159,12 @@ export abstract class BaseEditor extends LitElement {
 
       // get configuration changes.
       changedValues = getObjectDifferences(this.config, changedConfig);
+
+      // if player id changed, then reset the device information so it is refreshed.
+      if ("entity" in changedValues) {
+        debuglog("configChanged (base-editor) - player entity was changed; resetting device info so it is reloaded at next render");
+        Store.soundTouchDevice = undefined
+      }
 
       // update the existing configuration with supplied changes.
       this.config = {

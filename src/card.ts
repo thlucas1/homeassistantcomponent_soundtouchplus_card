@@ -40,29 +40,28 @@ import {
   getHomeAssistantErrorMessage,
   getSectionForConfigArea,
   isCardInDashboardEditor,
+  isCardInEditPreview,
   isCardInPickerPreview,
   isNumber,
-  isCardInEditPreview,
 } from './utils/utils';
 import { EDITOR_CONFIG_AREA_SELECTED, EditorConfigAreaSelectedEventArgs } from './events/editor-config-area-selected';
 import { FILTER_SECTION_MEDIA, FilterSectionMediaEventArgs } from './events/filter-section-media';
 import { PROGRESS_STARTED } from './events/progress-started';
 import { PROGRESS_ENDED } from './events/progress-ended';
 import { Store } from './model/store';
+import { Section } from './types/section';
+import { ConfigArea } from './types/config-area';
 import { CardConfig } from './types/card-config';
 import { CustomImageUrls } from './types/custom-image-urls';
-import { ConfigArea } from './types/config-area';
-import { Section } from './types/section';
+import { AlertUpdatesBase } from './sections/alert-updates-base';
 import { FavBrowserBase } from './sections/fav-browser-base';
+import { RecentBrowser } from './sections/recent-browser';
+import { UserPresetBrowser } from './sections/userpreset-browser';
 import { PandoraBrowser } from './sections/pandora-browser';
 import { PresetBrowser } from './sections/preset-browser';
-import { RecentBrowser } from './sections/recent-browser';
 import { SourceBrowser } from './sections/source-browser';
-import { UserPresetBrowser } from './sections/userpreset-browser';
-import { formatTitleInfo, removeSpecialChars } from './utils/media-browser-utils';
-import { ISoundTouchDevice } from './types/soundtouchplus/soundtouch-device';
 import { MediaPlayer } from './model/media-player';
-import { AlertUpdatesBase } from './sections/alert-updates-base';
+import { formatTitleInfo, removeSpecialChars } from './utils/media-browser-utils';
 
 
 const HEADER_HEIGHT = 2;
@@ -101,7 +100,6 @@ export class Card extends AlertUpdatesBase {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @property({ attribute: false }) config!: CardConfig;
   @property({ attribute: false }) footerBackgroundColor?: string;
-  @property({ attribute: false }) public soundTouchDevice!: ISoundTouchDevice | undefined;
 
   // private state properties.
   @state() private section!: Section;
@@ -134,9 +132,6 @@ export class Card extends AlertUpdatesBase {
 
   /** Indicates if createStore method is executing for the first time (true) or not (false). */
   private isFirstTimeSetup: boolean = true;
-
-  /** Indicates if GetDeviceInfo call was made (true) or not (false). */
-  private isGetDeviceInfoCalled: boolean = false;
 
   /** Indicates if an async update is in progress (true) or not (false). */
   protected isUpdateInProgressAsync!: boolean;
@@ -179,13 +174,15 @@ export class Card extends AlertUpdatesBase {
       Store.selectedConfigArea = ConfigArea.GENERAL;
     }
 
-    //console.log("render (card) - rendering card\n- this.store.section=%s\n- this.section=%s\n- Store.selectedConfigArea=%s\n- playerId=%s\n- config.sections=%s",
-    //  JSON.stringify(this.store.section),
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //  JSON.stringify(this.playerId),
-    //  JSON.stringify(this.config.sections),
-    //);
+    //if (debuglog.enabled) {
+    //  debuglog("render (card) - rendering card\n- store.section=%s\n- section=%s\n- Store.selectedConfigArea=%s\n- playerId=%s\n- config.sections=%s",
+    //    JSON.stringify(this.store.section),
+    //    JSON.stringify(this.section),
+    //    JSON.stringify(Store.selectedConfigArea),
+    //    JSON.stringify(this.playerId),
+    //    JSON.stringify(this.config.sections),
+    //  );
+    //}
 
     // calculate height of the card, accounting for any extra
     // titles that are shown, footer, etc.
@@ -382,22 +379,16 @@ export class Card extends AlertUpdatesBase {
       this.playerId = this.config.entity;
     }
 
-    // was the player resolved to an entity? if so, then load device information.
-    if ((!this.soundTouchDevice) && (this.store.player) && (this.store.player.id != "")) {
+    // was the player resolved to an entity? if so, then load device information
+    // if device information has not already been loaded.
+    if ((this.store.player) && (this.store.player.id != "") && (Store.soundTouchDevice == undefined)) {
 
-      //debuglog("createStore - player was resolved to an entity\n- this.isGetDeviceInfoCalled = %s\n- stp_config_state = %s",
-      //  JSON.stringify(this.isGetDeviceInfoCalled),
-      //  JSON.stringify(this.store.player.attributes.stp_config_state),
-      //);
-
-      if (!this.isGetDeviceInfoCalled) {
-
-        // we only want to get device information if there are no config errors;
-        // otherwise, it's a continuous loop!
-        if (this.store.player.attributes.stp_config_state || "" == "") {
-          this.updateSoundTouchDevice(this.store.player);
-        }
+      // we only want to get device information if there are no config errors;
+      // otherwise, it's a continuous loop!
+      if (this.store.player.attributes.stp_config_state || "" == "") {
+        this.updateSoundTouchDevice(this.store.player);
       }
+
     }
 
     // is this the first time executing?
@@ -1492,7 +1483,6 @@ export class Card extends AlertUpdatesBase {
     // this method is called from `render`, which could fire multiple times!
     if (!this.isUpdateInProgress) {
       this.isUpdateInProgress = true;
-      this.isGetDeviceInfoCalled = true
     } else {
       return false;
     }
@@ -1518,7 +1508,7 @@ export class Card extends AlertUpdatesBase {
           .then(result => {
 
             // load media list results.
-            this.soundTouchDevice = result;
+            Store.soundTouchDevice = result;
 
             if (debuglog.enabled) {
               debuglog("%cupdateSoundTouchDevice - soundTouchDevice was updated from GetDeviceInfo service",
@@ -1533,7 +1523,7 @@ export class Card extends AlertUpdatesBase {
           .catch(error => {
 
             // clear results, and reject the promise.
-            this.soundTouchDevice = undefined;
+            Store.soundTouchDevice = undefined;
 
             // call base class method, indicating media list update failed.
             this.alertErrorSet("Get SoundTouch Device Info failed: " + getHomeAssistantErrorMessage(error));

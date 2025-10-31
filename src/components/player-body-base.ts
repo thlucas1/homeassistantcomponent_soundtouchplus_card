@@ -28,6 +28,9 @@ export class PlayerBodyBase extends AlertUpdatesBase {
   /** SoundTouchPlus services instance. */
   protected soundTouchPlusService!: SoundTouchPlusService;
 
+  /** True if the card is in edit preview mode (e.g. being edited); otherwise, false. */
+  protected isCardInEditPreview!: boolean;
+
   /** Indicates if the player is stopped (e.g. not playing anything). */
   protected isPlayerStopped!: boolean | typeof nothing;
 

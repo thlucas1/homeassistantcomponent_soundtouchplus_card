@@ -20,6 +20,7 @@ import { IAudioProductToneControls } from '../types/soundtouchplus/audio-product
 import { IBass } from '../types/soundtouchplus/bass';
 import { IBassCapabilities } from '../types/soundtouchplus/bass-capabilities';
 import { ISoundTouchDevice } from '../types/soundtouchplus/soundtouch-device';
+import { Store } from '../model/store';
 
 /**
  * Track actions.
@@ -64,7 +65,7 @@ export class PlayerBodyToneControls extends PlayerBodyBase {
     super.render();
 
     // get supported device indicators.
-    this.soundTouchDevice = this.store.card.soundTouchDevice;
+    this.soundTouchDevice = Store.soundTouchDevice;
     this.supportsBassCapabilities = this.soundTouchDevice?.supported_uris?.includes("bassCapabilities");
     this.supportsBassLevel = this.soundTouchDevice?.supported_uris?.includes("bass");
     this.supportsAudioDspControls = this.soundTouchDevice?.supported_uris?.includes("audiodspcontrols");

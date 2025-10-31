@@ -2,9 +2,9 @@
 import { css, html, TemplateResult } from 'lit';
 
 // our imports.
+import { EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW } from '../constants';
 import { BaseEditor } from './base-editor';
 import { Section } from '../types/section';
-import { EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW } from '../constants';
 
 const CONFIG_SETTINGS_SCHEMA = [
   {
@@ -59,11 +59,6 @@ class RecentSettingsEditor extends BaseEditor {
 
     // ensure store is created.
     super.createStore();
-
-    //console.log("render (recent-browser-editor) - rendering recent settings editor\n- this.section=%s\n- Store.selectedConfigArea=%s",
-    //  JSON.stringify(this.section),
-    //  JSON.stringify(Store.selectedConfigArea),
-    //);
 
     // render html.
     return html`

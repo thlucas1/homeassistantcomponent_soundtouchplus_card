@@ -206,11 +206,6 @@ export function getConfigAreaForSection(section: Section) {
     configArea = ConfigArea.USERPRESET_BROWSER;
   }
 
-  //console.log("getConfigAreaForSection - return ConfigArea for section\n-configArea=%s for Section %s",
-  //  JSON.stringify(section),
-  //  JSON.stringify(configArea),
-  //);
-
   return configArea;
 }
 
@@ -419,8 +414,8 @@ export function getObjectDifferences(obj1: any, obj2: any): any {
   const differences: any = {};
 
   for (const key of uniqueKeys) {
-    const value1 = obj1[key];
-    const value2 = obj2[key];
+    const value1 = obj1[key] || '';
+    const value2 = obj2[key] || '';
 
     if (typeof value1 === 'object' && typeof value2 === 'object') {
       const nestedDifferences = getObjectDifferences(value1, value2);

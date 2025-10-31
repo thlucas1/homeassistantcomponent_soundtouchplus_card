@@ -4,7 +4,6 @@ import { EntityRegistryDisplayEntry } from "./entity-registry-entry";
 import { ServiceCallRequest } from './service-call-request';
 import { ServiceCallResponse } from './service-call-response';
 
-
 export interface HomeAssistant {
   auth: Auth & { external?: any }; // ExternalMessaging };
   connection: Connection;

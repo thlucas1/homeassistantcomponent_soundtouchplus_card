@@ -1,7 +1,7 @@
 import { css } from 'lit';
 
 /** current version of the card. */
-export const CARD_VERSION = '1.0.28';
+export const CARD_VERSION = '1.0.29';
 
 /** SoundTouchPlus integration domain identifier. */
 export const DOMAIN_SOUNDTOUCHPLUS = 'soundtouchplus';

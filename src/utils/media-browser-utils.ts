@@ -1,8 +1,3 @@
-// debug logging.
-//import Debug from 'debug/src/browser.js';
-//import { DEBUG_APP_NAME } from '../constants';
-//const debuglog = Debug(DEBUG_APP_NAME + ":media-browser-utils");
-
 // our imports.
 import { MediaPlayer } from '../model/media-player';
 import { CustomImageUrls } from '../types/custom-image-urls';
@@ -12,13 +7,14 @@ import { formatDateEpochSecondsToLocaleString } from './utils';
 
 /**
  * Removes all special characters from a string, so that it can be used
- * for comparison operations.
+ * for comparison operations.  The only characters remaining will be
+ * A-Z, 0-9, and space.
  * 
  * @param str String value to remove special characters from.
  * @returns The `str` value without special characters.
  */
 export function removeSpecialChars(str: string) {
-  let value = str.replace(/[^a-zA-Z ]/g, '');
+  let value = str.replace(/[^a-zA-Z0-9 ]/g, '');
   if (value)
     value = value.trim();
   return value;
@@ -39,6 +35,14 @@ export function getCustomImageUrl(collection: CustomImageUrls | undefined, title
   // note that we already removed special characters from the collection 
   // in the setConfig() method when the card configuration was loaded.
   for (const itemTitle in collection) {
+
+    //console.log("%c getCustomImageUrl - comparison:\n- itemTitle = %s\n- title = %s\n- title = %s (no special chars)",
+    //  "color: green;",
+    //  JSON.stringify(itemTitle),
+    //  JSON.stringify(title),
+    //  JSON.stringify(removeSpecialChars(title)),
+    //);
+
     if (itemTitle === removeSpecialChars(title)) {
       return collection[itemTitle];
     }
@@ -106,7 +110,6 @@ export function getMdiIconImageUrl(mdi_icon: string): string {
 
   // assign the icon url.
   const mdiImageUrl = '\'data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="' + mdi_icon + '"></path></svg>\'';
-  //const mdiImageUrl = '\'data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="' + mdi_icon_color + '" d="' + mdi_icon + '"></path></svg>\'';
   return mdiImageUrl
 
 }

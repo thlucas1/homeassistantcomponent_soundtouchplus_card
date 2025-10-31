@@ -18,6 +18,7 @@ import { ConfigArea } from '../types/config-area';
 import { Section } from '../types/section';
 import { MediaPlayer } from './media-player';
 import { getEntityRegistryDisplayEntry_ByEntityId, getHassEntityState_ByEntityId } from '../types/home-assistant-frontend/ha-utils';
+import { ISoundTouchDevice } from '../types/soundtouchplus/soundtouch-device';
 
 
 /**
@@ -57,6 +58,9 @@ export class Store {
 
   /** card editor render flags for individual sections. */
   static hasCardEditLoadedMediaList: { [key: string]: boolean } = {};
+
+  /** SoundTouch device information that we only want to load once for the selected player id. */
+  static soundTouchDevice: ISoundTouchDevice | undefined = undefined;
 
 
   /**

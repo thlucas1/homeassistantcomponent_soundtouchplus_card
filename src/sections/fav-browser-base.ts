@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // debug logging.
 import Debug from 'debug/src/browser.js';
 import { DEBUG_APP_NAME } from '../constants';
@@ -14,6 +15,7 @@ import {
 } from '@mdi/js';
 
 // our imports.
+import { DOMAIN_SOUNDTOUCHPLUS } from '../constants';
 import { sharedStylesFavBrowser } from '../styles/shared-styles-fav-browser.js';
 import { CardConfig } from '../types/card-config';
 import { Section } from '../types/section';
@@ -24,7 +26,6 @@ import { storageService } from '../decorators/storage';
 import { truncateMediaList } from '../utils/media-browser-utils';
 import { getHomeAssistantErrorMessage, isCardInEditPreview, loadHaFormLazyControls } from '../utils/utils';
 import { FilterSectionMediaEventArgs } from '../events/filter-section-media';
-import { DOMAIN_SOUNDTOUCHPLUS } from '../constants';
 import { AlertUpdatesBase } from './alert-updates-base';
 
 /** Keys used to access cached storage items. */

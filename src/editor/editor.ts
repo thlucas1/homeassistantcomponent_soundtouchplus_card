@@ -9,6 +9,10 @@ import { state } from 'lit/decorators.js';
 import { choose } from 'lit/directives/choose.js';
 
 // our imports.
+import {
+  getConfigAreaForSection,
+  getSectionForConfigArea,
+} from '../utils/utils';
 import './editor-form';
 import './general-editor';
 import './player-editor';
@@ -23,10 +27,6 @@ import { Section } from '../types/section';
 import { Store } from '../model/store';
 import { SHOW_SECTION } from '../constants';
 import { EditorConfigAreaSelectedEvent } from '../events/editor-config-area-selected';
-import {
-  getConfigAreaForSection,
-  getSectionForConfigArea,
-} from '../utils/utils';
 
 
 class CardEditor extends BaseEditor {
@@ -40,8 +40,6 @@ class CardEditor extends BaseEditor {
    * Setting properties inside this method will *not* trigger the element to update.
   */
   protected render(): TemplateResult | void {
-
-    //console.log("render (editor) - rendering starting");
 
     // just in case hass property has not been set yet.
     if (!this.hass) {
@@ -68,7 +66,7 @@ class CardEditor extends BaseEditor {
           (configArea) => html`
             <ha-control-button
               selected=${this.configArea === configArea || nothing}
-              @click=${() => this.OnConfigSectionClick(configArea)}
+              @click=${() => this.onConfigSectionClick(configArea)}
             >
               ${configArea}
             </ha-control-button>
@@ -80,7 +78,7 @@ class CardEditor extends BaseEditor {
           (configArea) => html`
             <ha-control-button
               selected=${this.configArea === configArea || nothing}
-              @click=${() => this.OnConfigSectionClick(configArea)}
+              @click=${() => this.onConfigSectionClick(configArea)}
             >
               ${configArea}
             </ha-control-button>
@@ -175,12 +173,12 @@ class CardEditor extends BaseEditor {
    * 
    * @param args Event arguments that contain the configArea that was clicked on.
    */
-  private OnConfigSectionClick(configArea: ConfigArea) {
+  private onConfigSectionClick(configArea: ConfigArea) {
 
     // show the section that we are editing.
     const sectionNew = getSectionForConfigArea(configArea);
 
-    //console.log("OnConfigSectionClick (editor)\n- OLD configArea=%s\n- NEW configArea=%s\n- OLD section=%s\n- NEW section=%s\n- Store.selectedConfigArea=%s",
+    //console.log("onConfigSectionClick (editor)\n- OLD configArea=%s\n- NEW configArea=%s\n- OLD section=%s\n- NEW section=%s\n- Store.selectedConfigArea=%s",
     //  JSON.stringify(this.configArea),
     //  JSON.stringify(configArea),
     //  JSON.stringify(this.section),

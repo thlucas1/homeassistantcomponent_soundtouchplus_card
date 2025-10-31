@@ -6,6 +6,11 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.29 ] - 2025/10/30
+  
+  * Performance improvements to the card.
+  * Fixed a bug that was causing device info to be queried on every card refresh.
+
 ###### [ 1.0.28 ] - 2025/10/29
   
   * Fixed vibrant CORS errors being generated for DLNA server images.

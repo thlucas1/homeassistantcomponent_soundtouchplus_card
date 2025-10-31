@@ -47,11 +47,6 @@ class Form extends BaseEditor {
    */
   static get styles() {
     return css`
-
-  //    #elmHaForm::part(root) {
-  //      border: 1px solid gold !important;
-  //    }
-
     `;
   }
 

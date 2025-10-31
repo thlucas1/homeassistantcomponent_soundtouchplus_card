@@ -201,9 +201,6 @@ export class Player extends AlertUpdatesBase {
     if (this.store.player) {
       playerMediaContentId = this.store.player.attributes.media_content_id;
       playerImage = this.store.player.attributes.stp_nowplaying_image_url;
-    //  if (playerImage) {
-    //    playerImage = this.store.hass.hassUrl(playerImage);
-    //  }
     }
 
     //console.log("%cstylePlayerSection - styling player section:\n- isOff = %s\n- isIdle = %s\n- playerImage = %s\n- playerMinimizeOnIdle = %s\n- configImageDefault = %s\n- configImagePlayerBg = %s",

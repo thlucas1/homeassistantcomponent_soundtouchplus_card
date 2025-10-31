@@ -2,11 +2,11 @@
 import { css, html, TemplateResult } from 'lit';
 
 // our imports.
+import { EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW } from '../constants';
 import { BaseEditor } from './base-editor';
 import { Section } from '../types/section';
 import { CardConfig } from '../types/card-config';
 import { EditorPandoraAccountChangedEvent } from '../events/editor-pandora-account-changed';
-import { EDITOR_DEFAULT_BROWSER_ITEMS_PER_ROW } from '../constants';
 
 
 const CONFIG_SETTINGS_SCHEMA = [
