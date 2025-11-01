@@ -226,7 +226,7 @@ class Progress extends AlertUpdatesBase {
       }
 
       .progress-time {
-        mix-blend-mode: screen;
+        mix-blend-mode: normal;
       }
     `;
   }
