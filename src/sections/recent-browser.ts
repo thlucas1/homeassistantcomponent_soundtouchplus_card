@@ -110,13 +110,6 @@ export class RecentBrowser extends FavBrowserBase {
 
     try {
 
-      // check for conditions that prevent the content from showing.
-      if (!this.player.attributes.soundtouchplus_recents_cache_enabled) {
-        this.alertInfo = "Recents cache disabled in \"" + this.player.name + "\" configuration.";
-        this.isUpdateInProgress = false;
-        return true;
-      }
-
       // we use the `Promise.allSettled` approach here like we do with actions, so
       // that we can easily add promises if more data gathering is needed in the future.
       const promiseRequests = new Array<Promise<unknown>>();
@@ -124,42 +117,89 @@ export class RecentBrowser extends FavBrowserBase {
       // create promise - get media list.
       const promiseUpdateMediaList = new Promise((resolve, reject) => {
 
-        // call the service to retrieve the media list.
-        this.soundTouchPlusService.RecentListCache(player)
-          .then(result => {
+        // is recent cache list enabled? if so, then use it since it will contain cover art images.
+        if (this.player.attributes.soundtouchplus_recents_cache_enabled) {
 
-            // load media list results.
-            this.mediaList = result.Recents;
-            this.mediaListLastUpdatedOn = result.LastUpdatedOn || getUtcNowTimestamp();
+          // call the service to retrieve the media list.
+          this.soundTouchPlusService.RecentListCache(player)
+            .then(result => {
 
-            if (debuglog.enabled) {
-              debuglog("%cupdateMediaList - media list updated\n- %s = mediaListLastUpdatedOn\n- %s = soundtouchplus_recents_cache_lastupdated",
-                "color: gold;",
-                JSON.stringify(this.mediaListLastUpdatedOn),
-                JSON.stringify(this.player.attributes.soundtouchplus_recents_cache_lastupdated),
-              );
-            }
+              // load media list results.
+              this.mediaList = result.Recents;
+              this.mediaListLastUpdatedOn = result.LastUpdatedOn || getUtcNowTimestamp();
 
-            // call base class method, indicating media list update succeeded.
-            super.updatedMediaListOk();
+              if (debuglog.enabled) {
+                debuglog("%cupdateMediaList - media list updated\n- %s = mediaListLastUpdatedOn\n- %s = soundtouchplus_recents_cache_lastupdated",
+                  "color: gold;",
+                  JSON.stringify(this.mediaListLastUpdatedOn),
+                  JSON.stringify(this.player.attributes.soundtouchplus_recents_cache_lastupdated),
+                );
+              }
 
-            // resolve the promise.
-            resolve(true);
+              // call base class method, indicating media list update succeeded.
+              super.updatedMediaListOk();
 
-          })
-          .catch(error => {
+              // resolve the promise.
+              resolve(true);
 
-            // clear results, and reject the promise.
-            this.mediaList = undefined;
-            this.mediaListLastUpdatedOn = 0;
+            })
+            .catch(error => {
 
-            // call base class method, indicating media list update failed.
-            super.updatedMediaListError("Get Recent List Cache failed: " + getHomeAssistantErrorMessage(error));
+              // clear results, and reject the promise.
+              this.mediaList = undefined;
+              this.mediaListLastUpdatedOn = 0;
 
-            // reject the promise.
-            reject(error);
+              // call base class method, indicating media list update failed.
+              super.updatedMediaListError("Get Recent List Cache failed: " + getHomeAssistantErrorMessage(error));
 
-          })
+              // reject the promise.
+              reject(error);
+
+            })
+
+        } else {
+
+          // otherwise, we will use the device recent list, which may not contain
+          // coverart images due to the device removing the images due to copytight content.
+
+          // call the service to retrieve the media list.
+          this.soundTouchPlusService.RecentList(player)
+            .then(result => {
+
+              // load media list results.
+              this.mediaList = result.Recents;
+              this.mediaListLastUpdatedOn = result.LastUpdatedOn || getUtcNowTimestamp();
+
+              if (debuglog.enabled) {
+                debuglog("%cupdateMediaList - media list updated\n- %s = mediaListLastUpdatedOn\n- %s = soundtouchplus_recents_lastupdated",
+                  "color: gold;",
+                  JSON.stringify(this.mediaListLastUpdatedOn),
+                  JSON.stringify(this.player.attributes.soundtouchplus_recents_lastupdated),
+                );
+              }
+
+              // call base class method, indicating media list update succeeded.
+              super.updatedMediaListOk();
+
+              // resolve the promise.
+              resolve(true);
+
+            })
+            .catch(error => {
+
+              // clear results, and reject the promise.
+              this.mediaList = undefined;
+              this.mediaListLastUpdatedOn = 0;
+
+              // call base class method, indicating media list update failed.
+              super.updatedMediaListError("Get Recent List failed: " + getHomeAssistantErrorMessage(error));
+
+              // reject the promise.
+              reject(error);
+
+            })
+        }
+
       });
 
       promiseRequests.push(promiseUpdateMediaList);

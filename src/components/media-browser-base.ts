@@ -405,7 +405,7 @@ export class MediaBrowserBase extends LitElement {
   /**
    * Style definition used to style a media browser item background image.
    */
-  protected styleMediaBrowserItemBackgroundImage(thumbnail: string, index: number) {
+  protected styleMediaBrowserItemBackgroundImage(thumbnail: string | undefined, index: number) {
 
     let bgSize = '100%';
     if (this.section == Section.SOURCES) {
@@ -414,7 +414,7 @@ export class MediaBrowserBase extends LitElement {
 
     // if thumbnail contains an svg icon, then use a mask; otherwise, use a background-image.
     // this allows the user to theme the svg icon color.
-    if (thumbnail.includes("svg+xml")) {
+    if (thumbnail?.includes("svg+xml")) {
       return html`
       <style>
         .button:nth-of-type(${index + 1}) .thumbnail {
@@ -449,8 +449,9 @@ export class MediaBrowserBase extends LitElement {
     // process all items in the collection.
     return (this.items || []).map((item) => {
 
-      //console.log("%c buildMediaBrowserItems - media list item:\n%s",
+      //console.log("%c buildMediaBrowserItems - itemsHaveImages=%s\n- media list item:\n%s",
       //  "color: yellow;",
+      //  JSON.stringify(this.itemsHaveImages),
       //  JSON.stringify(item),
       //);
 

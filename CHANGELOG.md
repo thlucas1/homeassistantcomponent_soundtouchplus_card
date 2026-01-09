@@ -6,6 +6,10 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.32 ] - 2026/01/08
+  
+  * Updated Recently Played section processing for devices that do not support websockets.
+
 ###### [ 1.0.31 ] - 2025/11/01
   
   * Reposted changes as a new version, as I forgot to check in the source with GIT.
