@@ -33,7 +33,8 @@ import {
   BRAND_LOGO_IMAGE_BASE64,
   BRAND_LOGO_IMAGE_SIZE,
   FOOTER_ICON_SIZE_DEFAULT,
-  PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT
+  PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT,
+  CARD_CONTENT_MARGIN_DEFAULT
 } from './constants';
 import {
   getConfigAreaForSection,
@@ -258,7 +259,7 @@ export class Card extends AlertUpdatesBase {
         margin: 0;
       }
 
-      spotifyplus-card {
+      soundtouchplus-card {
         display: block;
         height: 100% !important;
         width: 100% !important;
@@ -301,7 +302,7 @@ export class Card extends AlertUpdatesBase {
       }
 
       .stpc-card-content-section {
-        margin: 0.0rem;
+        margin: var(--stpc-card-content-margin, ${unsafeCSS(CARD_CONTENT_MARGIN_DEFAULT)});
         flex-grow: 1;
         flex-shrink: 0;
         height: 1vh;
@@ -1014,10 +1015,13 @@ export class Card extends AlertUpdatesBase {
     let editTabHeight = '0px';
     let editBottomToolbarHeight = '0px';
     const cardWaitProgressSliderColor = this.config.cardWaitProgressSliderColor;
+    const cardContentMargin = this.config.cardContentMargin;
 
     // set css variables that affect multiple sections of the card.
     if (cardWaitProgressSliderColor)
       styleInfo['--stpc-card-wait-progress-slider-color'] = `${cardWaitProgressSliderColor}`;
+    if (cardContentMargin)
+      styleInfo['--stpc-card-content-margin'] = `${cardContentMargin}`;
 
     // if config entity not set, then display the brand logo neatly in the card.
     if ((this.playerId || "") == "") {

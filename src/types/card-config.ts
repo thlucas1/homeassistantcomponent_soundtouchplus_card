@@ -57,6 +57,12 @@ export interface CardConfig extends LovelaceCardConfig {
   height?: string | number;
 
   /**
+   * Card content section margin value.
+   * Default is 0.0rem.
+   */
+  cardContentMargin?: string;
+
+  /**
    * True to disable touch events and force mouse events for media browser items;
    * othersie, False to enable touch events if they are detected.
    * Default is false.
@@ -241,10 +247,35 @@ export interface CardConfig extends LovelaceCardConfig {
   playerMinimizeOnIdle?: boolean;
 
   /**
+   * Justify content value of icons in the Player control areas.
+   * Default is 'center'.
+   * Examples: left, center, right, space-around, space-between, space-evenly, etc.
+   */
+  playerControlsIconJustifyContent?: string;
+
+  /**
+   * Max width value of player control areas (progress, transport deck, and volume details).
+   * Default is '40rem'.
+   */
+  playerControlsMaxWidth?: string;
+
+  /**
    * Color of the player progress text labels.
    * Default is '#ffffff'.
    */
   playerProgressLabelColor?: string;
+
+  /**
+   * Font size of the player progressbar labels.
+   * Default is 'x-small'.
+   */
+  playerProgressLabelFontSize?: string;
+
+  /**
+   * Horizontal padding value for the player progress text labels.
+   * Default is '0px'.
+   */
+  playerProgressLabelPaddingLR?: string;
 
   /**
    * Color of the player progress slider bar.
@@ -289,6 +320,12 @@ export interface CardConfig extends LovelaceCardConfig {
    * Default is '#ffffff'.
    */
   playerVolumeLabelColor?: string;
+
+  /**
+   * Font size of the player volume labels.
+   * Default is 'x-small'.
+   */
+  playerVolumeLabelFontSize?: string;
 
   /**
    * Color of the player volume slider bar.

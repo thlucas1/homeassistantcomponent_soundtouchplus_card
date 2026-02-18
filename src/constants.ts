@@ -1,7 +1,7 @@
 import { css } from 'lit';
 
 /** current version of the card. */
-export const CARD_VERSION = '1.0.32';
+export const CARD_VERSION = '1.0.33';
 
 /** SoundTouchPlus integration domain identifier. */
 export const DOMAIN_SOUNDTOUCHPLUS = 'soundtouchplus';
@@ -39,6 +39,9 @@ export const BRAND_LOGO_IMAGE_SIZE = '90%';
 
 /** Text used to search for radio content. */
 export const RADIO_SEARCH_KEY = " Radio ";
+
+/** default card content area margin value. */
+export const CARD_CONTENT_MARGIN_DEFAULT = '0.0rem';
 
 /** default size of the icons in the Footer area. */
 export const FOOTER_ICON_SIZE_DEFAULT = '1.75rem';

@@ -100,26 +100,29 @@ class PlayerControls extends AlertUpdatesBase {
     return html`
       <div class="player-controls-container" style=${this.styleContainer(idle, isOff)}>
           <div class="icons" hide=${stopped}>
-              <div class="flex-1"></div>
               <ha-icon-button @click=${() => this.onClickAction(ACTION_FAVES)}   hide=${this.hideFeature(ACTION_FAVES)}   .path=${mdiInformationSlabBoxOutline} label="More Information" style=${this.styleIcon(colorActionFavorites)} ></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(SHUFFLE_SET)}    hide=${this.hideFeature(SHUFFLE_SET)}    .path=${this.getShuffleIcon()} label="Shuffle" style=${this.styleIcon(colorShuffle)}></ha-icon-button>
-              <ha-icon-button @click=${() => this.onClickAction(PREVIOUS_TRACK)} hide=${this.hideFeature(PREVIOUS_TRACK)} .path=${mdiSkipPrevious} label="Previous Track"></ha-icon-button>
+              <ha-icon-button @click=${() => this.onClickAction(PREVIOUS_TRACK)} hide=${this.hideFeature(PREVIOUS_TRACK)} .path=${mdiSkipPrevious} label="Previous Track" style=${this.styleIcon()}></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(PLAY)}           hide=${this.hideFeature(PLAY)}           .path=${mdiPlay} label="Play" style=${this.styleIcon(colorPlay)}></ha-icon-button>
-              <ha-icon-button @click=${() => this.onClickAction(PAUSE)}          hide=${this.hideFeature(PAUSE)}          .path=${mdiPause} label="Pause"></ha-icon-button>
-              <ha-icon-button @click=${() => this.onClickAction(NEXT_TRACK)}     hide=${this.hideFeature(NEXT_TRACK)}     .path=${mdiSkipNext} label="Next Track"></ha-icon-button>
+              <ha-icon-button @click=${() => this.onClickAction(PAUSE)}          hide=${this.hideFeature(PAUSE)}          .path=${mdiPause} label="Pause" style=${this.styleIcon()}></ha-icon-button>
+              <ha-icon-button @click=${() => this.onClickAction(NEXT_TRACK)}     hide=${this.hideFeature(NEXT_TRACK)}     .path=${mdiSkipNext} label="Next Track" style=${this.styleIcon()}></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(REPEAT_SET)}     hide=${this.hideFeature(REPEAT_SET)}     .path=${this.getRepeatIcon()} label="Repeat" style=${this.styleIcon(colorRepeat)} ></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(TONE_CONTROLS)}  hide=${this.hideFeature(TONE_CONTROLS)}  .path=${mdiTuneVertical} label="Tone Controls" style=${this.styleIcon(colorToneControls)} ></ha-icon-button>
           </div>
           <div class="iconsPower" hide=${isOff}>
               <ha-icon-button @click=${() => this.onClickAction(TURN_ON)}        hide=${this.hideFeature(TURN_ON)}        .path=${mdiPower} label="Turn On" style=${this.styleIcon(colorPower)}></ha-icon-button>
-              <ha-icon-button @click=${() => this.onClickAction(SOURCES)}        hide=${this.hideFeature(SOURCES)}        .path=${mdiAudioInputRca} label="Sources"></ha-icon-button>
+              <ha-icon-button @click=${() => this.onClickAction(SOURCES)}        hide=${this.hideFeature(SOURCES)}        .path=${mdiAudioInputRca} label="Sources" style=${this.styleIcon()}></ha-icon-button>
           </div>
           <div class="iconsPower" hide=${idle}>
-              <ha-icon-button @click=${() => this.onClickAction(TURN_OFF)}       hide=${this.hideFeature(TURN_OFF)}       .path=${mdiPower} label="Turn Off"></ha-icon-button>
+              <ha-icon-button @click=${() => this.onClickAction(TURN_OFF)}       hide=${this.hideFeature(TURN_OFF)}       .path=${mdiPower} label="Turn Off" style=${this.styleIcon()}></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(PLAY)}           hide=${this.hideFeature(PLAY)}           .path=${mdiPlay} label="Play" style=${this.styleIcon(true)}></ha-icon-button>
-              <ha-icon-button @click=${() => this.onClickAction(SOURCES)}        hide=${this.hideFeature(SOURCES)}        .path=${mdiAudioInputRca} label="Sources"></ha-icon-button>
+              <ha-icon-button @click=${() => this.onClickAction(SOURCES)}        hide=${this.hideFeature(SOURCES)}        .path=${mdiAudioInputRca} label="Sources" style=${this.styleIcon()}></ha-icon-button>
           </div>
-          <stpc-player-volume hide=${stopped} .store=${this.store} .player=${this.player} class="player-volume-container"></stpc-player-volume>
+      </div>
+      <div class="player-volume-container" style=${this.styleContainer(idle, isOff)}>
+          <div class="iconsVolume" hide=${stopped}>
+              <stpc-player-volume hide=${stopped} .store=${this.store} .player=${this.player}></stpc-player-volume>
+          </div>
       </div>
   `;
   }
@@ -131,38 +134,52 @@ class PlayerControls extends AlertUpdatesBase {
   static get styles() {
     return css`
       .player-controls-container {
-        margin: 0.75rem 3.25rem;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-        max-width: 40rem;
+        max-width: var(--stpc-player-controls-max-width, 40rem);
         text-align: center;
         overflow: hidden auto;
+        box-sizing: border-box;
         /*border: 1px solid red;  /*  FOR TESTING CONTROL LAYOUT CHANGES */
       }
 
       .player-volume-container {
-        display: block;
+        max-width: var(--stpc-player-controls-max-width, 40rem);
+        text-align: center;
+        overflow: hidden auto;
+        box-sizing: border-box;
+        /* border: 1px solid blue;  /*  FOR TESTING CONTROL LAYOUT CHANGES */
       }
 
       .icons {
-        justify-content: center;
         display: inline-flex;
+        align-items: center;
+        justify-content: var(--stpc-player-controls-icon-justify-content, center);
+        overflow: hidden;
+        color: var(--stpc-player-controls-icon-color, #ffffff);
+        --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);
+        --mdc-icon-size: var(--stpc-player-controls-icon-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_SIZE_DEFAULT)});
+        mix-blend-mode: normal;
+        width: 100%;
+      }
+
+      .iconsPower {
+        display: block;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        color: var(--stpc-player-controls-icon-color, #ffffff);
+        --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);
+        --mdc-icon-size: var(--stpc-player-controls-icon-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_SIZE_DEFAULT)});
+        width: 100%;
+      }
+
+      .iconsVolume {
+        display: inline;
         align-items: center;
         overflow: hidden;
         color: var(--stpc-player-controls-icon-color, #ffffff);
         --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);
         --mdc-icon-size: var(--stpc-player-controls-icon-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_SIZE_DEFAULT)});
         mix-blend-mode: normal;
-      }
-
-      .iconsPower {
-        justify-content: center;
-        display: block;
-        align-items: center;
-        overflow: hidden;
-        color: var(--stpc-player-controls-icon-color, #ffffff);
-        --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);
-        --mdc-icon-size: var(--stpc-player-controls-icon-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_SIZE_DEFAULT)});
       }
 
       *[hide] {
@@ -687,11 +704,16 @@ class PlayerControls extends AlertUpdatesBase {
    * 
    * @param isToggled True if the icon is in a toggle state; otherwise false if icon is in a non-toggled state.
    */
-  private styleIcon(isToggled: boolean | undefined) {
+  private styleIcon(isToggled: boolean | undefined | null = null) {
 
     const styleInfo: StyleInfo = <StyleInfo>{};
 
-    // if button is toggled, then use the icon toggle color; 
+    const playerControlsIconMargin = this.config.playerControlsIconMargin;
+    if (playerControlsIconMargin) {
+      styleInfo['margin'] = `${playerControlsIconMargin}`;
+    }
+
+    // if button is toggled, then use the icon toggle color;
     // otherwise, default to regular icon color.
     if (isToggled) {
       styleInfo['color'] = `var(--stpc-player-controls-icon-toggle-color, ${PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT})`;

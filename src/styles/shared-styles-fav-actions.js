@@ -98,7 +98,7 @@ export const sharedStylesFavActions = css`
   }
 
   *[hide="false"] {
-    display: block !important;
+    display: flex !important;
   }
 
   *[hide] {
