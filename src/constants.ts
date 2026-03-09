@@ -1,7 +1,7 @@
 import { css } from 'lit';
 
 /** current version of the card. */
-export const CARD_VERSION = '1.0.33';
+export const CARD_VERSION = '1.0.34';
 
 /** SoundTouchPlus integration domain identifier. */
 export const DOMAIN_SOUNDTOUCHPLUS = 'soundtouchplus';
@@ -43,11 +43,11 @@ export const RADIO_SEARCH_KEY = " Radio ";
 /** default card content area margin value. */
 export const CARD_CONTENT_MARGIN_DEFAULT = '0.0rem';
 
-/** default size of the icons in the Footer area. */
-export const FOOTER_ICON_SIZE_DEFAULT = '1.75rem';
-
 /** default color value of the player header / controls background gradient. */
 export const PLAYER_CONTROLS_BACKGROUND_COLOR_DEFAULT = '#000000BB';
+
+/** default size of the icons button in the Player controls area. */
+export const PLAYER_CONTROLS_ICON_BUTTON_SIZE_DEFAULT = '2.75rem';
 
 /** default size of the icons in the Player controls area. */
 export const PLAYER_CONTROLS_ICON_SIZE_DEFAULT = '2.0rem';

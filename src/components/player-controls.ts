@@ -25,6 +25,7 @@ import {
 
 // our imports.
 import {
+  PLAYER_CONTROLS_ICON_BUTTON_SIZE_DEFAULT,
   PLAYER_CONTROLS_ICON_SIZE_DEFAULT,
   PLAYER_CONTROLS_ICON_TOGGLE_COLOR_DEFAULT
 } from '../constants';
@@ -155,20 +156,21 @@ class PlayerControls extends AlertUpdatesBase {
         justify-content: var(--stpc-player-controls-icon-justify-content, center);
         overflow: hidden;
         color: var(--stpc-player-controls-icon-color, #ffffff);
-        --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);
+        --ha-icon-button-size: var(--stpc-player-controls-icon-button-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_BUTTON_SIZE_DEFAULT)});
         --mdc-icon-size: var(--stpc-player-controls-icon-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_SIZE_DEFAULT)});
         mix-blend-mode: normal;
         width: 100%;
       }
 
       .iconsPower {
-        display: block;
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
+        justify-content: var(--stpc-player-controls-icon-justify-content, center);
         overflow: hidden;
         color: var(--stpc-player-controls-icon-color, #ffffff);
-        --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);
+        --ha-icon-button-size: var(--stpc-player-controls-icon-button-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_BUTTON_SIZE_DEFAULT)});
         --mdc-icon-size: var(--stpc-player-controls-icon-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_SIZE_DEFAULT)});
+        mix-blend-mode: normal;
         width: 100%;
       }
 
@@ -177,7 +179,7 @@ class PlayerControls extends AlertUpdatesBase {
         align-items: center;
         overflow: hidden;
         color: var(--stpc-player-controls-icon-color, #ffffff);
-        --mdc-icon-button-size: var(--stpc-player-controls-icon-button-size, 2.75rem);
+        --ha-icon-button-size: var(--stpc-player-controls-icon-button-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_BUTTON_SIZE_DEFAULT)});
         --mdc-icon-size: var(--stpc-player-controls-icon-size, ${unsafeCSS(PLAYER_CONTROLS_ICON_SIZE_DEFAULT)});
         mix-blend-mode: normal;
       }

@@ -6,6 +6,11 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.34 ] - 2026/03/08
+
+  * Updated various icon controls that were no longer displaying properly due to HA 2026.03.0 changes.  HA devs updated ha-icon-button to use `ha-button` component instead of `mwc-icon-button` material design component.
+  * Added theme variable `--stpc-player-volume-slider-thickness` and `playerVolumeSliderThickness` card configuration option; Thickness of the player volume slider bar (default `1rem`).
+
 ###### [ 1.0.33 ] - 2026/02/18
   
   * Added theme variable `--stpc-player-controls-max-width` and `playerControlsMaxWidth` card configuration option; Max width value of player control areas (progress, transport deck, and volume details).

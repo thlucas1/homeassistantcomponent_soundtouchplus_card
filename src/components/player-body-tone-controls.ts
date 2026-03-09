@@ -275,7 +275,7 @@ export class PlayerBodyToneControls extends PlayerBodyBase {
 
         *[slim] * {
           --control-slider-thickness: 10px;
-          --mdc-icon-button-size: 30px;
+          --ha-icon-button-size: 30px;
           --mdc-icon-size: 20px;
         }
 
