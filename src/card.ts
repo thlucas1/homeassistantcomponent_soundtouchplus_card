@@ -385,7 +385,7 @@ export class Card extends AlertUpdatesBase {
 
       // we only want to get device information if there are no config errors;
       // otherwise, it's a continuous loop!
-      if (this.store.player.attributes.stp_config_state || "" == "") {
+      if ((this.store.player.attributes.stp_config_state || "") == "") {
         this.updateSoundTouchDevice(this.store.player);
       }
 
@@ -528,7 +528,7 @@ export class Card extends AlertUpdatesBase {
       );
     }
 
-    // ensure "<search-input-outlined>" and "<ha-md-button-menu>" HA customElements are
+    // ensure "<ha-input-search>" and "<ha-md-button-menu>" HA customElements are
     // loaded so that the controls are rendered properly.
     //(async () => await loadHaFormLazyControls())();
 

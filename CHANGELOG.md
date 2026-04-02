@@ -6,6 +6,11 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.35 ] - 2026/04/02
+
+  * Updated controls that were no longer displaying properly due to HA 2026.04.0 changes.  HA devs replaced the `search-input-outlined` material design component with the `ha-input-search` component due to web-awesome changes.
+  * Corrected a bug getting initial device information if configured device was not present on the network.  This was causing repeated calls to the `GetDeviceInfo` service that resulted in exceptions since the device is not present on the network.
+
 ###### [ 1.0.34 ] - 2026/03/08
 
   * Updated various icon controls that were no longer displaying properly due to HA 2026.03.0 changes.  HA devs updated ha-icon-button to use `ha-button` component instead of `mwc-icon-button` material design component.

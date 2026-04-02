@@ -156,16 +156,16 @@ export class FavBrowserBase extends AlertUpdatesBase {
 
     // define control to render - search criteria.
     this.filterCriteriaHtml = html`
-      <search-input-outlined id="filterCriteria" 
+      <ha-input-search id="filterCriteria" 
         class="media-browser-control-filter"
+        appearance="outlined"
         .hass=${this.hass}
-        .filter=${this.filterCriteria}
-        .value=${this.filterCriteria}
-        .autofocus=true
-        placeholder=${this.filterCriteriaPlaceholder || "search by name"}
-        @value-changed=${this.onFilterCriteriaChange}
+        .value=${this.filterCriteria || ""}
+        .autofocus=${true}
+        .placeholder=${this.filterCriteriaPlaceholder || "search by name"}
+        @input=${this.onFilterCriteriaChange}
         @keypress=${this.onFilterCriteriaKeyPress}
-      ></search-input-outlined>
+      ></ha-input-search>
       `;
 
     // define control to render - search criteria (readonly).
@@ -321,7 +321,7 @@ export class FavBrowserBase extends AlertUpdatesBase {
     //  );
     //}
 
-    // ensure "<search-input-outlined>" and "<ha-md-button-menu>" HA customElements are
+    // ensure "<ha-input-search>" and "<ha-md-button-menu>" HA customElements are
     // loaded so that the controls are rendered properly.
     (async () => await loadHaFormLazyControls())();
 
@@ -475,13 +475,13 @@ export class FavBrowserBase extends AlertUpdatesBase {
   }
 
 
-  protected onFilterCriteriaChange(ev: CustomEvent) {
+  protected onFilterCriteriaChange(ev) {
 
     // store search critera.
-    this.filterCriteria = ev.detail.value;
+    this.filterCriteria = ev.target.value;
 
     // if filter cleared, then clear cache as well.
-    if (ev.detail.value == "") {
+    if (this.filterCriteria == "") {
       storageService.clearStorageValue(this.cacheKeyBase + this.mediaType + CACHE_KEY_FILTER_CRITERIA);
     }
 

@@ -114,6 +114,9 @@ export class Store {
         // `entity` value will not be set in the config if coming from the card picker;
         // this is ok, as we want it to render a "needs configured" card ui.
         // in this case, we just return an "empty" MediaPlayer instance.
+        debuglog("%cgetMediaPlayerObject - entity not configured; returning empty media player instance",
+          "color:gold",
+        );
         break;
       }
 
@@ -134,12 +137,19 @@ export class Store {
       const hassEntityState = getHassEntityState_ByEntityId(this.hass, this.config.entity);
       if (hassEntityState) {
         player = new MediaPlayer(hassEntityState);
-      //  if (debuglog.enabled) {
-      //    debuglog("%cgetMediaPlayerObject - media player was resolved:\n%s",
-      //      "color:red",
-      //      JSON.stringify(hassEntityState, null, 2),
-      //    );
-      //  }
+        //  if (debuglog.enabled) {
+        //    debuglog("%cgetMediaPlayerObject - media player was resolved:\n%s",
+        //      "color:red",
+        //      JSON.stringify(hassEntityState, null, 2),
+        //    );
+        //  }
+
+        // ensure the entity is available, and not having network-related issues.
+        const state = player.state as string;
+        if (state == "unavailable") {
+          playerState = "Card configuration `entity` value " + JSON.stringify(playerEntityId) + " is unavailable; is it having network issues?";
+          player = null
+        }
       } else {
         playerState = "Card configuration `entity` value " + JSON.stringify(playerEntityId) + " could not be found in the HA state machine.";
         break;
@@ -150,20 +160,22 @@ export class Store {
         return player;
       }
 
-      // at this point, the card configuration `entity` value could not be resolved 
+      // at this point, the card configuration `entity` value could not be resolved
       // to an active SoundTouchPlus MediaPlayerEntity instance.
-      playerState = "Card configuration `entity` value " + JSON.stringify(playerEntityId) + " was not found in the HA state machine; is it disabled?";
+      if (playerState == "") {
+        playerState = "Card configuration `entity` value " + JSON.stringify(playerEntityId) + " was not found in the HA state machine; is it disabled?";
+      }
       break;
 
     } while (true);
 
     // trace.
-    //if (debuglog.enabled) {
-    //  debuglog("%cgetMediaPlayerObject - media player not resolved:\n%s",
-    //    "color:red",
-    //    playerState
-    //  );
-    //}
+    if (debuglog.enabled) {
+      debuglog("%cgetMediaPlayerObject - media player not resolved:\n%s",
+        "color:red",
+        playerState
+      );
+    }
 
     // if player could not be resolved then create an empty one so that the
     // card still renders; the `stp_config_state` attribute value will contain
