@@ -83,20 +83,29 @@ export class MediaPlayer {
 
 
   /**
-   * Returns true if the player is currently powered off (e.g. state = 'off'|'idle'|'unknown'); 
+   * Returns true if the player is currently powered off or idle (e.g. state = 'off'|'idle'); 
    * otherwise, false.
    */
   public isPoweredOffOrIdle() {
-    return this.state === MediaPlayerState.OFF || this.state === MediaPlayerState.IDLE || this.state === MediaPlayerState.UNKNOWN;
+    return this.state === MediaPlayerState.OFF || this.state === MediaPlayerState.IDLE;
   }
 
 
   /**
-   * Returns true if the player is currently powered off (e.g. state = 'off'|'unknown'); 
+   * Returns true if the player is currently powered off or unknown (e.g. state = 'off'|'unknown'); 
    * otherwise, false.
    */
   public isPoweredOffOrUnknown() {
     return this.state === MediaPlayerState.OFF || this.state === MediaPlayerState.UNKNOWN;
+  }
+
+
+  /**
+   * Returns true if the player is currently powered off or idle (e.g. state = 'off'|'unknown'|'idle'); 
+   * otherwise, false.
+   */
+  public isPoweredOffOrUnknownOrIdle() {
+    return this.state === MediaPlayerState.OFF || this.state === MediaPlayerState.IDLE || this.state === MediaPlayerState.UNKNOWN;
   }
 
 

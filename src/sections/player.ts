@@ -46,7 +46,7 @@ export class Player extends AlertUpdatesBase {
     this.player = this.store.player;
 
     // get idle state in case we are minimizing height.
-    const isOffIdle = this.player.isPoweredOffOrIdle();
+    const isOffOrUnknownOrIdle = this.player.isPoweredOffOrUnknownOrIdle();
 
     // render html.
     return html`
@@ -61,7 +61,7 @@ export class Player extends AlertUpdatesBase {
             ${this.alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this.alertInfoClear}>${this.alertInfo}</ha-alert>` : ""}
           </div>
           ${(() => {
-            if (isOffIdle && this.config.playerMinimizeOnIdle && this.config.height != "fill") {
+            if (isOffOrUnknownOrIdle && this.config.playerMinimizeOnIdle && this.config.height != "fill") {
               return (html`<stpc-player-body-idle class="player-section-body-content" style="display:block" .store=${this.store}></stpc-player-body-idle>`);
             } else if ((this.config.playerControlsHideFavorites || false) == true) {
               return (html``); // if favorites disabled then we don't need to display favorites body.
@@ -70,7 +70,7 @@ export class Player extends AlertUpdatesBase {
             }
           })()}
           ${(() => {
-            if (isOffIdle && this.config.playerMinimizeOnIdle && this.config.height != "fill") {
+            if (isOffOrUnknownOrIdle && this.config.playerMinimizeOnIdle && this.config.height != "fill") {
               return (html``); // if idle then we don't need to display queue body.
             } else if ((this.config.playerControlsHideToneControls || false) == true) {
               return (html``); // if tone controls disabled then we don't need to display anything in the body.
@@ -180,7 +180,7 @@ export class Player extends AlertUpdatesBase {
     const styleInfo: StyleInfo = <StyleInfo>{};
 
     // get player states.
-    const isOff = this.player.isPoweredOffOrUnknown();
+    const isOffUnknown = this.player.isPoweredOffOrUnknown();
     const isIdle = this.player.isIdle();
 
     // initialize default player background image and colors.
@@ -202,11 +202,14 @@ export class Player extends AlertUpdatesBase {
     if (this.store.player) {
       playerMediaContentId = this.store.player.attributes.media_content_id;
       playerImage = this.store.player.attributes.stp_nowplaying_image_url;
+      if ((this.config.cardImageThumbnailsReplaceHttpWithHttps || false) == true) {
+        playerImage = playerImage?.replace('http://', 'https://')
+      }
     }
 
-    //console.log("%cstylePlayerSection - styling player section:\n- isOff = %s\n- isIdle = %s\n- playerImage = %s\n- playerMinimizeOnIdle = %s\n- configImageDefault = %s\n- configImagePlayerBg = %s",
+    //console.log("%cstylePlayerSection - styling player section:\n- isOffUnknown = %s\n- isIdle = %s\n- playerImage = %s\n- playerMinimizeOnIdle = %s\n- configImageDefault = %s\n- configImagePlayerBg = %s",
     //  "color:red",
-    //  JSON.stringify(isOff),
+    //  JSON.stringify(isOffUnknown),
     //  JSON.stringify(isIdle),
     //  JSON.stringify(playerImage),
     //  JSON.stringify(this.config.playerMinimizeOnIdle),
@@ -233,7 +236,7 @@ export class Player extends AlertUpdatesBase {
     }
 
     // set player background image to display.
-    if (isOff) {
+    if (isOffUnknown) {
 
       // set image to display for OFF state.
       this.store.card.playerMediaContentId = "configImagePlayerBgOff"
@@ -439,7 +442,7 @@ export class Player extends AlertUpdatesBase {
       styleInfo['display'] = `none`;
 
     // adjust css styling for minimized player format.
-    if (this.config.playerMinimizeOnIdle && this.store.player.isPoweredOffOrIdle()) {
+    if (this.config.playerMinimizeOnIdle && this.store.player.isPoweredOffOrUnknownOrIdle()) {
       if (this.config.height != 'fill') {
         styleInfo['display'] = `none`;
       }
@@ -462,7 +465,7 @@ export class Player extends AlertUpdatesBase {
       styleInfo['display'] = `none`;
 
     // adjust css styling for minimized player format.
-    if (this.config.playerMinimizeOnIdle && this.store.player.isPoweredOffOrIdle()) {
+    if (this.config.playerMinimizeOnIdle && this.store.player.isPoweredOffOrUnknownOrIdle()) {
       if (this.config.height != 'fill') {
         styleInfo['justify-items'] = `flex-start`;
         styleInfo['padding-left'] = `0px`;

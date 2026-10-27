@@ -1041,7 +1041,7 @@ export class Card extends AlertUpdatesBase {
       styleInfo['width'] = `${CARD_EDIT_PREVIEW_WIDTH}`;
 
       // adjust css styling for minimized player format.
-      if (this.config.playerMinimizeOnIdle && (this.section == Section.PLAYER) && this.store.player.isPoweredOffOrIdle()) {
+      if (this.config.playerMinimizeOnIdle && (this.section == Section.PLAYER) && this.store.player.isPoweredOffOrUnknownOrIdle()) {
         if (this.config.height != 'fill') {
           styleInfo['height'] = `unset !important`;
           styleInfo['min-height'] = `unset !important`;
@@ -1101,7 +1101,7 @@ export class Card extends AlertUpdatesBase {
     }
 
     // adjust css styling for minimized player format.
-    if (this.config.playerMinimizeOnIdle && (this.section == Section.PLAYER) && this.store.player.isPoweredOffOrIdle()) {
+    if (this.config.playerMinimizeOnIdle && (this.section == Section.PLAYER) && this.store.player.isPoweredOffOrUnknownOrIdle()) {
       if (this.config.height != 'fill') {
         styleInfo['height'] = `unset !important`;
         styleInfo['min-height'] = `unset !important`;
@@ -1159,7 +1159,7 @@ export class Card extends AlertUpdatesBase {
     const styleInfo: StyleInfo = <StyleInfo>{};
 
     // adjust css styling for minimized player format.
-    if (this.config.playerMinimizeOnIdle && (this.section == Section.PLAYER) && this.store.player.isPoweredOffOrIdle()) {
+    if (this.config.playerMinimizeOnIdle && (this.section == Section.PLAYER) && this.store.player.isPoweredOffOrUnknownOrIdle()) {
       if (this.config.height != 'fill') {
         styleInfo['height'] = `unset !important`;
       }
@@ -1182,7 +1182,7 @@ export class Card extends AlertUpdatesBase {
     // the Player section is enabled and there are no alerts.
     if (this.config.playerMinimizeOnIdle) {
       if (!this.alertError) {
-        if (this.store.player.isPoweredOffOrIdle()) {
+        if (this.store.player.isPoweredOffOrUnknownOrIdle()) {
           if ((this.config.sections || []).indexOf(Section.PLAYER) > -1) {
             if (this.section == Section.PLAYER) {
               styleInfo['display'] = `none`;

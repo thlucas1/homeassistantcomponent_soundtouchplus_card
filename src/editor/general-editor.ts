@@ -88,6 +88,12 @@ const CONFIG_SETTINGS_SCHEMA = [
     required: false,
     selector: { boolean: {} },
   },
+  {
+    name: 'cardImageThumbnailsReplaceHttpWithHttps',
+    label: "Force image url thumbnails to use `https:` instead of `http:`",
+    required: false,
+    selector: { boolean: {} },
+  },
 ];
 
 

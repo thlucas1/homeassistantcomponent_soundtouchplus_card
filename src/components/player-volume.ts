@@ -54,7 +54,7 @@ class Volume extends AlertUpdatesBase {
     const muteIcon = this.player.isMuted() ? mdiVolumeMute : mdiVolumeHigh;
 
     // set button color based on selected option.
-    const colorPower = (this.player.state == MediaPlayerState.OFF);
+    const colorPower = (this.player.isPoweredOffOrUnknown());
     const colorMute = (this.player.attributes.is_volume_muted);
 
     // assign volume level values.

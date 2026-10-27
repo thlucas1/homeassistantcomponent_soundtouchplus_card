@@ -63,6 +63,13 @@ export interface CardConfig extends LovelaceCardConfig {
   cardContentMargin?: string;
 
   /**
+   * True to force image url thumbnails to use `https:` instead of `http:`
+   * prefixes; otherwise, False to use the image url as-is.
+   * Default is false.
+   */
+  cardImageThumbnailsReplaceHttpWithHttps?: boolean;
+
+  /**
    * True to disable touch events and force mouse events for media browser items;
    * othersie, False to enable touch events if they are detected.
    * Default is false.

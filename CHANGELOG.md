@@ -6,6 +6,11 @@ Change are listed in reverse chronological order (newest to oldest).
 
 <span class="changelog">
 
+###### [ 1.0.37 ] - 2026/10/27
+
+  * Restored power button visibility if the current state of the media player is `unknown`.
+  * Added card configuration property `cardImageThumbnailsReplaceHttpWithHttps`: force image url thumbnails that utilize `http://` prefixes to use an `https://` prefix instead.
+
 ###### [ 1.0.36 ] - 2026/04/05
 
   * Changed autofocus property of `ha-input-search` component from `true` to `false`.  This was causing a keyboard prompt to popup automatically when a section was focused that supports filtering.

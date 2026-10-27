@@ -82,15 +82,16 @@ class PlayerControls extends AlertUpdatesBase {
     this.soundTouchPlusService = this.store.soundTouchPlusService;
 
     const stopped = [MediaPlayerState.ON, MediaPlayerState.PLAYING, MediaPlayerState.PAUSED, MediaPlayerState.BUFFERING].includes(this.player.state) && nothing;
-    const idle = [MediaPlayerState.IDLE].includes(this.player.state) && nothing;
+    const isIdle = [MediaPlayerState.IDLE].includes(this.player.state) && nothing;
     const isOff = [MediaPlayerState.OFF].includes(this.player.state) && nothing;
+    const isUnknown = [MediaPlayerState.UNKNOWN].includes(this.player.state) && nothing;
 
     // set button color based on selected option.
     const colorActionFavorites = (this.isActionFavoritesVisible);
     const colorRepeat = [RepeatMode.ONE, RepeatMode.ALL].includes(this.player.attributes.repeat || RepeatMode.OFF);
     const colorShuffle = (this.player.attributes.shuffle);
     const colorPlay = (this.player.state == MediaPlayerState.PAUSED);
-    const colorPower = (this.player.state == MediaPlayerState.OFF);
+    const colorPower = (this.player.isPoweredOffOrUnknown());
     const colorToneControls = (this.isToneControlsVisible);
 
     // render html.
@@ -99,7 +100,7 @@ class PlayerControls extends AlertUpdatesBase {
     // - if idle, enable TURN_OFF and PLAY buttons, and hide volume controls;
     // - for everything else, enable all deck controls and volume controls.
     return html`
-      <div class="player-controls-container" style=${this.styleContainer(idle, isOff)}>
+      <div class="player-controls-container" style=${this.styleContainer(isIdle, isOff)}>
           <div class="icons" hide=${stopped}>
               <ha-icon-button @click=${() => this.onClickAction(ACTION_FAVES)}   hide=${this.hideFeature(ACTION_FAVES)}   .path=${mdiInformationSlabBoxOutline} label="More Information" style=${this.styleIcon(colorActionFavorites)} ></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(SHUFFLE_SET)}    hide=${this.hideFeature(SHUFFLE_SET)}    .path=${this.getShuffleIcon()} label="Shuffle" style=${this.styleIcon(colorShuffle)}></ha-icon-button>
@@ -110,17 +111,17 @@ class PlayerControls extends AlertUpdatesBase {
               <ha-icon-button @click=${() => this.onClickAction(REPEAT_SET)}     hide=${this.hideFeature(REPEAT_SET)}     .path=${this.getRepeatIcon()} label="Repeat" style=${this.styleIcon(colorRepeat)} ></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(TONE_CONTROLS)}  hide=${this.hideFeature(TONE_CONTROLS)}  .path=${mdiTuneVertical} label="Tone Controls" style=${this.styleIcon(colorToneControls)} ></ha-icon-button>
           </div>
-          <div class="iconsPower" hide=${isOff}>
+          <div class="iconsPower" hide=${isOff || isUnknown}>
               <ha-icon-button @click=${() => this.onClickAction(TURN_ON)}        hide=${this.hideFeature(TURN_ON)}        .path=${mdiPower} label="Turn On" style=${this.styleIcon(colorPower)}></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(SOURCES)}        hide=${this.hideFeature(SOURCES)}        .path=${mdiAudioInputRca} label="Sources" style=${this.styleIcon()}></ha-icon-button>
           </div>
-          <div class="iconsPower" hide=${idle}>
+          <div class="iconsPower" hide=${isIdle}>
               <ha-icon-button @click=${() => this.onClickAction(TURN_OFF)}       hide=${this.hideFeature(TURN_OFF)}       .path=${mdiPower} label="Turn Off" style=${this.styleIcon()}></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(PLAY)}           hide=${this.hideFeature(PLAY)}           .path=${mdiPlay} label="Play" style=${this.styleIcon(true)}></ha-icon-button>
               <ha-icon-button @click=${() => this.onClickAction(SOURCES)}        hide=${this.hideFeature(SOURCES)}        .path=${mdiAudioInputRca} label="Sources" style=${this.styleIcon()}></ha-icon-button>
           </div>
       </div>
-      <div class="player-volume-container" style=${this.styleContainer(idle, isOff)}>
+      <div class="player-volume-container" style=${this.styleContainer(isIdle, isOff)}>
           <div class="iconsVolume" hide=${stopped}>
               <stpc-player-volume hide=${stopped} .store=${this.store} .player=${this.player}></stpc-player-volume>
           </div>
@@ -588,7 +589,7 @@ class PlayerControls extends AlertUpdatesBase {
     } else if (feature == TURN_ON) {
 
       if (this.player.supportsFeature(TURN_ON)) {
-        if ([MediaPlayerState.OFF, MediaPlayerState.STANDBY].includes(this.player.state)) {
+        if ([MediaPlayerState.OFF, MediaPlayerState.UNKNOWN, MediaPlayerState.STANDBY].includes(this.player.state)) {
           return (this.config.playerVolumeControlsHidePower) ? true : nothing;
         }
         return true; // hide icon
@@ -686,13 +687,13 @@ class PlayerControls extends AlertUpdatesBase {
   /**
    * Returns an element style for the progress bar portion of the control.
    */
-  private styleContainer(idle: boolean | typeof nothing, isOff: boolean | typeof nothing) {
+  private styleContainer(isIdle: boolean | typeof nothing, isOff: boolean | typeof nothing) {
 
     const styleInfo: StyleInfo = <StyleInfo>{};
     styleInfo['margin-bottom'] = `0px`; // cannot place this in class (player-controls-container), must be placed here!
 
     // for minimized height, only bunch the icons if player state is IDLE or OFF.
-    if ((this.config.playerMinimizeOnIdle) && (idle || isOff)) {
+    if ((this.config.playerMinimizeOnIdle) && (isIdle || isOff)) {
       styleInfo['margin'] = `0px`;
       styleInfo['padding'] = `2px`;
     }

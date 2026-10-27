@@ -91,6 +91,11 @@ export function getContentItemImageUrl(item: any, config: CardConfig, hasItemsWi
 
   }
 
+  // do we need to convert the image url from "http://" to "https://"?
+  if ((config.cardImageThumbnailsReplaceHttpWithHttps || false) == true) {
+    imageUrl = imageUrl?.replace('http://', 'https://');
+  }
+
   // if imageUrl is a home assistant brands logo, then use the 'icon.png' image.
   if (imageUrl?.match(/https:\/\/brands\.home-assistant\.io\/.+\/logo.png/)) {
     imageUrl = imageUrl?.replace('logo.png', 'icon.png');

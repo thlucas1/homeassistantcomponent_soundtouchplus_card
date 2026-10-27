@@ -40,13 +40,19 @@ class UserPresetActions extends FavActionsBase {
     // invoke base class method.
     super.render();
 
+    // do we need to convert the image url from "http://" to "https://"?
+    let containerArt = this.mediaItem.ContentItem?.ContainerArt;
+    if ((this.store.config.cardImageThumbnailsReplaceHttpWithHttps || false) == true) {
+      containerArt = containerArt?.replace('http://', 'https://');
+    }
+
     // render html.
     return html` 
       <div class="userpreset-actions-container">
         ${this.alertError ? html`<ha-alert alert-type="error" dismissable @alert-dismissed-clicked=${this.alertErrorClear}>${this.alertError}</ha-alert>` : ""}
         ${this.alertInfo ? html`<ha-alert alert-type="info" dismissable @alert-dismissed-clicked=${this.alertInfoClear}>${this.alertInfo}</ha-alert>` : ""}
         <div class="media-info-content">
-          <div class="img" style="background:url(${this.mediaItem.ContentItem?.ContainerArt});"></div>
+          <div class="img" style="background:url(${containerArt});"></div>
           <div class="media-info-details">
             <div class="grid userpreset-info-grid">
 
